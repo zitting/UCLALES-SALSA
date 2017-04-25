@@ -18,7 +18,7 @@
 ! and TV Singh, Academic and Technology Services
 !----------------------------------------------------------------------------
 !
-module mpi_interface
+MODULE mpi_interface
   !
   !    nxg = nxpg-4
   !    nyg = nypg-4
@@ -32,68 +32,68 @@ module mpi_interface
   !    nynza, nxnza: arrays containing nynzp and nxnzp on nxprocs and nyprocs 
   !    resp.
   !
-  implicit none
+  IMPLICIT NONE
 
-  integer :: myid, pecount, nxpg, nypg, nxg, nyg, nbytes, intsize
-  integer :: xcomm, ycomm,commxid,commyid, MY_CMPLX, MY_SIZE
-  integer :: nxnzp,nynzp
-  integer :: wrxid, wryid, nxprocs, nyprocs
-  integer, allocatable, dimension(:) :: xoffset, yoffset, nxpa, nypa
+  INTEGER :: myid, pecount, nxpg, nypg, nxg, nyg, nbytes, intsize
+  INTEGER :: xcomm, ycomm,commxid,commyid, MY_CMPLX, MY_SIZE
+  INTEGER :: nxnzp,nynzp
+  INTEGER :: wrxid, wryid, nxprocs, nyprocs
+  INTEGER, ALLOCATABLE, DIMENSION(:) :: xoffset, yoffset, nxpa, nypa
   CHARACTER(len=80) :: ver='', author=''
-  ! Additional, e.g. case specific, information
+  ! Additional, e.g. CASE specific, information
   CHARACTER(len=180), PARAMETER :: info=''
 
-  ! these are the parameters used in the alltoallw call in the fft
+  ! these are the PARAMETERs used in the alltoallw CALL in the fft
 
-contains
+CONTAINS
   !
   !----------------------------------------------------------------------
   ! INIT_MP: Initializes MPI
   !
-  subroutine init_mpi
+  SUBROUTINE init_mpi
 
-    character (len=8) date
+    CHARACTER (len=8) date
 
     myid=0
     pecount=1
 
-    select case (kind(0.0))
-    case (4)
+    SELECT CASE (kind(0.0))
+    CASE (4)
        nbytes = 4
        MY_SIZE = 4
        MY_CMPLX = 8
-    case (8)
+    CASE (8)
        nbytes = 8
        MY_SIZE = 8
        MY_CMPLX = 16
-    case default
-       stop "kind not supported"
-    end select
+    CASE DEFAULT
+       STOP "kind not supported"
+    END SELECT
 
-    select case(kind(0))
-    case (4)
+    SELECT CASE(kind(0))
+    CASE (4)
        intsize=4
-    case (8)
+    CASE (8)
        intsize=8
-    case default
-       stop "int kind not supported"
-    end select
+    CASE DEFAULT
+       STOP "int kind not supported"
+    END SELECT
     !
-    call date_and_time(date)
-    if (myid == 0) print "(/1x,75('-'),/2x,A22,/2x,A15,I2,A15,I2,A14)", &
-         'UCLALES-SALSA '//date, 'Computing using',nbytes,' byte reals and', &
-         intsize," byte integers"
-    if (myid == 0 .and. len(info)>0) print *, ' '//trim(info)
+    CALL date_and_time(date)
+    IF (myid == 0) PRINT "(/1x,75('-'),/2x,A22,/2x,A15,I2,A15,I2,A14)", &
+         'UCLALES-SALSA '//date, 'Computing using',nbytes,' byte REALs and', &
+         intsize," byte INTEGERs"
+    IF (myid == 0 .AND. len(info)>0) PRINT *, ' '//trim(info)
 
-  end subroutine init_mpi
+  END SUBROUTINE init_mpi
   !
   !----------------------------------------------------------------------
   ! DEFINE_DECOMP: Defines MPI Decomposition
   !
-  subroutine define_decomp(nxp, nyp, nxpart)
+  SUBROUTINE define_decomp(nxp, nyp, nxpart)
 
-    integer, intent(inout) :: nxp, nyp
-    logical, intent(in) ::  nxpart
+    INTEGER, INTENT(inout) :: nxp, nyp
+    LOGICAL, INTENT(in) ::  nxpart
 
     nxprocs=1
     nyprocs=1
@@ -115,73 +115,73 @@ contains
     nxg=nxpg-4
     nyg=nypg-4
 
-    allocate (nxpa(0:nxprocs-1), nypa(0:nyprocs-1))
+    ALLOCATE (nxpa(0:nxprocs-1), nypa(0:nyprocs-1))
     nxpa(0)=nxg
     nypa(0)=nyg
 
     !
     !  offsets for ecah processor in x and y, for a given grid (nxp x nyp)
     !
-    allocate(xoffset(0:nxprocs-1),yoffset(0:nyprocs-1))
+    ALLOCATE(xoffset(0:nxprocs-1),yoffset(0:nyprocs-1))
 
     xoffset = 0
     yoffset = 0
 
-    if(nxp.lt.5) then
-       print *, 'ABORT: X Horizontal domain size too small for ',nxprocs,    &
+    IF(nxp.LT.5) THEN
+       PRINT *, 'ABORT: X Horizontal domain size too small for ',nxprocs,    &
             ' processors.'
-       print *, '       Increase nyp to ',nxprocs*5, ' or run on ',nxpg/5,   &
+       PRINT *, '       Increase nyp to ',nxprocs*5, ' or run on ',nxpg/5,   &
             ' or fewer processors'
-       call appl_abort(0)
-    endif
-    if(nyp.lt.5) then
-       print *, 'ABORT: Y Horizontal domain size too small for ',nyprocs,    &
+       CALL appl_abort(0)
+    END IF
+    IF(nyp.LT.5) THEN
+       PRINT *, 'ABORT: Y Horizontal domain size too small for ',nyprocs,    &
             ' processors.'
-       print *, '       Increase nyp to ',nyprocs*5, ' or run on ',nypg/5,   &
+       PRINT *, '       Increase nyp to ',nyprocs*5, ' or run on ',nypg/5,   &
             ' or fewer processors'
-       call appl_abort(0)
-    endif
+       CALL appl_abort(0)
+    END IF
 
-    if (myid == 0) print 61,'Sequential (shared memory) simulation'
+    IF (myid == 0) PRINT 61,'Sequential (shared memory) simulation'
 
-61 format (/1x,49('-')/2x,A37)
+61 FORMAT (/1x,49('-')/2x,A37)
 
-  end subroutine define_decomp
+  END SUBROUTINE define_decomp
   !
   !----------------------------------------------------------------------
-  ! INIT_ALLTOALL_REORDERXY: Defines the mpi derived types to do a data 
+  ! INIT_ALLTOALL_REORDERXY: Defines the mpi derived types to DO a data 
   ! movement of the form A(m,n/p,z) -> B(n,m/p,z) for data of type MY_CMPLX
   !
-  subroutine init_alltoall_reorder(nxp,nyp,nzp)
+  SUBROUTINE init_alltoall_reorder(nxp,nyp,nzp)
 
-    integer, intent(in) :: nxp,nyp,nzp
+    INTEGER, INTENT(in) :: nxp,nyp,nzp
 
     nxg=nxp-4
     nyg=nyp-4
     nxnzp=nxg*nzp
     nynzp=nyg*nzp
 
-  end subroutine init_alltoall_reorder
+  END SUBROUTINE init_alltoall_reorder
   ! ---------------------------------------------------------------------
-  ! subroutine cyclics: commits exchange cyclic x boundary conditions
+  ! SUBROUTINE cyclics: commits exchange cyclic x boundary conditions
   !
-  subroutine cyclics(n1,n2,n3,var,req)
+  SUBROUTINE cyclics(n1,n2,n3,var,req)
 
-    integer, intent(in) :: n1,n2,n3,req(16)
-    real, intent(inout) :: var(n1,n2,n3)
+    INTEGER, INTENT(in) :: n1,n2,n3,req(16)
+    REAL, INTENT(inout) :: var(n1,n2,n3)
 
-    if (n3 == 5) then
+    IF (n3 == 5) THEN
        var(:,:,1) = var(:,:,3)
        var(:,:,2) = var(:,:,3)
        var(:,:,4) = var(:,:,3)
        var(:,:,5) = var(:,:,3)
-    end if
-    if (n2 == 5) then
+    END IF
+    IF (n2 == 5) THEN
        var(:,1,:) = var(:,3,:)
        var(:,2,:) = var(:,3,:)
        var(:,4,:) = var(:,3,:)
        var(:,5,:) = var(:,3,:)
-    end if
+    END IF
 
     var(:,:2,:) = var(:,n2-3:n2-2,:)
     var(:,n2-1:,:) = var(:,3:4,:)
@@ -191,129 +191,129 @@ contains
     var(:,:2,:2) = var(:,n2-3:n2-2,n3-3:n3-2)
     var(:,n2-1:,n3-1:) = var(:,3:4,3:4)
     
-  end subroutine cyclics
+  END SUBROUTINE cyclics
   !
   ! ---------------------------------------------------------------------
-  ! subroutine cyclicc: comits excahnging cyclic boundary conditions
-  subroutine cyclicc(n1,n2,n3,var,req)
+  ! SUBROUTINE cyclicc: comits excahnging cyclic boundary conditions
+  SUBROUTINE cyclicc(n1,n2,n3,var,req)
 
-    integer :: n1,n2,n3,req(16)
-    real :: var(n1,n2,n3)
+    INTEGER :: n1,n2,n3,req(16)
+    REAL :: var(n1,n2,n3)
 
-  end subroutine cyclicc
+  END SUBROUTINE cyclicc
   !
   ! ---------------------------------------------------------------------
-  subroutine appl_abort(ierr)
+  SUBROUTINE appl_abort(ierr)
 
-    integer :: ierr
-    stop 'Program Aborted'
+    INTEGER :: ierr
+    STOP 'Program Aborted'
 
-  end subroutine appl_abort
+  END SUBROUTINE appl_abort
   !
   ! ---------------------------------------------------------------------
-  subroutine appl_finalize(ierr)
+  SUBROUTINE appl_finalize(ierr)
 
-    integer :: ierr
+    INTEGER :: ierr
 
-  end subroutine appl_finalize
+  END SUBROUTINE appl_finalize
   !
   !---------------------------------------------------------------------------
-  subroutine xshuffle(a,atmp,nx,ny,nz,isign)
+  SUBROUTINE xshuffle(a,atmp,nx,ny,nz,isign)
 
-    integer, intent(in):: nx,ny,nz,isign
-    complex, intent(inout):: a(nx,ny,nz),atmp((nx+1)*(ny+1)*(nz+1))
-    integer ll,i,j,k
+    INTEGER, INTENT(in):: nx,ny,nz,isign
+    COMPLEX, INTENT(inout):: a(nx,ny,nz),atmp((nx+1)*(ny+1)*(nz+1))
+    INTEGER ll,i,j,k
 
-    if(isign .eq. 1) then
+    IF(isign .EQ. 1) THEN
        ll=0
-       do k=1,nz
-          do j=1,ny
-             do i=1,nx
+       DO k=1,nz
+          DO j=1,ny
+             DO i=1,nx
                 ll=ll+1
                 atmp(ll)=a(i,j,k)
-             enddo
-          enddo
-       enddo
+             END DO
+          END DO
+       END DO
 
-    else
+    ELSE
        ll=0
-       do k=1,nz
-          do j=1,ny
-             do i=1,nx
+       DO k=1,nz
+          DO j=1,ny
+             DO i=1,nx
                 ll=ll+1
                 a(i,j,k)=atmp(ll)
-             enddo
-          enddo
-       enddo
+             END DO
+          END DO
+       END DO
 
-    endif
+    END IF
 
-  end subroutine xshuffle
+  END SUBROUTINE xshuffle
   !
   !---------------------------------------------------------------------------
-  subroutine yshuffle(a,atmp,nx,ny,nz,isign)
+  SUBROUTINE yshuffle(a,atmp,nx,ny,nz,isign)
 
-    integer, intent(in):: nx,ny,nz,isign
-    complex, intent(inout):: a(ny,nx,nz),atmp((nx+1)*(ny+1)*(nz+1))
-    integer ll,i,j,k
+    INTEGER, INTENT(in):: nx,ny,nz,isign
+    COMPLEX, INTENT(inout):: a(ny,nx,nz),atmp((nx+1)*(ny+1)*(nz+1))
+    INTEGER ll,i,j,k
 
-    if(isign .eq. 1) then
+    IF(isign .EQ. 1) THEN
        ll=0
-       do k=1,nz
-          do j=1,nx
-             do i=1,ny
+       DO k=1,nz
+          DO j=1,nx
+             DO i=1,ny
                 ll=ll+1
                 atmp(ll)=a(i,j,k)
-             enddo
-          enddo
-       enddo
-    else
+             END DO
+          END DO
+       END DO
+    ELSE
        ll=0
-       do k=1,nz
-          do j=1,nx
-             do i=1,ny
+       DO k=1,nz
+          DO j=1,nx
+             DO i=1,ny
                 ll=ll+1
                 a(i,j,k)=atmp(ll)
-             enddo
-          enddo
-       enddo
+             END DO
+          END DO
+       END DO
 
-    endif
+    END IF
 
-  end subroutine yshuffle
+  END SUBROUTINE yshuffle
   !
   !---------------------------------------------------------------------------
   ! get maximum across processors
   !
-  subroutine double_scalar_par_max(xxl,xxg)
+  SUBROUTINE double_scalar_par_max(xxl,xxg)
 
-    real(kind=8), intent(out) :: xxg
-    real(kind=8), intent(in) :: xxl
+    REAL(kind=8), INTENT(out) :: xxg
+    REAL(kind=8), INTENT(in) :: xxl
 
     xxg=xxl
 
-  end subroutine double_scalar_par_max
+  END SUBROUTINE double_scalar_par_max
   !
   !---------------------------------------------------------------------------
-  subroutine double_scalar_par_sum(xxl,xxg)
+  SUBROUTINE double_scalar_par_sum(xxl,xxg)
 
-    real(kind=8), intent(out) :: xxg
-    real(kind=8), intent(in) :: xxl
+    REAL(kind=8), INTENT(out) :: xxg
+    REAL(kind=8), INTENT(in) :: xxl
 
     xxg=xxl
 
-  end subroutine double_scalar_par_sum
+  END SUBROUTINE double_scalar_par_sum
   !
   !---------------------------------------------------------------------------
-  subroutine double_array_par_sum(xxl,xxg,n)
+  SUBROUTINE double_array_par_sum(xxl,xxg,n)
 
-    integer, intent(in)::n
-    real(kind=8), intent(out) :: xxg(n)
-    real(kind=8), intent(in) :: xxl(n)
+    INTEGER, INTENT(in)::n
+    REAL(kind=8), INTENT(out) :: xxg(n)
+    REAL(kind=8), INTENT(in) :: xxl(n)
 
     xxg=xxl
 
-  end subroutine double_array_par_sum
+  END SUBROUTINE double_array_par_sum
 
 
-end module mpi_interface
+END MODULE mpi_interface

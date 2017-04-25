@@ -17,41 +17,41 @@
 ! Copyright 1999, 2001, Bjorn B. Stevens, Dep't Atmos and Ocean Sci, UCLA
 !----------------------------------------------------------------------------
 !
-module init
+MODULE init
 
-  use grid
+  USE grid
 
-  integer, parameter    :: nns = 500
-  integer               :: ns
-  integer               :: iseed = 0
-  integer               :: ipsflg = 1
-  integer               :: itsflg = 1
+  INTEGER, PARAMETER    :: nns = 500
+  INTEGER               :: ns
+  INTEGER               :: iseed = 0
+  INTEGER               :: ipsflg = 1
+  INTEGER               :: itsflg = 1
        ! itsflg = 0 :potential temperature in kelvin
        !          1 :liquid water potential temperature in kelvin
        !          2 :temperature
-  real, dimension(nns)  :: us,vs,ts,thds,ps,hs,rts,rss,tks,xs
-  real                  :: zrand = 200.
-  character  (len=80)   :: hfilin = 'test.'
+  REAL, DIMENSION(nns)  :: us,vs,ts,thds,ps,hs,rts,rss,tks,xs
+  REAL                  :: zrand = 200.
+  CHARACTER  (len=80)   :: hfilin = 'test.'
 
-contains
+CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! INITLZ:  this is the main driver for the model's initializ-
   ! ation routines.  it initializes the model according to runtype
   !
-  subroutine initialize
+  SUBROUTINE initialize
 
-    use step, only : time, outflg
-    use stat, only : init_stat, mcflg, acc_massbudged
-    use sgsm, only : tkeinit
-    use mpi_interface, only : appl_abort, myid
-    use thrm, only : thermo
+    USE step, ONLY : time, outflg
+    USE stat, ONLY : init_stat, mcflg, acc_massbudged
+    USE sgsm, ONLY : tkeinit
+    USE mpi_interface, ONLY : appl_abort, myid
+    USE thrm, ONLY : thermo
     USE mo_salsa_driver, ONLY : run_SALSA
     USE mo_submctl, ONLY : nbins ! Olis parempi jos ei tarttis
     USE util, ONLY : maskactiv
     USE class_ComponentIndex, ONLY : GetNcomp
 
-    implicit none
+    IMPLICIT NONE
 
     ! Local variables for SALSA basic state
     REAL :: zwp(nzp,nxp,nyp), ztkt(nzp,nxp,nyp)
@@ -61,20 +61,20 @@ contains
     
     ztkt = 0.
 
-    TMP = .false.
+    TMP = .FALSE.
 
     ! Set vertical velocity as 0.5 m/s to intialize cloud microphysical properties with
     ! SALSA
     zwp(:,:,:) = 0.5
 
-    if (runtype == 'INITIAL') then
+    IF (runtype == 'INITIAL') THEN
        time=0.
-       call arrsnd
-       call basic_state
-       call fldinit ! Juha: aerosol size distributions are initialized here.
+       CALL arrsnd
+       CALL basic_state
+       CALL fldinit ! Juha: aerosol size distributions are initialized here.
                     !       Also thermodynamics!
 
-       ! If SALSA is used, call SALSA with full configuration once before beginning
+       ! If SALSA is used, CALL SALSA with full configuration once before beginning
        ! spin-up period to set up aerosol and cloud fields.
        IF (level >= 4) THEN
 
@@ -83,7 +83,7 @@ contains
 
           n4 = GetNcomp(prtcl) + 1 ! Aerosol compoenents + water
 
-          IF ( nxp == 5 .and. nyp == 5 ) THEN
+          IF ( nxp == 5 .AND. nyp == 5 ) THEN
              CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,zwp,a_dn, &
                   a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
                   a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
@@ -116,16 +116,16 @@ contains
           
        END IF !level >= 4
 
-    else if (runtype == 'HISTORY') then
-       if (isgstyp == 2) call tkeinit(nxyzp,a_qp)
-       call hstart
-    else
-       if (myid == 0) print *,'  ABORTING:  Invalid Runtype'
-       call appl_abort(0)
-    end if ! runtype
+    ELSE IF (runtype == 'HISTORY') THEN
+       IF (isgstyp == 2) CALL tkeinit(nxyzp,a_qp)
+       CALL hstart
+    ELSE
+       IF (myid == 0) PRINT *,'  ABORTING:  Invalid Runtype'
+       CALL appl_abort(0)
+    END IF ! runtype
 
-    call sponge_init
-    call init_stat(time+dtl,filprf,expnme,nzp)
+    CALL sponge_init
+    CALL init_stat(time+dtl,filprf,expnme,nzp)
     !
     IF (mcflg) THEN
        ! Juha:
@@ -138,22 +138,22 @@ contains
             rv=a_rp,rc=a_rc,prc=a_srp)
     END IF ! mcflg
     !
-    ! write analysis and history files from restart if appropriate
+    ! write analysis and history files from restart IF appropriate
     !
-    if (outflg) then
-       if (runtype == 'INITIAL') then
-          call write_hist(1, time)
-          call init_anal(time)
-          call thermo(level)
-          call write_anal(time)
-       else
-          call init_anal(time+dtl)
-          call write_hist(0, time)
-       end if
-    end if !outflg
+    IF (outflg) THEN
+       IF (runtype == 'INITIAL') THEN
+          CALL write_hist(1, time)
+          CALL init_anal(time)
+          CALL thermo(level)
+          CALL write_anal(time)
+       ELSE
+          CALL init_anal(time+dtl)
+          CALL write_hist(0, time)
+       END IF
+    END IF !outflg
 
-    return
-  end subroutine initialize
+    RETURN
+  END SUBROUTINE initialize
   !
   !----------------------------------------------------------------------
   ! FLDINIT: Initializeds 3D fields, mostly from 1D basic state
@@ -161,64 +161,64 @@ contains
   !          Modified for level 4.
   !          Juha Tonttila, FMI, 20140828
   !
-  subroutine fldinit
+  SUBROUTINE fldinit
 
-    use defs, only : alvl, cpr, cp, p00, R
-    use sgsm, only : tkeinit
-    use thrm, only : thermo, rslf
+    USE defs, ONLY : alvl, cpr, cp, p00, R
+    USE sgsm, ONLY : tkeinit
+    USE thrm, ONLY : thermo, rslf
 
-    implicit none
+    IMPLICIT NONE
 
-    integer :: i,j,k
-    real    :: exner, pres, tk, rc, xran(nzp)
+    INTEGER :: i,j,k
+    REAL    :: exner, pres, tk, rc, xran(nzp)
 
-    call htint(ns,ts,hs,nzp,th0,zt)
+    CALL htint(ns,ts,hs,nzp,th0,zt)
 
-    do j=1,nyp
-       do i=1,nxp
+    DO j=1,nyp
+       DO i=1,nxp
           a_ustar(i,j) = 0.
-          do k=1,nzp
+          DO k=1,nzp
              a_up(k,i,j)    = u0(k)
              a_vp(k,i,j)    = v0(k)
              a_tp(k,i,j)    = (th0(k)-th00)
-             if (associated (a_rp)) a_rp(k,i,j)   = rt0(k)
+             IF (associated (a_rp)) a_rp(k,i,j)   = rt0(k)
              a_theta(k,i,j) = th0(k)
              a_pexnr(k,i,j) = 0.
-          end do
-       end do
-    end do
+          END DO
+       END DO
+    END DO
 
-    ! Juha: Added select-case for level 4
+    ! Juha: Added SELECT-CASE for level 4
     SELECT CASE(level)
        CASE(1,2,3)
-          if ( allocated (a_rv)) a_rv = a_rp
+          IF ( ALLOCATEd (a_rv)) a_rv = a_rp
 
-          if ( allocated (a_rc)) then
-             do j=1,nyp
-                do i=1,nxp
-                   do k=1,nzp
+          IF ( ALLOCATEd (a_rc)) THEN
+             DO j=1,nyp
+                DO i=1,nxp
+                   DO k=1,nzp
                       exner = (pi0(k)+pi1(k))/cp
                       pres  = p00 * (exner)**cpr
-                      if (itsflg == 0) then
+                      IF (itsflg == 0) THEN
                          tk    = th0(k)*exner
                          rc  = max(0.,a_rp(k,i,j)-rslf(pres,tk))
                          a_tp(k,i,j) = a_theta(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
                          a_rv(k,i,j) = a_rp(k,i,j)-rc
-                      end if
-                      if (itsflg == 2) then
+                      END IF
+                      IF (itsflg == 2) THEN
                          tk    = th0(k)
                          a_theta(k,i,j) = tk/exner
                          rc  = max(0.,a_rp(k,i,j)-rslf(pres,tk))
                          a_tp(k,i,j) = a_theta(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
                          a_rv(k,i,j) = a_rp(k,i,j)-rc
-                      end if
-                   end do
-                end do
-             end do
-          end if
+                      END IF
+                   END DO
+                END DO
+             END DO
+          END IF
 
        CASE(4,5)
-          ! Condensation will be calculated by the initial call of SALSA, so use the
+          ! Condensation will be calculated by the initial CALL of SALSA, so USE the
           ! saturation adjustment method to estimate the amount of liquid water,
           ! which is needed for theta_l
           DO j = 1,nyp
@@ -244,27 +244,27 @@ contains
     END SELECT
 
     k=1
-    do while( zt(k+1) <= zrand .and. k+1 < nzp)
+    DO WHILE( zt(k+1) <= zrand .AND. k+1 < nzp)
        k=k+1
        xran(k) = 0.2*(zrand - zt(k))/zrand
-    end do
-    call random_pert(nzp,nxp,nyp,zt,a_tp,xran,k)
+    END DO
+    CALL random_pert(nzp,nxp,nyp,zt,a_tp,xran,k)
 
-    if (associated(a_rp)) then
+    IF (associated(a_rp)) THEN
        k=1
-       do while( zt(k+1) <= zrand .and. k+1 < nzp)
+       DO WHILE( zt(k+1) <= zrand .AND. k+1 < nzp)
           k=k+1
           xran(k) = 5.0e-5*(zrand - zt(k))/zrand
-       end do
-       call random_pert(nzp,nxp,nyp,zt,a_rp,xran,k)
-    end if
+       END DO
+       CALL random_pert(nzp,nxp,nyp,zt,a_rp,xran,k)
+    END IF
 
     a_wp=0.
-    if(isgstyp == 2) call tkeinit(nxyzp,a_qp)
+    IF(isgstyp == 2) CALL tkeinit(nxyzp,a_qp)
     !
     ! initialize thermodynamic fields
     !
-    call thermo (level)
+    CALL thermo (level)
 
     !
     ! Initialize aerosol size distributions
@@ -279,81 +279,81 @@ contains
     a_vc=a_vp
     a_wc=a_wp
 
-    return
-  end subroutine fldinit
+    RETURN
+  END SUBROUTINE fldinit
   !----------------------------------------------------------------------
   ! SPONGE_INIT: Initializes variables for sponge layer
   !
-  subroutine sponge_init
+  SUBROUTINE sponge_init
 
-    use mpi_interface, only: myid
+    USE mpi_interface, ONLY: myid
 
-    implicit none
+    IMPLICIT NONE
 
-    integer :: k,kk
+    INTEGER :: k,kk
 
-    if (nfpt > 0) then
-       allocate (spng_tfct(max(1,nfpt)), spng_wfct(max(1,nfpt)))
+    IF (nfpt > 0) THEN
+       ALLOCATE (spng_tfct(max(1,nfpt)), spng_wfct(max(1,nfpt)))
 
-       do k=nzp-nfpt,nzp-1
+       DO k=nzp-nfpt,nzp-1
           kk = k + 1 - (nzp-nfpt)
           spng_tfct(kk)=max(0.,(zm(nzp)-zt(k))/((zm(nzp)-zm(nzp-nfpt))*distim))
           spng_wfct(kk)=max(0.,(zm(nzp)-zm(k))/((zm(nzp)-zm(nzp-nfpt))*distim))
           spng_tfct(kk) = max(0.,(1./distim - spng_tfct(kk)))
           spng_wfct(kk) = max(0.,(1./distim - spng_wfct(kk)))
-       end do
+       END DO
 
-       if(myid == 0) then
-          print "(//' ',49('-')/)"
-          print '(2X,A17)', 'Sponge Layer Init '
-          print '(3X,A12,F6.1,A1)', 'Starting at ', zt(nzp-nfpt), 'm'
-          print '(3X,A18,F6.1,A1)', 'Minimum timescale ', 1/spng_wfct(nfpt),'s'
-       end if
-    end if
+       IF(myid == 0) THEN
+          PRINT "(//' ',49('-')/)"
+          PRINT '(2X,A17)', 'Sponge Layer Init '
+          PRINT '(3X,A12,F6.1,A1)', 'Starting at ', zt(nzp-nfpt), 'm'
+          PRINT '(3X,A18,F6.1,A1)', 'Minimum timescale ', 1/spng_wfct(nfpt),'s'
+       END IF
+    END IF
 
-    return
-  end subroutine sponge_init
+    RETURN
+  END SUBROUTINE sponge_init
 
   !
   !
   ! ----------------------------------------------------------------------
   ! ARRSND: Arranges the sounding input into proper arrays
   !
-  subroutine arrsnd
+  SUBROUTINE arrsnd
 
-    use defs, only          : p00,p00i,cp,cpr,rcp,r,g,ep2,alvl,Rm,ep
-    use thrm, only          : rslf
-    use mpi_interface, only : appl_abort, myid
+    USE defs, ONLY          : p00,p00i,cp,cpr,rcp,r,g,ep2,alvl,Rm,ep
+    USE thrm, ONLY          : rslf
+    USE mpi_interface, ONLY : appl_abort, myid
 
-    implicit none
+    IMPLICIT NONE
 
-    integer :: k, iterate
-    real    :: tavg, zold2, zold1, x1, xx, yy, zz, til
-    character (len=245) :: fm0 = &
+    INTEGER :: k, iterate
+    REAL    :: tavg, zold2, zold1, x1, xx, yy, zz, til
+    CHARACTER (len=245) :: fm0 = &
          "(/,' -------------------------------------------------',/,"       //&
          "'  Sounding Input: ',//,7x,'ps',9x,'hs',7x,'ts',6x ,'thds',6x," // &
          "'us',7x,'vs',7x,'rts',5x,'rel hum',/,6x,'(Pa)',7X,'(m)',6X,'(K)'"// &
          ",6X,'(K)',6X,'(m/s)',4X,'(m/s)',3X,'(kg/kg)',5X,'(%)',/,1x/)"
-    character (len=36) :: fm1 = "(f11.1,f10.1,2f9.2,2f9.2,f10.5,f9.1)"
+    CHARACTER (len=36) :: fm1 = "(f11.1,f10.1,2f9.2,2f9.2,f10.5,f9.1)"
     !
     ! arrange the input sounding
     !
-    if (ps(1) == 0.) then
-       open (1,file='sound_in',status='old',form='formatted')
-       do ns=1,nns
-          read (1,*,end=100) ps(ns),ts(ns),rts(ns),us(ns),vs(ns)
-       end do
-       close (1)
-    end if
-100 continue
+    IF (ps(1) == 0.) THEN
+       OPEN(1,file='sound_in',status='old',form='formatted')
+       DO ns=1,nns
+          READ(1,*,end=100) ps(ns),ts(ns),rts(ns),us(ns),vs(ns)
+       END DO
+       CLOSE(1)
+    END IF
+100 CONTINUE
 
     zold1 = 0.
     zold2 = 0.
 
     ns=1
-    do while (ps(ns) /= 0. .and. ns <= nns)
+    DO WHILE (ps(ns) /= 0. .AND. ns <= nns)
        !
-       ! filling relative humidity array only accepts sounding in mixing
+       ! filling relative humidity array ONLY accepts sounding in mixing
        ! ratio (g/kg) converts to (kg/kg)
        !
        rts(ns)=rts(ns)*1.e-3
@@ -362,16 +362,16 @@ contains
        ! ipsflg = 0 :pressure in millibars
        ! 1 :pressure array is height in meters (ps(1) is surface pressure)
        !
-       select case (ipsflg)
-       case (0)
+       SELECT CASE (ipsflg)
+       CASE (0)
           ps(ns)=ps(ns)*100.
-       case default
+       CASE DEFAULT
           xs(ns)=(1.+ep2*rts(ns))
-          if (ns == 1)then
+          IF (ns == 1)then
              ps(ns)=ps(ns)*100.
              zold2=0.
              hs(1) = 0.
-          else
+          ELSE
              hs(ns) = ps(ns)
              zold1=zold2
              zold2=ps(ns)
@@ -381,74 +381,74 @@ contains
              ELSE
                 ! ts=T [K]
                 tavg=0.5*(ts(ns)*xs(ns)+ts(ns-1)*xs(ns-1))
-             ENDIF
+             END IF
              ps(ns)=(ps(ns-1)**rcp-g*(zold2-zold1)*(p00**rcp)/(cp*tavg))**cpr
-          end if
-       end select
+          END IF
+       END SELECT
        !
        ! filling temperature array:
        ! itsflg = 0 :potential temperature in kelvin
        !          1 :liquid water potential temperature in kelvin
        !          2 :temperature
        !
-       select case (itsflg)
-       case (0)
+       SELECT CASE (itsflg)
+       CASE (0)
           tks(ns)=ts(ns)*(ps(ns)*p00i)**rcp
-       case (1)
+       CASE (1)
           til=ts(ns)*(ps(ns)*p00i)**rcp
           xx=til
           yy=rslf(ps(ns),xx)
           zz=max(rts(ns)-yy,0.)
-          if (zz > 0.) then
-             do iterate=1,3
+          IF (zz > 0.) THEN
+             DO iterate=1,3
                 x1=alvl/(cp*xx)
                 xx=xx - (xx - til*(1.+x1*zz))/(1. + x1*til                &
                      *(zz/xx+(1.+yy*ep)*yy*alvl/(Rm*xx*xx)))
                 yy=rslf(ps(ns),xx)
                 zz=max(rts(ns)-yy,0.)
-             enddo
-          endif
+             END DO
+          END IF
           tks(ns)=xx
-       case (2)
-          tks(ns) = ts(ns) ! a long way of saying do nothing
-       case default
-          if (myid == 0) print *, '  ABORTING: itsflg not supported'
-          call appl_abort(0)
-       end select
+       CASE (2)
+          tks(ns) = ts(ns) ! a long way of saying DO nothing
+       CASE DEFAULT
+          IF (myid == 0) PRINT *, '  ABORTING: itsflg not supported'
+          CALL appl_abort(0)
+       END SELECT
        ns = ns+1
-    end do
+    END DO
     ns=ns-1
     !
     ! compute height levels of input sounding.
     !
-    if (ipsflg == 0) then
-       do k=2,ns
+    IF (ipsflg == 0) THEN
+       DO k=2,ns
           hs(k)=hs(k-1)-r*.5 *(tks(k)*(1.+ep2*rts(k))                      &
                +tks(k-1)*(1.+ep2*rts(k-1)))*(log(ps(k))-log(ps(k-1)))/g
-       end do
-    end if
+       END DO
+    END IF
 
-    if (hs(ns) < zt(nzp)) then
-       if (myid == 0) print *, '  ABORTING: Model top above sounding top'
-       if (myid == 0) print '(2F12.2)', hs(ns), zt(nzp)
-       call appl_abort(0)
-    end if
+    IF (hs(ns) < zt(nzp)) THEN
+       IF (myid == 0) PRINT *, '  ABORTING: Model top above sounding top'
+       IF (myid == 0) PRINT '(2F12.2)', hs(ns), zt(nzp)
+       CALL appl_abort(0)
+    END IF
 
-    do k=1,ns
+    DO k=1,ns
        thds(k)=tks(k)*(p00/ps(k))**rcp
-    end do
+    END DO
 
-    do k=1,ns
+    DO k=1,ns
        xs(k)=100.*rts(k)/rslf(ps(k),tks(k))
-    end do
+    END DO
 
-    if(myid == 0) then
-       write(6,fm0)
-       write(6,fm1)(ps(k),hs(k),tks(k),thds(k),us(k),vs(k),rts(k),xs(k),k=1,ns)
-    endif
+    IF(myid == 0) THEN
+       WRITE(6,fm0)
+       WRITE(6,fm1)(ps(k),hs(k),tks(k),thds(k),us(k),vs(k),rts(k),xs(k),k=1,ns)
+    END IF
 
-    return
-  end subroutine arrsnd
+    RETURN
+  END SUBROUTINE arrsnd
   !
   !----------------------------------------------------------------------
   ! BASIC_STATE: This routine computes the basic state values
@@ -456,17 +456,17 @@ contains
   ! temperature is assumed to be a the volume weighted average value of
   ! the sounding
   !
-  subroutine basic_state
+  SUBROUTINE basic_state
 
-    use defs, only : cp, rcp, cpr, r, g, p00, p00i, ep2
-    use mpi_interface, only : myid
+    USE defs, ONLY : cp, rcp, cpr, r, g, p00, p00i, ep2
+    USE mpi_interface, ONLY : myid
 
-    implicit none
+    IMPLICIT NONE
 
-    integer k
-    real :: v1da(nzp), v1db(nzp), v1dc(nzp), exner
+    INTEGER k
+    REAL :: v1da(nzp), v1db(nzp), v1dc(nzp), exner
 
-    character (len=305) :: fmt =  &
+    CHARACTER (len=305) :: fmt =  &
          "(/,' -------------------------------------------------',/,"     //&
          "'  Basic State: ',//,4X,'Z',6X,'U0',6X,'V0',6X,'DN0',6X,' P0'"   //&
          ",6X,'PRESS',4X,'TH0',6X,'THV',5X,'RT0',/,3X,'(m)',5X,'(m/s)'"     //&
@@ -475,98 +475,98 @@ contains
 
     !
 
-    call htint(ns,thds,hs,nzp,th0,zt)
-    call htint(ns,us,hs,nzp,u0,zt)
-    call htint(ns,vs,hs,nzp,v0,zt)
+    CALL htint(ns,thds,hs,nzp,th0,zt)
+    CALL htint(ns,us,hs,nzp,u0,zt)
+    CALL htint(ns,vs,hs,nzp,v0,zt)
 
-    if (level >= 1) then
-       call htint(ns,rts,hs,nzp,rt0,zt)
+    IF (level >= 1) THEN
+       CALL htint(ns,rts,hs,nzp,rt0,zt)
        rt0(1)=rt0(2)
-    else
-       do k=1,nzp
+    ELSE
+       DO k=1,nzp
           rt0(k)=0.
-       end do
-    end if
+       END DO
+    END IF
     !
     ! calculate theta_v for an unsaturated layer, neglecting condensate here is
-    ! okay as this is only used for the first estimate of pi1, which will be
+    ! okay as this is ONLY used for the first estimate of pi1, which will be
     ! updated in a consistent manner on the first dynamic timestep
     !
-    do k=1,nzp
+    DO k=1,nzp
        v1dc(k)=th0(k) * (1.+ep2*rt0(k)) ! theta_v assuming unsaturated
-    end do
+    END DO
     !
     ! calculate pressure for actual initial state
     !
     pi1(1)=cp*(ps(1)*p00i)**rcp+g*(hs(1)-zt(1))/v1dc(1)
-    do k=2,nzp
+    DO k=2,nzp
        pi1(k) = pi1(k-1)-g/(dzm(k-1)*0.5*(v1dc(k)+v1dc(k-1)))
-    end do
+    END DO
     !
-    ! calculate hydrostatic exner function associated with th00 constant along
+    ! calculate hydrostatic exner FUNCTION associated with th00 constant along
     ! with associated basic state density
     !
     pi0(1)=cp*(ps(1)*p00i)**rcp + g*(hs(1)-zt(1))/th00
     dn0(1)=((cp**(1.-cpr))*p00)/(r*th00*pi0(1)**(1.-cpr))
-    do k=2,nzp
+    DO k=2,nzp
        pi0(k)=pi0(1) + g*(zt(1) - zt(k))/th00
        dn0(k)=((cp**(1.-cpr))*p00)/(r*th00*pi0(k)**(1.-cpr))
        u0(k)=u0(k)-umean
        v0(k)=v0(k)-vmean
-    end do
+    END DO
     !
     ! define pi1 as the difference between pi associated with th0 and pi
     ! associated with th00, thus satisfying pi1+pi0 = pi = cp*(p/p00)**(R/cp)
     !
-    do k=1,nzp
+    DO k=1,nzp
        pi1(k) = pi1(k)-pi0(k)
-    end do
+    END DO
     !
-    do k=1,nzp
+    DO k=1,nzp
        exner = (pi0(k) + pi1(k))/cp
        v1db(k)=p00*(exner)**cpr      ! pressure
        v1da(k)=p00*(pi0(k)/cp)**cpr  ! pressure associated with pi0
-    end do
+    END DO
 
     u0(1) = u0(2)
     v0(1) = v0(2)
     psrf  = ps(1)
 
-    if(myid == 0) write (*,fmt) (zt(k),u0(k),v0(k),dn0(k),v1da(k),v1db(k), &
+    IF(myid == 0) WRITE(*,fmt) (zt(k),u0(k),v0(k),dn0(k),v1da(k),v1db(k), &
          th0(k),v1dc(k),rt0(k)*1000.,k=1,nzp)
 
-    return
-  end subroutine basic_state
+    RETURN
+  END SUBROUTINE basic_state
   !
   !---------------------------------------------------------------------
   ! HTINT: Height interpolation of field on one grid, to field on another
   !
-  subroutine htint(na,xa,za,nb,xb,zb)
+  SUBROUTINE htint(na,xa,za,nb,xb,zb)
 
-    implicit none
-    integer, intent (in) :: na, nb
-    real, intent (in)    :: xa(na),za(na),zb(nb)
-    real, intent (out)   :: xb(nb)
+    IMPLICIT NONE
+    INTEGER, INTENT (in) :: na, nb
+    REAL, INTENT (in)    :: xa(na),za(na),zb(nb)
+    REAL, INTENT (out)   :: xb(nb)
 
-    integer :: l, k
-    real    :: wt
+    INTEGER :: l, k
+    REAL    :: wt
 
     l = 1
-    do k=1,nb
-       if (zb(k) <= za(na)) then
-          do while ( zb(k) > za(l+1) .and. l < na)
+    DO k=1,nb
+       IF (zb(k) <= za(na)) THEN
+          DO WHILE ( zb(k) > za(l+1) .AND. l < na)
              l=l+1
-          end do
+          END DO
           wt=(zb(k)-za(l))/(za(l+1)-za(l))
           xb(k)=xa(l)+(xa(l+1)-xa(l))*wt
-       else
+       ELSE
           wt=(zb(k)-za(na))/(za(na-1)-za(na))
           xb(k)=xa(na)+(xa(na-1)-xa(na))*wt
-       end if
-    end do
+       END IF
+    END DO
 
-    return
-  end subroutine htint
+    RETURN
+  END SUBROUTINE htint
   !
   ! -----------------------------------------------------------------------
   ! HTINT2d: Same as HTINT but for 2d variables
@@ -574,131 +574,131 @@ contains
   SUBROUTINE htint2d(na,xa,za,nb,xb,zb,nx)
     IMPLICIT NONE
 
-    integer, intent (in) :: na, nb, nx
-    real, intent (in)    :: xa(na,nx),za(na),zb(nb)
-    real, intent (out)   :: xb(nb,nx)
+    INTEGER, INTENT (in) :: na, nb, nx
+    REAL, INTENT (in)    :: xa(na,nx),za(na),zb(nb)
+    REAL, INTENT (out)   :: xb(nb,nx)
 
-    integer :: l, k, i
-    real    :: wt
+    INTEGER :: l, k, i
+    REAL    :: wt
 
-    do i=1,nx
+    DO i=1,nx
        l = 1
-       do k = 1,nb
-          if (zb(k) <= za(na)) then
-             do while ( zb(k) > za(l+1) .and. l < na)
+       DO k = 1,nb
+          IF (zb(k) <= za(na)) THEN
+             DO WHILE ( zb(k) > za(l+1) .AND. l < na)
                 l=l+1
-             end do
+             END DO
              wt=(zb(k)-za(l))/(za(l+1)-za(l))
              xb(k,i)=xa(l,i)+(xa(l+1,i)-xa(l,i))*wt
-          else
+          ELSE
              wt=(zb(k)-za(na))/(za(na-1)-za(na))
              xb(k,i)=xa(na,i)+(xa(na-1,i)-xa(na,i))*wt
-          end if
-       end do
-    end do
+          END IF
+       END DO
+    END DO
 
   END SUBROUTINE htint2d
 
 
   !
   !----------------------------------------------------------------------
-  ! HSTART:  This subroutine reads a history file and does
+  ! HSTART:  This SUBROUTINE reads a history file and does
   ! a history start
   !
-  subroutine hstart
+  SUBROUTINE hstart
 
-    use step, only : time
-    use mpi_interface, only : myid
+    USE step, ONLY : time
+    USE mpi_interface, ONLY : myid
 
-    implicit none
+    IMPLICIT NONE
 
-    call read_hist(time, hfilin)
+    CALL read_hist(time, hfilin)
 
     dtlv=2.*dtl
     dtlt=dtl
 
-    if(myid == 0) &
-         print "(//' ',49('-')/,' ',/,' History read from: ',A60)",hfilin
+    IF(myid == 0) &
+         PRINT "(//' ',49('-')/,' ',/,' History read from: ',A60)",hfilin
 
-    return
-  end subroutine hstart
+    RETURN
+  END SUBROUTINE hstart
   !
   !----------------------------------------------------------------------
   ! RANDOM_PERT: initialize field between k=2 and kmx with a
   ! random perturbation of specified magnitude
   !
-  subroutine random_pert(n1,n2,n3,zt,fld,xmag,kmx)
+  SUBROUTINE random_pert(n1,n2,n3,zt,fld,xmag,kmx)
 
-    use mpi_interface, only :  nypg,nxpg,myid,wrxid,wryid,xoffset,yoffset, &
+    USE mpi_interface, ONLY :  nypg,nxpg,myid,wrxid,wryid,xoffset,yoffset, &
          double_scalar_par_sum
 
-    use util, only : sclrset
-    implicit none
+    USE util, ONLY : sclrset
+    IMPLICIT NONE
 
-    integer, intent(in) :: n1,n2,n3,kmx
-    real, intent(inout) :: fld(n1,n2,n3)
-    real, intent(in)    :: zt(n1),xmag(n1)
+    INTEGER, INTENT(in) :: n1,n2,n3,kmx
+    REAL, INTENT(inout) :: fld(n1,n2,n3)
+    REAL, INTENT(in)    :: zt(n1),xmag(n1)
 
-    real (kind=8) :: rand(3:n2-2,3:n3-2),  xx, xxl
-    real (kind=8), allocatable :: rand_temp(:,:)
+    REAL (kind=8) :: rand(3:n2-2,3:n3-2),  xx, xxl
+    REAL (kind=8), ALLOCATABLE :: rand_temp(:,:)
 
-    integer, dimension (:), allocatable :: seed
+    INTEGER, DIMENSION (:), ALLOCATABLE :: seed
 
-    integer :: i,j,k,n2g,n3g,isize
+    INTEGER :: i,j,k,n2g,n3g,isize
 
     rand=0.0
     ! seed must be a double precision odd whole number greater than
     ! or equal to 1.0 and less than 2**48.
 
-    call random_seed(size=isize)
-    allocate (seed(isize))
+    CALL random_seed(size=isize)
+    ALLOCATE (seed(isize))
     seed(:) = iseed
-    call random_seed(put=seed)
-    deallocate (seed)
+    CALL random_seed(put=seed)
+    deALLOCATE (seed)
     n2g = nxpg
     n3g = nypg
 
-    do k=2,kmx
-       allocate (rand_temp(3:n2g-2,3:n3g-2))
-       call random_number(rand_temp)
+    DO k=2,kmx
+       ALLOCATE (rand_temp(3:n2g-2,3:n3g-2))
+       CALL random_number(rand_temp)
        rand(3:n2-2, 3:n3-2)=rand_temp(3+xoffset(wrxid):n2+xoffset(wrxid)-2, &
             3+yoffset(wryid):n3+yoffset(wryid)-2)
-       deallocate (rand_temp)
+       deALLOCATE (rand_temp)
 
        xx = 0.
-       do j=3,n3-2
-          do i=3,n2-2
+       DO j=3,n3-2
+          DO i=3,n2-2
              fld(k,i,j) = fld(k,i,j) + rand(i,j)*xmag(k)
-          end do
-       end do
+          END DO
+       END DO
 
        xxl = xx
-       call double_scalar_par_sum(xxl,xx)
-       xx = xx/real((n2g-4)*(n3g-4))
+       CALL double_scalar_par_sum(xxl,xx)
+       xx = xx/REAL((n2g-4)*(n3g-4))
        fld(k,:,:)= fld(k,:,:) - xx
-    end do
+    END DO
 
-    if(myid == 0) then
-       print *
-       print *,'-------------------------------------------------'
-       print 600,zt(kmx),rand(3,3),xx
-       print *,'-------------------------------------------------'
-    endif
+    IF(myid == 0) THEN
+       PRINT *
+       PRINT *,'-------------------------------------------------'
+       PRINT 600,zt(kmx),rand(3,3),xx
+       PRINT *,'-------------------------------------------------'
+    END IF
 
-    call sclrset('cnst',n1,n2,n3,fld)
+    CALL sclrset('cnst',n1,n2,n3,fld)
 
-    return
+    RETURN
 
-600 format(2x,'Inserting random temperature perturbations',    &
+600 FORMAT(2x,'Inserting random temperature perturbations',    &
          /3x,'Below: ',F7.2,' meters;',                        &
          /3x,'with test value of: ',E12.5,                     &
          /3x,'and a magnitude of: ',E12.5)
-  end subroutine random_pert
+  END SUBROUTINE random_pert
 
 
   !
   !--------------------------------------------------------------------
-  ! CLDINIT: Apply the tendencies from the initialization call of SALSA
+  ! CLDINIT: Apply the tendencies from the initialization CALL of SALSA
   !          instantaneously to account for the basic state thermodynamics
   !          and microphysics.
   !
@@ -722,7 +722,7 @@ contains
              a_gaerop(k,i,j,:)  = MAX( a_gaerop(k,i,j,:)  + dtlt*a_gaerot(k,i,j,:), 0. )
              a_rp(k,i,j) = a_rp(k,i,j) + dtlt*a_rt(k,i,j)
 
-            IF(level < 5) cycle
+            IF(level < 5) CYCLE
 
              a_nicep(k,i,j,:)   = MAX( a_nicep(k,i,j,:)   + dtlt*a_nicet(k,i,j,:), 0. )
              a_nsnowp(k,i,j,:)  = MAX( a_nsnowp(k,i,j,:)  + dtlt*a_nsnowt(k,i,j,:), 0. )
@@ -744,9 +744,9 @@ contains
 
     ! Ice
     a_ri(:,:,:) = 0.
-    do bb = 1,nice
-        call DiagInitIce(bb)
-    end do
+    DO bb = 1,nice
+        CALL DiagInitIce(bb)
+    END DO
 
   END SUBROUTINE SALSAInit
   !-------------------------------------------
@@ -930,7 +930,7 @@ contains
 
     IMPLICIT NONE
     REAL :: core(nbins), nsect(1,1,nbins)             ! Size of the bin mid aerosol particle, local aerosol size dist
-    REAL :: pndist(nzp,nbins)                         ! Aerosol size dist as a function of height
+    REAL :: pndist(nzp,nbins)                         ! Aerosol size dist as a FUNCTION of height
     REAL :: pvf2a(nzp,nspec), pvf2b(nzp,nspec)        ! Mass distributions of aerosol species for a and b-bins
     REAL :: pnf2a(nzp)                                ! Number fraction for bins 2a
     REAL :: pvfOC1a(nzp)                              ! Mass distribution between SO4 and OC in 1a
@@ -999,12 +999,12 @@ contains
        CALL READ_AERO_INPUT(iso4,ioc,pndist,pvfOC1a,pvf2a,pvf2b,pnf2a)
 
     !
-    ! Uniform profiles based on NAMELIST parameters
+    ! Uniform profiles based on NAMELIST PARAMETERs
     ! ---------------------------------------------------------------------------------------------------
     ELSE IF (isdtyp == 0) THEN
 
        IF (ioc>0 .AND. iso4>0) THEN
-          ! Both are there, so use the given "massDistrA"
+          ! Both are there, so USE the given "massDistrA"
           pvfOC1a(:) = volDistA(ioc)/(volDistA(ioc)+volDistA(iso4)) ! Normalize
        ELSE IF (ioc>0) THEN
           ! Pure OC
@@ -1014,7 +1014,7 @@ contains
           pvfOC1a(:) = 0.0
        ELSE
           STOP 'Either OC or SO4 must be active for aerosol region 1a!'
-       ENDIF
+       END IF
 
        ! Mass fractions for species in a and b-bins
        DO ss = 1,nspec
@@ -1026,7 +1026,7 @@ contains
        pnf2a(:) = nf2a
        !
        ! Uniform aerosol size distribution with height.
-       ! Using distribution parameters (n, dpg and sigmag) from the SALSA namelist
+       ! Using distribution PARAMETERs (n, dpg and sigmag) from the SALSA namelist
        !
        ! Convert to SI
        n = n*1.e6
@@ -1059,7 +1059,7 @@ contains
 
              !
              ! b) Aerosol mass concentrations
-             ! bin regime 1, done here separately because of the SO4/OC convention
+             ! bin regime 1, done here separately becaUSE of the SO4/OC convention
              ! SO4
              IF (iso4 > 0) THEN
                 ss = (iso4-1)*nbins + in1a; ee = (iso4-1)*nbins + fn1a
@@ -1150,7 +1150,7 @@ contains
 !!! initialize liquid and ice cloud particles ie. move particle fractions from aerosol bins to liquid cloud and ice particle bins
 !!!
 
- ! ---------- Juha: This should be replaced ASAP with a physical treatment. Do NOT use for liquid clouds.
+ ! ---------- Juha: This should be replaced ASAP with a physical treatment. Do NOT USE for liquid clouds.
   SUBROUTINE liq_ice_init
 
     !USE mo_salsa_driver, ONLY : aero
@@ -1164,7 +1164,7 @@ contains
     REAL :: zumA, zumB, zumCumIce, zumCumLiq, &
             excessIce, excessLiq,excessFracIce,excessFracLiq
 
-    ! initialize liquid and ice only if it is determinded so in the namelist.salsa
+    ! initialize liquid and ice ONLY IF it is determinded so in the namelist.salsa
     IF(initliqice) THEN
         IF(level==4) THEN
             iceFracA = 0.0; iceFracB = 0.0;
@@ -1173,7 +1173,7 @@ contains
         DO k = 2,nzp  ! DONT PUT STUFF INSIDE THE GROUND
            DO j = 1,nyp
               DO i = 1,nxp
-                 IF (a_rh(k,i,j)<1.0  .or. a_temp(k,i,j) > 273.15) CYCLE
+                 IF (a_rh(k,i,j)<1.0  .OR. a_temp(k,i,j) > 273.15) CYCLE
                  zumA=sum(a_naerop(k,i,j,in2a:fn2a))
                  zumB=sum(a_naerop(k,i,j,in2b:fn2b))
 
@@ -1185,7 +1185,7 @@ contains
 
                  DO bb=fn2a,in2a,-1
 
-                    IF(a_temp(k,i,j) < 273.15 .and. zumCumIce<iceFracA*zumA .and. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice if it is cold enough
+                    IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce<iceFracA*zumA .AND. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice IF it is cold enough
 
                        excessIce =min(abs(zumCumIce-iceFracA*zumA),a_naerop(k,i,j,bb))
                        a_nicep(k,i,j,bb-3) = a_nicep(k,i,j,bb-3) + excessIce
@@ -1205,7 +1205,7 @@ contains
 
                     END IF
 
-                    IF (a_rh(k,i,j)>1.0 .and. zumCumLiq<liqFracA*zumA .and. a_naerop(k,i,j,bb)>10e-10) THEN
+                    IF (a_rh(k,i,j)>1.0 .AND. zumCumLiq<liqFracA*zumA .AND. a_naerop(k,i,j,bb)>10e-10) THEN
 
                        excessLiq =min(abs(zumCumLiq-liqFracA*zumA),a_naerop(k,i,j,bb))
                        a_ncloudp(k,i,j,bb-3) = a_ncloudp(k,i,j,bb-3) + excessLiq
@@ -1233,7 +1233,7 @@ contains
                 excessFracIce = 1.0
                 excessFracLiq = 1.0
                 DO bb=fn2b,in2b,-1
-                   IF(a_temp(k,i,j) < 273.15 .and. zumCumIce<iceFracB*zumB  .and. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice if it is cold enough
+                   IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce<iceFracB*zumB  .AND. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice IF it is cold enough
 
                       excessIce =min(abs(zumCumIce-iceFracB*zumB),a_naerop(k,i,j,bb))
                       a_nicep(k,i,j,bb-3) = a_nicep(k,i,j,bb-3) + excessIce
@@ -1253,7 +1253,7 @@ contains
                       END DO
                    END IF
 
-                   IF (a_rh(k,i,j)>1.0 .and. zumCumLiq<liqFracB*zumB .and. a_naerop(k,i,j,bb)>10e-10) THEN
+                   IF (a_rh(k,i,j)>1.0 .AND. zumCumLiq<liqFracB*zumB .AND. a_naerop(k,i,j,bb)>10e-10) THEN
 
                       excessLiq =min(abs(zumCumLiq-liqFracB*zumB),a_naerop(k,i,j,bb))
                       a_ncloudp(k,i,j,bb-3) = a_ncloudp(k,i,j,bb-3) + excessLiq
@@ -1321,7 +1321,7 @@ END SUBROUTINE liq_ice_init
   END SUBROUTINE setAeroMass
   !
   ! -------------------------------------------------------------------------
-  ! Reads vertical profiles of aerosol size distribution parameters, aerosol species volume fractions and
+  ! Reads vertical profiles of aerosol size distribution PARAMETERs, aerosol species volume fractions and
   ! number concentration fractions between a and b bins
   !
   SUBROUTINE READ_AERO_INPUT(piso4,pioc,ppndist,ppvfOC1a,ppvf2a,ppvf2b,ppnf2a)
@@ -1333,7 +1333,7 @@ END SUBROUTINE liq_ice_init
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: piso4,pioc
-    REAL, INTENT(out) :: ppndist(nzp,nbins)                   ! Aerosol size dist as a function of height
+    REAL, INTENT(out) :: ppndist(nzp,nbins)                   ! Aerosol size dist as a FUNCTION of height
     REAL, INTENT(out) :: ppvf2a(nzp,nspec), ppvf2b(nzp,nspec) ! Volume distributions of aerosol species for a and b-bins
     REAL, INTENT(out) :: ppnf2a(nzp)                          ! Number fraction for bins 2a
     REAL, INTENT(out) :: ppvfOC1a(nzp)                        ! Volume distribution between SO4 and OC in 1a
@@ -1362,7 +1362,7 @@ END SUBROUTINE liq_ice_init
     ! Open the input file
     IF (READ_NC) CALL open_aero_nc(ncid, nc_levs, nc_nspec, nc_nmod)
 
-    ! Check that the input dimensions are compatible with SALSA initialization
+    ! Check that the input DIMENSIONs are compatible with SALSA initialization
     ! ....
 
     ! Allocate input variables
@@ -1393,27 +1393,27 @@ END SUBROUTINE liq_ice_init
        CALL close_aero_nc(ncid)
     ELSE
        ! Read the profile data from a text file
-       open (11,file='aerosol_in',status='old',form='formatted')
-       do i=1,nc_levs
-          read (11,*,end=100) zlevs(i)
-          read (11,*,end=100) (zvolDistA(i,k),k=1,nspec) ! Note: reads just "nspec" values from the current line
-          read (11,*,end=100) (zvolDistB(i,k),k=1,nspec) ! -||-
-          read (11,*,end=100) (zn(i,k),k=1,nmod)
-          read (11,*,end=100) (zdpg(i,k),k=1,nmod)
-          read (11,*,end=100) (zsigmag(i,k),k=1,nmod)
-          read (11,*,end=100) znf2a(i)
-       end do
-100    continue
-       close (11)
+       OPEN(11,file='aerosol_in',status='old',form='formatted')
+       DO i=1,nc_levs
+          READ(11,*,end=100) zlevs(i)
+          READ(11,*,end=100) (zvolDistA(i,k),k=1,nspec) ! Note: reads just "nspec" values from the current line
+          READ(11,*,end=100) (zvolDistB(i,k),k=1,nspec) ! -||-
+          READ(11,*,end=100) (zn(i,k),k=1,nmod)
+          READ(11,*,end=100) (zdpg(i,k),k=1,nmod)
+          READ(11,*,end=100) (zsigmag(i,k),k=1,nmod)
+          READ(11,*,end=100) znf2a(i)
+       END DO
+100    CONTINUE
+       CLOSE(11)
        !
        ! The true number of altitude levels
        nc_levs=i-1
     END IF
     !
-    IF (zlevs(nc_levs)<zt(nzp)) then
-       if (myid == 0) print *, '  ABORTING: Model top above aerosol sounding top'
-       if (myid == 0) print '(2F12.2)', zlevs(nc_levs), zt(nzp)
-       call appl_abort(0)
+    IF (zlevs(nc_levs)<zt(nzp)) THEN
+       IF (myid == 0) PRINT *, '  ABORTING: Model top above aerosol sounding top'
+       IF (myid == 0) PRINT '(2F12.2)', zlevs(nc_levs), zt(nzp)
+       CALL appl_abort(0)
     END IF
 
     ! Convert to SI
@@ -1434,11 +1434,11 @@ END SUBROUTINE liq_ice_init
     CALL htint2d(nc_levs,znsect(1:nc_levs,:),zlevs(1:nc_levs),nzp,ppndist,zt,nbins)
     CALL htint(nc_levs,znf2a(1:nc_levs),zlevs(1:nc_levs),nzp,ppnf2a,zt)
 
-    ! Since 1a bins by SALSA convention can only contain SO4 or OC,
+    ! Since 1a bins by SALSA convention can ONLY contain SO4 or OC,
     ! get renormalized mass fractions.
     ! --------------------------------------------------------------
     IF (pioc>0 .AND. piso4>0) THEN
-       ! Both are there, so use the given "massDistrA"
+       ! Both are there, so USE the given "massDistrA"
        ppvfOC1a(:) = ppvf2a(:,pioc)/(ppvf2a(:,pioc)+ppvf2a(:,piso4)) ! Normalize
     ELSE IF (pioc>0) THEN
        ! Pure OC
@@ -1448,7 +1448,7 @@ END SUBROUTINE liq_ice_init
        ppvfOC1a(:) = 0.0
     ELSE
        STOP 'Either OC or SO4 must be active for aerosol region 1a!'
-    ENDIF
+    END IF
 
     DEALLOCATE( zlevs, zvolDistA, zvolDistB, znf2a, zn, zsigmag, zdpg, znsect, helper )
 
@@ -1484,4 +1484,4 @@ END SUBROUTINE liq_ice_init
 
 
 
-end module init
+END MODULE init

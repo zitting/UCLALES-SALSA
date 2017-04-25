@@ -1,13 +1,13 @@
 !c test
 !c---------------------------------------------------------------------
-!c SUBROUTINE FFT2DC: This routine computes the two dimensional 
-!c transform of a complex cubic array of square N and length NZ.
+!c SUBROUTINE FFT2DC: This routine computes the two DIMENSIONal 
+!c transform of a COMPLEXcubic array of square N and length NZ.
 !c FFT's are done for each square level for k=2->NZ inclusive.  The 
 !c first level is used as a scratch array for storing the transpose
 !c matrix for the second half of the transform.  The code uses
 !c Swartztrauber's fft routines.  ISGN=1 implies the backward 
 !c transform otherwise the forward transform is carried out, 
-!c normalization is done only on the backward transform
+!c normalization is done ONLY on the backward transform
 !c
       SUBROUTINE FFT2DC_ALT(N,NZ,A,WSAVE,ISGN)
 !c 
@@ -23,55 +23,55 @@
          DO K=2,NZ
             DO J=1,N
                CALL CFFTF(N,A(1,J,K),WSAVE)
-            ENDDO
+            END DO
 
             DO I=1,N-1
                DO J=I+1,N
                   A(I,J,1)=A(J,I,K) !transpose
                   A(J,I,K)=A(I,J,K)
                   A(I,J,K)=A(I,J,1)
-               ENDDO
-            ENDDO
+               END DO
+            END DO
             DO I=1,N
                CALL CFFTF(N,A(1,I,K),WSAVE)
-            ENDDO
-         ENDDO
+            END DO
+         END DO
       ELSE
          FACT=1./FLOAT(N)
          FACT=FACT*FACT
          DO K=2,NZ
             DO J=1,N
                CALL CFFTB(N,A(1,J,K),WSAVE)
-            ENDDO
+            END DO
             DO I=1,N
                DO J=1,N
                   A(I,J,1)=A(J,I,K)
-               ENDDO
-            ENDDO
+               END DO
+            END DO
             DO J=1,N
                CALL CFFTB(N,A(1,J,1),WSAVE)
-            ENDDO
+            END DO
             
             DO I=1,N
                DO J=1,N
                   A(I,J,K)=A(I,J,1)*FACT
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDIF
+               END DO
+            END DO
+         END DO
+      END IF
 
       RETURN
       END 
 !c
 !c---------------------------------------------------------------------
-!c SUBROUTINE FFT2DC: This routine computes the two dimensional 
-!c transform of a complex cubic array of square N and length NZ.
+!c SUBROUTINE FFT2DC: This routine computes the two DIMENSIONal 
+!c transform of a COMPLEXcubic array of square N and length NZ.
 !c FFT's are done for each square level for k=2->NZ inclusive.  The 
 !c first level is used as a scratch array for storing the transpose
 !c matrix for the second half of the transform.  The code uses
 !c Swartztrauber's fft routines.  ISGN=1 implies the backward 
 !c transform otherwise the forward transform is carried out, 
-!c normalization is done only on the backward transform
+!c normalization is done ONLY on the backward transform
 !c
       SUBROUTINE FFT2DC(N,NZ,A,WSAVE,ISGN)
 
@@ -85,54 +85,54 @@
          DO K=2,NZ
             DO J=1,N
                CALL CFFTF(N,A(1,J,K),WSAVE)
-            ENDDO
+            END DO
          
             DO I=1,N
                DO J=1,N
                   A(I,J,1)=A(J,I,K) !transpose
-               ENDDO
-            ENDDO
+               END DO
+            END DO
             DO J=1,N
                CALL CFFTF(N,A(1,J,1),WSAVE)
-            ENDDO
+            END DO
             DO I=1,N
                DO J=1,N
                   A(I,J,K)=A(J,I,1)
-               ENDDO
-            ENDDO
-         ENDDO
+               END DO
+            END DO
+         END DO
       ELSE
          FACT=1./FLOAT(N)
          FACT=FACT*FACT
          DO K=2,NZ
             DO J=1,N
                CALL CFFTB(N,A(1,J,K),WSAVE)
-            ENDDO
+            END DO
             DO I=1,N
                DO J=1,N
                   A(I,J,1)=A(J,I,K)
-               ENDDO
-            ENDDO
+               END DO
+            END DO
             DO J=1,N
                CALL CFFTB(N,A(1,J,1),WSAVE)
-            ENDDO
+            END DO
             DO I=1,N
                DO J=1,N
                   A(I,J,K)=A(J,I,1)*FACT
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDIF
+               END DO
+            END DO
+         END DO
+      END IF
 
       RETURN
       END 
 !c
 !c---------------------------------------------------------------------
 !c SUBROUTINE FFT1DC: This routine computes the fourier transform of 
-!c a complex N element vector defined at NZ levels, for levels 2 --> NZ
+!c a COMPLEXN element vector defined at NZ levels, for levels 2 --> NZ
 !c inclusive. FFT's are done using Swartztrauber's fft routines.  
 !c ISGN=1 implies the backward transform, otherwise the forward
-!c transform is carried out, normalization is done only on the backward
+!c transform is carried out, normalization is done ONLY on the backward
 !c transform
 !c
       SUBROUTINE FFT1DC(N,NZ,A,WSAVE,ISGN,FFTINI)
@@ -145,21 +145,21 @@
       IF(FFTINI .EQ. 1) THEN
          CALL CFFTI(N,WSAVE)
          FFTINI = 0
-      ENDIF
+      END IF
 
       IF(ISGN.NE.1)THEN
          DO K=1,NZ
             CALL CFFTF(N,A(1,K),WSAVE)
-         ENDDO
+         END DO
       ELSE
          FACT=1./FLOAT(N)
          DO K=1,NZ
             CALL CFFTB(N,A(1,K),WSAVE)
             DO I=1,N
                A(I,K)=A(I,K)*FACT
-            ENDDO
-         ENDDO
-      ENDIF
+            END DO
+         END DO
+      END IF
 
       RETURN
       END
