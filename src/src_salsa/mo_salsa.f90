@@ -1,7 +1,7 @@
 MODULE mo_salsa
 
   ! --------------------------------------------------------------------------
-  ! The SALSA subroutine
+  ! The SALSA SUBROUTINE
   !
   ! Modified for the new aerosol datatype,
   ! Juha Tonttila, FMI, 2014.
@@ -10,7 +10,7 @@ MODULE mo_salsa
 
   PRIVATE
 
-  ! -- subroutines
+  ! -- SUBROUTINEs
   PUBLIC :: salsa
 
 CONTAINS
@@ -22,9 +22,9 @@ CONTAINS
                    pice, psnow,                             &
                    pactd,    pw,    prtcl,level      )
 
-    USE mo_salsa_dynamics, only : coagulation, condensation
+    USE mo_salsa_dynamics, ONLY : coagulation, condensation
     USE mo_salsa_update, ONLY : distr_update
-    USE mo_salsa_cloud, only : cloud_activation, autoconv2, &
+    USE mo_salsa_cloud, ONLY : cloud_activation, autoconv2, &
               ice_immers_nucl,ice_hom_nucl,ice_het_nucl,ice_melt, &
               autosnow
 
@@ -51,9 +51,9 @@ CONTAINS
 
     IMPLICIT NONE
 
-    !-- Input parameters and variables --------------------------------------------------
+    !-- Input PARAMETERs and variables --------------------------------------------------
     INTEGER, INTENT(in) ::          &
-         kbdim,                     & ! dimension for arrays (='kbdim')
+         kbdim,                     & ! DIMENSION for arrays (='kbdim')
          klev                         ! number of vertical levels (='klev')
 
 

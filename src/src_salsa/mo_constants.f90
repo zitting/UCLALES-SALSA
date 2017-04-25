@@ -16,7 +16,7 @@ MODULE mo_constants
   REAL, PARAMETER :: als    = 2.8345e6      ! latent heat for sublimation in J/kg
   REAL, PARAMETER :: alf    = als-alv          ! latent heat for fusion in J/kg
 
-! Earth and earth orbit parameters
+! Earth and earth orbit PARAMETERs
   REAL, PARAMETER :: g     = 9.80665       ! gravity acceleration in m/s2
  
 END MODULE mo_constants

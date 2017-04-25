@@ -1,8 +1,8 @@
 !****************************************************************
 !*                                                            *
-!*   module MO_SALSA_PROPERTIES                                 *
+!*   MODULE MO_SALSA_PROPERTIES                                 *
 !*                                                              *
-!*   Contains subroutines and functions that are used           *
+!*   Contains SUBROUTINEs and functions that are used           *
 !*   to calculate particle properties during simulation         *
 !*                                                              *
 !****************************************************************
@@ -13,11 +13,11 @@ CONTAINS
 
   ! fxm: should sea salt form a solid particle when prh is very low
   !  (even though it could be mixed with e.g. sulphate)?
-  ! fxm: crashes if no sulphate or sea salt
-  ! fxm: do we really need to consider Kelvin effect for regime 2
+  ! fxm: crashes IF no sulphate or sea salt
+  ! fxm: do we REALly need to consider Kelvin effect for regime 2
   !********************************************************************
   !
-  ! subroutine WETSIZE()
+  ! SUBROUTINE WETSIZE()
   !
   !********************************************************************
   !
@@ -45,10 +45,10 @@ CONTAINS
   !     
   ! If sulphate and sea salt coexist in a particle,
   !   it is assumed that the Cl is replaced by sulphate;
-  !   thus only either sulphate + organics or sea salt + organics
+  !   thus ONLY either sulphate + organics or sea salt + organics
   !   is included in the calculation of soluble fraction.
   !
-  ! Molality parameterizations taken from table 1 of
+  ! Molality PARAMETERizations taken from table 1 of
   !  Tang: Mixed-salt aerosols of atmospheric importance,
   !   JGR, 102 (D2), 1883-1893 (1997)
   !
@@ -102,7 +102,7 @@ CONTAINS
 
     !-- input variables -------------
     INTEGER, INTENT(in) ::          &
-         kbdim,                     & ! dimension for arrays 
+         kbdim,                     & ! DIMENSION for arrays 
          klev                         ! number of vertical levels 
 
     REAL, INTENT(in) ::        &     
@@ -110,7 +110,7 @@ CONTAINS
          ptemp(kbdim,klev)           ! temperature [K]
 
     LOGICAL, INTENT(in) :: init  ! TRUE: Initialization call
-                                 ! FALSE: Normal runtime: update water content only for 1a
+                                 ! FALSE: Normal runtime: update water content ONLY for 1a
 
     !-- output variables -------------
     TYPE(t_section), INTENT(inout) :: paero(kbdim,klev,fn2b)     
@@ -214,7 +214,7 @@ CONTAINS
 
                 END DO
 
-                ! Instead of lwc, use the volume concentration of water from now on 
+                ! Instead of lwc, USE the volume concentration of water from now on 
                 ! (easy to convert...)
                 paero(ii,jj,kk)%volc(8) = zlwc/rhowa
                 
@@ -238,7 +238,7 @@ CONTAINS
     END DO
 
     !-- 2) Regime 2a: sulphate, OC, BC and sea salt ----------------------------
-    !                 This is done only for initialization call, otherwise the 
+    !                 This is done ONLY for initialization call, otherwise the 
     !                 water contents are computed via condensation
 
     IF (init) THEN
@@ -322,7 +322,7 @@ CONTAINS
                       
                    END DO
 
-                   ! Liquid water content; instead of LWC use the volume concentration
+                   ! Liquid water content; instead of LWC USE the volume concentration
                    !plwc(ii,jj,kk)=zlwc
                    paero(ii,jj,kk)%volc(8) = zlwc/rhowa
                    paero(ii,jj,kk)%dwet = zdwet
@@ -343,7 +343,7 @@ CONTAINS
   END SUBROUTINE equilibration
 
   ! Juha: It should not be necessary to do this since cloud water content is Always calculated via condensation equations
-  !               - This is done only for initialization call, otherwise the
+  !               - This is done ONLY for initialization call, otherwise the
   !                 water contents are computed via condensation
   !               - Not an equilibrium, but fixed droplet/ice diameter
   !               - Regimes 2a & 2b for ice and cloud droplets
@@ -363,7 +363,7 @@ CONTAINS
 
     !-- input variables -------------
     INTEGER, INTENT(in) ::          &
-         kbdim,                     & ! dimension for arrays
+         kbdim,                     & ! DIMENSION for arrays
          klev                         ! number of vertical levels
 
     !-- output variables -------------
@@ -387,7 +387,7 @@ CONTAINS
                    pcloud(ii,jj,kk)%dwet = pcloud(ii,jj,kk)%dmid
                    pcloud(ii,jj,kk)%core = pi6*pcloud(ii,jj,kk)%dmid**3
                 END IF
-            ENDDO
+            END DO
 
             ! Ice
             DO kk = iia%cur,fib%cur      ! size bin

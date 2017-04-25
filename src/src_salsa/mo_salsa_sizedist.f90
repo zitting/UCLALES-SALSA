@@ -18,7 +18,7 @@ CONTAINS
     INTEGER, PARAMETER :: nmod = 7
 
     INTEGER, INTENT(IN) ::          &
-         kbdim,                     & ! dimension for arrays
+         kbdim,                     & ! DIMENSION for arrays
          klev                         ! number of vertical levels
 
     REAL, INTENT(IN) ::         &

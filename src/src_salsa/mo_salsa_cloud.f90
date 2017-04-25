@@ -34,7 +34,7 @@ CONTAINS
 
     !-- Input and output variables ----------
     INTEGER, INTENT(IN) ::              &
-             kbdim,                     & ! dimension for arrays
+             kbdim,                     & ! DIMENSION for arrays
              klev                       ! number of vertical levels
 
     REAL, INTENT(in) ::             &
@@ -143,12 +143,12 @@ CONTAINS
   SUBROUTINE ActCloudBase(kbdim,klev,paero,pres,temp,w,pactd)
     ! Cloud base activation following:
     !
-    ! Abdul-Razzak et al: "A parameterization of aerosol activation -
+    ! Abdul-Razzak et al: "A PARAMETERization of aerosol activation -
     !                      3. Sectional representation"
     !                      J. Geophys. Res. 107, 10.1029/2001JD000483, 2002.
     !                      [Part 3]
     !
-    ! Abdul Razzak et al: "A parameterization of aerosol activation -
+    ! Abdul Razzak et al: "A PARAMETERization of aerosol activation -
     !                      1. Single aerosol type"
     !                      J. Geophys. Res. 103, 6123-6130, 1998.
     !                      [Part 1]
@@ -174,7 +174,7 @@ CONTAINS
 
     !-- Input and output variables ----------
     INTEGER, INTENT(IN) ::              &
-             kbdim,                     & ! dimension for arrays
+             kbdim,                     & ! DIMENSION for arrays
              klev                       ! number of vertical levels
 
     REAL, INTENT(in) ::             &
@@ -218,8 +218,8 @@ CONTAINS
              ntot,                      & ! total number conc of particles [#/m3]
              zdcrit(kbdim,klev,fn2b),   & ! critical diameter [m]
              zdcstar(kbdim,klev),                   & ! Critical diameter corresponding to Smax
-             zdcrhi(kbdim,klev,fn2b),   & ! Critical diameter at the high end of a bin
-             zdcrlo(kbdim,klev,fn2b),   & ! Critical diameter at the low end of a bin
+             zdcrhi(kbdim,klev,fn2b),   & ! Critical diameter at the high END of a bin
+             zdcrlo(kbdim,klev,fn2b),   & ! Critical diameter at the low END of a bin
              V,                         & ! updraft velocity [m/s]
              rref                       ! reference radius [m]
 
@@ -371,14 +371,14 @@ CONTAINS
 
   SUBROUTINE actInterst(kbdim,klev,paero,pcloud,prv,prs,temp)
     !
-    ! Activate interstitial aerosols if they've reached their critical size
+    ! Activate interstitial aerosols IF they've reached their critical size
     !
     ! 1. Formulate the profiles of Dwet within bins
     !      - Get the slopes between adjacent bin mids (known)
     !      - Interpolate Dwet to bin edges
     ! 2. Based on Dcrit and Dwet slopes, estimate the Ddry where Dwet becomes > Dcrit
     ! 3. Formulate the slopes for number concentration
-    ! 4. Use the Dry limits from (2) as the integration limits if they are defined
+    ! 4. USE the Dry limits from (2) as the integration limits IF they are defined
     !
     ! Note: insoluble species are not properly accounted for
     !
@@ -408,7 +408,7 @@ CONTAINS
     REAL :: Nact, Vact(8)        ! Helper variables for transferring the activated particles
 
     REAL :: Nmid, Nim1, Nip1     ! Bin number concentrations in current and adjacent bins
-    REAL :: dNmid, dNim1, dNip1  ! Density function value of the number distribution for current and adjacent bins
+    REAL :: dNmid, dNim1, dNip1  ! Density FUNCTION value of the number distribution for current and adjacent bins
 
     REAL :: Vmid, Vim1, Vip1     ! Dry particle volume in the middle of the bin
     REAL :: Vlo, Vhi             ! Dry particle volume scaled to bin edges
@@ -448,13 +448,13 @@ CONTAINS
              ELSE
                 ! b-bins
                 ab = icb%par + (cb-icb%cur)
-             ENDIF
+             END IF
              pactd(cb)%numc = 0.d0
              pactd(cb)%volc(:) =0.d0
              IF ( paero(ii,jj,ab)%numc < nlim) CYCLE
              intrange = .FALSE.
 
-             ! Define some parameters
+             ! Define some PARAMETERs
              Nmid = paero(ii,jj,ab)%numc     ! Number concentration at the current bin center
              Vwmid = SUM(paero(ii,jj,ab)%volc(:))/Nmid  ! Wet volume at the current bin center
              Vmid = SUM(paero(ii,jj,ab)%volc(1:7))/Nmid ! Dry volume at the current bin center
@@ -705,7 +705,7 @@ CONTAINS
                 ab = ica%par + (cb-ica%cur)
              ELSE
                 ab = icb%par + (cb-icb%cur)
-             ENDIF
+             END IF
 
              IF ( paero(ii,jj,ab)%numc < nlim) CYCLE
 
@@ -770,7 +770,7 @@ CONTAINS
 
              IF (zvcstar < Vmid) THEN
 
-                ! Use actual critical volume only in the critical bin, otherwise current bin limits
+                ! USE actual critical volume ONLY in the critical bin, otherwise current bin limits
                 zvcint = MAX(zvcstar, Vlo)
 
                 pactd(ii,jj,cb)%numc = (Nmid/Nnorm) * ( intgN(zs1,N01,zvcint,Vmid) + intgN(zs2,N02,Vmid,Vhi) )
@@ -782,7 +782,7 @@ CONTAINS
 
              ELSE IF (zvcstar >= Vmid) THEN
 
-                ! Use actual critical volume only in the critical bin, otherwise current bin limits
+                ! USE actual critical volume ONLY in the critical bin, otherwise current bin limits
                 zvcint = MIN(zvcstar,Vhi)
 
                 pactd(ii,jj,cb)%numc = (Nmid/Nnorm) * ( intgN(zs2,N02,zvcint,Vhi) )
@@ -835,7 +835,7 @@ CONTAINS
   !
   ! Uses a more straightforward method for converting cloud droplets to drizzle.
   ! Assume a lognormal cloud droplet distribution for each bin. Sigma_g is an adjustable
-  ! parameter and is set to 1.2 by default
+  ! PARAMETER and is set to 1.2 by default
   !
     
     USE mo_submctl, ONLY : t_section,   &
@@ -945,7 +945,7 @@ CONTAINS
 
     DO ii = 1,kbdim
         DO jj = 1,klev
-            if (ptemp(ii,jj) > 243. ) cycle
+            IF (ptemp(ii,jj) > 243. ) CYCLE
 
             ! Cloud droplets => ice
             DO kk = 1,ncld
@@ -1042,7 +1042,7 @@ CONTAINS
 
     DO ii = 1,kbdim
         DO jj = 1,klev
-            if (ptemp(ii,jj) > 243. ) cycle
+            IF (ptemp(ii,jj) > 243. ) CYCLE
 
             ! Aerosols
             DO kk = 1,fn2b
@@ -1142,10 +1142,10 @@ CONTAINS
     DO ii = 1,kbdim
        DO jj = 1,klev
           ! Decreasing & sub-zero temperatures required
-          if (ptt(ii,jj) > 0. .OR. ptemp(ii,jj)>273.15) cycle
+          IF (ptt(ii,jj) > 0. .OR. ptemp(ii,jj)>273.15) CYCLE
   
           Ts = 273.15-ptemp(ii,jj)
-          Temp_tend = ptt(ii,jj)
+          Temp_tEND = ptt(ii,jj)
 
           DO kk =1,nice
               IF (pcloud(ii,jj,kk)%numc<nlim) CYCLE
@@ -1204,7 +1204,7 @@ CONTAINS
   REAL FUNCTION calc_JHF(NL,temp) ! homogenous freezing !! Khovosrotyanov & Sassen 1998 [KS98] eq. (7)
 
     USE mo_submctl, ONLY : boltz, planck,surfi0,pi
-    REAL, intent(in) :: NL, & !  number of water molecules per unit volume of the liquid
+    REAL, INTENT(in) :: NL, & !  number of water molecules per unit volume of the liquid
                             temp
     REAL :: r_cr
 
@@ -1225,19 +1225,19 @@ CONTAINS
 
     calc_act_energy = 0.
 
-    select case(nucltype)
+    SELECT CASE(nucltype)
 
-        case('hom')
+        CASE('hom')
             ![KC00] p. 4084 beginning of chapter 3.2.
             calc_act_energy = 0.694e-12 * (1.000+ 0.027*(Tc+30.000)*exp(0.010*(Tc+30.000)))
-        case('het')
+        CASE('het')
             ! Pruppacher & Klett 1997 [PK97] eq. (3-22)
             a0 = 5.550
             a1 = -8.423e-3
             a2 = 6.384e-4
             a3 = 7.891e-6
             calc_act_energy = 4178.800*a0*exp(a1*Tc + a2*Tc**2 + a3*Tc**3)
-     end select
+     END SELECT
   END FUNCTION calc_act_energy
 
   ! ------------------------------------------------------------
@@ -1283,7 +1283,7 @@ CONTAINS
   REAL FUNCTION calc_r_g(sigma_is,prv,prs,temp) !! calculate ice germ radius [KC00]
 
     USE mo_submctl, ONLY : rhoic,rg,mwa
-    REAL, intent(in) :: sigma_is, prv, prs, temp
+    REAL, INTENT(in) :: sigma_is, prv, prs, temp
     REAL :: Late, epsi,temp00,GG,C
 
     Late = calc_Lefm(temp)
@@ -1301,7 +1301,7 @@ CONTAINS
   REAL FUNCTION calc_r_cr(temp) !! calculate ice embryo radius [KC00] !!check
     
     USE mo_submctl, ONLY : rhoic,surfi0
-    REAL, intent(in) :: temp
+    REAL, INTENT(in) :: temp
     REAL :: Late, temp00
 
     Late = calc_Lefm(temp)
@@ -1317,7 +1317,7 @@ CONTAINS
   ! Jacobson: Fundamentals of atmospheric modeling eq. (2.56)
   REAL FUNCTION calc_Lefm(temp) !! Latent heat of fusion !!check
     
-    REAL, intent(in) :: temp
+    REAL, INTENT(in) :: temp
     REAL :: Tc ! temperature in celsius degrees
     Tc = temp-273.15
     calc_Lefm = 2.83458e+6-Tc*(340.+10.46*Tc)
@@ -1326,9 +1326,9 @@ CONTAINS
 
   ! ------------------------------------------------------------
 
-  REAL function calc_temp00(temp) !!freezing point depression
+  REAL FUNCTION calc_temp00(temp) !!freezing point depression
     
-    REAL, intent(in) :: temp
+    REAL, INTENT(in) :: temp
 
     calc_temp00 = 273.15
 
@@ -1366,7 +1366,7 @@ CONTAINS
        DO jj = 1,klev
           ! Ice and snow melt when temperature above 273.15 K
           ! => should add the effect of freezing point depression
-          if (ptemp(ii,jj) <= 273.15 ) cycle
+          IF (ptemp(ii,jj) <= 273.15 ) CYCLE
 
           DO kk = 1,nice
               ! Ice => cloud water
@@ -1408,7 +1408,7 @@ CONTAINS
   !
   ! Uses a more straightforward method for converting cloud droplets to drizzle.
   ! Assume a lognormal cloud droplet distribution for each bin. Sigma_g is an adjustable
-  ! parameter and is set to 1.2 by default
+  ! PARAMETER and is set to 1.2 by default
   !
     
     USE mo_submctl, ONLY : t_section,   &

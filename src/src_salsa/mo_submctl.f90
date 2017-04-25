@@ -165,9 +165,9 @@ MODULE mo_submctl
                lsautosnow
     LOGICAL :: nlactiv     = .TRUE.,   & ! Cloud droplet activation
                lsactiv
-    LOGICAL :: nlactintst  = .TRUE.,   & ! Switch for interstitial activation: Use particle wet size determined by
+    LOGICAL :: nlactintst  = .TRUE.,   & ! Switch for interstitial activation: USE particle wet size determined by
                lsactintst                ! codensation equations and supersaturation directly from the host model
-    LOGICAL :: nlactbase   = .TRUE.,   & ! Switch for cloud base activation: Use the regular parameterized method
+    LOGICAL :: nlactbase   = .TRUE.,   & ! Switch for cloud base activation: USE the regular PARAMETERized method
                lsactbase                 ! for maximum supersaturation and cloud activation.
 
 
@@ -208,7 +208,7 @@ MODULE mo_submctl
   REAL :: act_coeff=1.e-7  ! activation coefficient
 
   ! RH Limit: used for initialization and spinup within SALSA to limit the water vapour mixing ratio.
-  ! Prevents unrealistically high RH in cloud activation and condensation procedures that is often assigned 
+  ! Prevents unREAListically high RH in cloud activation and condensation procedures that is often assigned 
   ! in the LES input files to immediately generate cloud. Given in %/100. 
   REAL :: rhlim = 1.20 
   
@@ -220,7 +220,7 @@ MODULE mo_submctl
   ! Volume fractions between aerosol species for A and B-bins
   REAL :: volDistA(maxspec) = (/1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
   REAL :: volDistB(maxspec) = (/0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0/)
-  ! Number fraction allocated to a-bins in regime 2 (b-bins will get 1-nf2a)
+  ! Number fraction ALLOCATEd to a-bins in regime 2 (b-bins will get 1-nf2a)
   REAL :: nf2a = 1.0
 
   ! Should not be necessary!
@@ -290,7 +290,7 @@ MODULE mo_submctl
                                     ! ccn dry radius. The first cloud droplet bin is taken to coincide 
                                     ! with the smallest full aerosol bin that conforms with this diameter
 
-  REAL, ALLOCATABLE :: aerobins(:),  &  ! These are just to deliver information about the bin diameters if the
+  REAL, ALLOCATABLE :: aerobins(:),  &  ! These are just to deliver information about the bin diameters IF the
                            cloudbins(:), &  ! host model needs it (lower limits).
                            precpbins(:), &
                            icebins(:), &

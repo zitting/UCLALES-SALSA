@@ -1,8 +1,8 @@
 !****************************************************************
 !*                                                              *
-!*   module MO_SALSA_INIT                                       *
+!*   MODULE MO_SALSA_INIT                                       *
 !*                                                              *
-!*   Contains subroutines and functions that are used           *
+!*   Contains SUBROUTINEs and functions that are used           *
 !*   to initialize the particle size grid and aerosol           *
 !*   processes                                                  *
 !*                                                              *
@@ -14,11 +14,11 @@ MODULE mo_salsa_init
 CONTAINS
 
   ! fxm: when dpmid is used for calculating coagulation coefficients
-  ! (only?), would it make more sense to use approximate wet radii
+  ! (ONLY?), would it make more sense to USE approximate wet radii
   ! e.g. for sea salt particles?
   !********************************************************************
   !
-  ! subroutine SET_SIZEBINS()
+  ! SUBROUTINE SET_SIZEBINS()
   !
   !********************************************************************
   !
@@ -43,7 +43,7 @@ CONTAINS
   ! Interface:
   ! ----------
   ! Called from model driver
-  ! (only at the beginning of simulation)
+  ! (ONLY at the beginning of simulation)
   !
   !
   ! Coded by:
@@ -98,8 +98,8 @@ CONTAINS
           ratio = reglim(2)/reglim(1)   ! section spacing
 
           DO cc = in1a,fn1a
-             aero(ii,jj,cc)%vlolim = pi6*(reglim(1)*ratio**(real(cc-1)/nbin(1)))**3
-             aero(ii,jj,cc)%vhilim = pi6*(reglim(1)*ratio**(real(cc)/nbin(1)))**3
+             aero(ii,jj,cc)%vlolim = pi6*(reglim(1)*ratio**(REAL(cc-1)/nbin(1)))**3
+             aero(ii,jj,cc)%vhilim = pi6*(reglim(1)*ratio**(REAL(cc)/nbin(1)))**3
              aero(ii,jj,cc)%dmid = ( (aero(ii,jj,cc)%vhilim + aero(ii,jj,cc)%vlolim) /  &
                                      (2.*pi6) )**(1./3.)
              aero(ii,jj,cc)%vratiohi = aero(ii,jj,cc)%vhilim/(pi6*aero(ii,jj,cc)%dmid**3)
@@ -115,8 +115,8 @@ CONTAINS
 
           DO dd = in2a,in2a+nbin2-1
              cc = dd - in2a
-             aero(ii,jj,dd)%vlolim = pi6*(reglim(2)*ratio**(real(cc)/nbin2))**3
-             aero(ii,jj,dd)%vhilim = pi6*(reglim(2)*ratio**(real(cc+1)/nbin2))**3
+             aero(ii,jj,dd)%vlolim = pi6*(reglim(2)*ratio**(REAL(cc)/nbin2))**3
+             aero(ii,jj,dd)%vhilim = pi6*(reglim(2)*ratio**(REAL(cc+1)/nbin2))**3
              aero(ii,jj,dd)%dmid = ( (aero(ii,jj,dd)%vhilim + aero(ii,jj,dd)%vlolim) /  &
                                      (2.*pi6) )**(1./3.)
              aero(ii,jj,dd)%vratiohi = aero(ii,jj,dd)%vhilim/(pi6*aero(ii,jj,dd)%dmid**3)
@@ -130,8 +130,8 @@ CONTAINS
           DO dd = in2a+nbin2,fn2a
              cc = dd - (fn2a-(nbin3-1))
 
-             aero(ii,jj,dd)%vlolim = pi6*(reglim(3)*ratio**(real(cc)/nbin3))**3
-             aero(ii,jj,dd)%vhilim = pi6*(reglim(3)*ratio**(real(cc+1)/nbin3))**3
+             aero(ii,jj,dd)%vlolim = pi6*(reglim(3)*ratio**(REAL(cc)/nbin3))**3
+             aero(ii,jj,dd)%vhilim = pi6*(reglim(3)*ratio**(REAL(cc+1)/nbin3))**3
              aero(ii,jj,dd)%dmid = ( (aero(ii,jj,dd)%vhilim + aero(ii,jj,dd)%vlolim) /  &
                                      (2.*pi6) )**(1./3.)
              aero(ii,jj,dd)%vratiohi = aero(ii,jj,dd)%vhilim/(pi6*aero(ii,jj,dd)%dmid**3)
@@ -158,7 +158,7 @@ CONTAINS
        END DO !ii
     END DO !!jj
 
-    ! Save bin limits to be delivered e.g. to host model if needed
+    ! Save bin limits to be delivered e.g. to host model IF needed
     ALLOCATE(aerobins(nbins))
     DO cc = 1,nbins
        aerobins(cc) = (aero(1,1,cc)%vlolim/pi6)**(1./3.)
@@ -173,7 +173,7 @@ CONTAINS
   ! SUBROUTINE set_cloudbins
   ! *******************************
   !
-  ! Setup of hydrometeor size bins similar to the subroutine *set_sizebins*
+  ! Setup of hydrometeor size bins similar to the SUBROUTINE *set_sizebins*
   !
   ! Juha Tonttila (FMI) 2014
   !
@@ -283,7 +283,7 @@ CONTAINS
           cloud(ii,jj,ica%cur:fcb%cur)%dwet = cloud(ii,jj,ica%cur:fcb%cur)%dmid
 
           ! Initialize the volume and number concentrations for clouds.
-          ! First "real" values are only obtained upon the first calculation
+          ! First "REAL" values are ONLY obtained upon the first calculation
           ! of the cloud droplet activation.
           DO cc = 1,8
              cloud(ii,jj,ica%cur:fcb%cur)%volc(cc) = 0.
@@ -319,7 +319,7 @@ CONTAINS
        END DO
     END DO
 
-    ! Save bin limits to be delivered e.g. to host model if needed
+    ! Save bin limits to be delivered e.g. to host model IF needed
     ALLOCATE(cloudbins(ncld))
     DO bb = 1,ncld
        cloudbins(bb) = (cloud(1,1,bb)%vlolim/pi6)**(1./3.)
@@ -339,7 +339,7 @@ CONTAINS
   ! SUBROUTINE set_icebins
   ! *******************************
   !
-  ! Setup of ice size bins similar to the subroutines *set_sizebins* & *set_cloudbins*
+  ! Setup of ice size bins similar to the SUBROUTINEs *set_sizebins* & *set_cloudbins*
   !
   ! Jaakko Ahola (FMI) 2015
   !
@@ -449,7 +449,7 @@ CONTAINS
           ice(ii,jj,iia%cur:fib%cur)%dwet = ice(ii,jj,iia%cur:fib%cur)%dmid
 
           ! Initialize the volume and number concentrations for ice.
-          ! First "real" values are only obtained upon the first calculation
+          ! First "REAL" values are ONLY obtained upon the first calculation
           ! of the cloud droplet activation. !!
 
           DO cc = 1,8
@@ -488,7 +488,7 @@ CONTAINS
        END DO
     END DO
 
-    ! Save bin limits to be delivered e.g. to host model if needed
+    ! Save bin limits to be delivered e.g. to host model IF needed
     ALLOCATE(icebins(nice))
     DO bb = 1,nice
        icebins(bb) = (ice(1,1,bb)%vlolim/pi6)**(1./3.)
@@ -510,7 +510,7 @@ CONTAINS
   ! SUBROUTINE define_salsa
   ! *************************
   !
-  ! Reads logical switches and aerosol/hydrometeor size bin definitions
+  ! Reads LOGICAL switches and aerosol/hydrometeor size bin definitions
   ! from a namelist.
   !
   ! Juha Tonttila (FMI) 2014
@@ -551,7 +551,7 @@ CONTAINS
 
 
     NAMELIST /salsa/  &
-         nldebug,     & ! switch for debug printing
+         nldebug,     & ! switch for debug PRINTing
          nlcoag,      & ! Coagulation master switch
          nlcgaa,      & ! Coagulation between aerosols
          nlcgcc,      & ! Collision-coalescence between cloud droplets
@@ -568,7 +568,7 @@ CONTAINS
          nlcgsi,      & ! Collection of ice by snow
          nlcgsp,      & ! Collection of precipitation by snow
          nlcgss,      & ! Collision-coalescence between snow particles
-         nlcnd,       & ! Switch for condensation subroutine
+         nlcnd,       & ! Switch for condensation SUBROUTINE
          nlcndgas,    & ! Condensation of precursor gases
          nlichom,     & ! Switch for homogeneous ice nucleation
          nlichet,     & ! Switch for heterogeneous ice nucleation
@@ -583,13 +583,13 @@ CONTAINS
          nlauto,        & ! Switch for autoconversion of cloud droplets to drizzle and rain
          nlautosnow,    & ! Switch for autoconversion of ice particles to snowing
          nlactiv,       & ! Master switch for cloud droplet activation
-         nlactbase,     & ! Switch for parameterized cloud base activation
+         nlactbase,     & ! Switch for PARAMETERized cloud base activation
          nlactintst,    & ! Switch for interstitial activation based on particle growth and host model S
          isdtyp,        & ! Type of initial size distribution: 0 - uniform; 1 - vertical profile, read from file
          reglim,        & ! Low/high diameter limits of the 2 aerosol size regimes (1d table with length 4)
          nbin,          & ! Number of bins used for each of the aerosol size regimes (1d table with length 2)
          dmincld,       & ! Minimum hydrometeor bin diameter: the lower limit of the smallest hydrometeor bin
-                          ! is set at or above. For now this is also the only way to control the number of
+                          ! is set at or above. For now this is also the ONLY way to control the number of
                           ! hydrometeor bins as they are assumed fully parallel with the aerosol bins.
                           ! Implementing different bin limits for hydromets than aerosols would require
                           ! somewhat extensive modification of the microphysical SALSA dynamics calculations
@@ -599,10 +599,10 @@ CONTAINS
          volDistA,      & ! Initial relative contribution [0-1] of each species to particle volume in a-bins. Must be
                           ! an array of length 7, with zero for unused species.
          volDistB,      & ! Same as above but for b-bins
-         nf2a,          & ! Number fraction of particles allocated to a-bins in regime 2. b-bins will get 1-nf2a
+         nf2a,          & ! Number fraction of particles ALLOCATEd to a-bins in regime 2. b-bins will get 1-nf2a
 
          ! ------------
-         ! -- Juha: These should eventually be replaced with physical processing !!!! Dont use for liquid clouds!
+         ! -- Juha: These should eventually be replaced with physical processing !!!! Dont USE for liquid clouds!
          initliqice,  & ! initialize ice and liquid cloud particles from aerosol bins
          liqFracA,      & ! fraction of aerosols that are activated to liquid cloud droplets in A bins
          iceFracA,      & ! fraction of aerosols that are activated to ice cloud particles in A bins
@@ -649,7 +649,7 @@ CONTAINS
 
     IMPLICIT NONE
 
-    ! Remember to call 'define_salsa' for namelist paramers before calling this subroutine!
+    ! Remember to CALL 'define_salsa' for namelist paramers before calling this SUBROUTINE!
 
     ! --1) Set derived indices
     nbin2 = 4
@@ -672,7 +672,7 @@ CONTAINS
     massacc = 1.
 
 
-    ! -- Aerosol tracers are allocated in *set_sizebins*
+    ! -- Aerosol tracers are ALLOCATEd in *set_sizebins*
     ! -- Hydrometeor tracer in *set_cloudbins*
 
     ! --3) Call other initialization routines
