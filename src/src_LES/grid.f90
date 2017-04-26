@@ -2094,7 +2094,7 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: nb ! Number of bins for current particle distribution
-    INTEGER, INTENT(in) :: zstr,zEND  ! Start and END index for averaging
+    INTEGER, INTENT(in) :: zstr,zEND  ! Start and end index for averaging
     REAL, INTENT(in) :: numc(nzp,nxp,nyp,nb)
     REAL, INTENT(in) :: ntot(nzp,nxp,nyp)
     REAL, INTENT(in) :: numlim

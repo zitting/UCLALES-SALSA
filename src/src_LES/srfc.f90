@@ -379,7 +379,7 @@ CONTAINS
   END SUBROUTINE surface
   !
   ! -------------------------------------------------------------------
-  ! GET_SWNDS: RETURNs surface winds valid at cell centers
+  ! GET_SWNDS: returns surface winds valid at cell centers
   !
   SUBROUTINE get_swnds(n1,n2,n3,usfc,vsfc,wspd,up,vp,umean,vmean)
 
@@ -404,7 +404,7 @@ CONTAINS
   END SUBROUTINE get_swnds
   !
   ! ----------------------------------------------------------------------
-  ! FUNCTION GET_USTAR:  RETURNs value of ustar using the below
+  ! FUNCTION GET_USTAR:  returns value of ustar using the below
   ! similarity functions and a specified buoyancy flux (bflx) given in
   ! kinematic units
   !
@@ -461,7 +461,7 @@ CONTAINS
   END FUNCTION diag_ustar
   !
   ! ----------------------------------------------------------------------
-  ! Subroutine srfcscls:  RETURNs scale values based on Businger/Dye
+  ! Subroutine srfcscls:  returns scale values based on Businger/Dye
   ! similarity functions.
   !
   ! phi_h (zeta > 0) =  Pr * (1 + ah * zeta)
@@ -566,7 +566,7 @@ CONTAINS
   END SUBROUTINE srfcscls
   !
   ! ----------------------------------------------------------------------
-  ! Subroutine: sfcflxs:  this routine RETURNs the surface fluxes based
+  ! Subroutine: sfcflxs:  this routine returns the surface fluxes based
   ! on manton-cotton algebraic surface layer equations.
   !
   SUBROUTINE sfcflxs(n2,n3,vk,ubar,u,v,xx,us,ts,rs,uw,vw,tw,rw,ww)

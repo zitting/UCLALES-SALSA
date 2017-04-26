@@ -225,9 +225,9 @@ MODULE radiation
     END SUBROUTINE d4stream
 
   ! ---------------------------------------------------------------------------
-  ! sets up the input data to extEND through an atmosphere of appreiciable
+  ! sets up the input data to extend through an atmosphere of appreiciable
   ! depth using a background souding specified as a parameter, match this to
-  ! the original sounding using p0 as this does not depEND on time and thus
+  ! the original sounding using p0 as this does not depend on time and thus
   ! allows us to recompute the same background matching after a history start
   !
   SUBROUTINE setup(background,n1,npts,nv1,nv,zp)
@@ -279,7 +279,7 @@ MODULE radiation
        dp1 = pb-pa
        dp2 = ptop - pb
        dp3 = zp(n1-1) - zp(n1)
-       IF (dp1 > 2.*dp2) k = k-1 ! first level is too close, blEND from prev
+       IF (dp1 > 2.*dp2) k = k-1 ! first level is too close, blend from prev
        npts  = k
        norig = k
        ptest = sp(k)

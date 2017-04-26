@@ -115,7 +115,7 @@ CONTAINS
          nxpart    ,       & ! whether partition in x direction?
          naddsc    ,       & ! Number of additional scalars
          savg_intvl,       & ! output statistics frequency
-         ssam_intvl,       & ! integral accumulate/ts PRINT frequency
+         ssam_intvl,       & ! integral accumulate/ts print frequency
          mcflg,            & ! Mass conservation stats flag
          csflg,            & ! Column statistics flag
          corflg , cntlat , & ! coriolis flag

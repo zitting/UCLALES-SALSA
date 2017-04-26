@@ -611,7 +611,7 @@ CONTAINS
   !
   ! -----------------------------------------------------------------------
   ! Subroutines set_cs_warm, cs_rem_set, cs_rem_save and set_cs_any:
-  ! WRITE(and compute) column average statistics
+  ! write (and compute) column average statistics
   !
   ! Save named data (already available)
   SUBROUTINE set_cs_any(n2,n3,r,nam)

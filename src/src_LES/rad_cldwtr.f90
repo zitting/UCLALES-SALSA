@@ -333,7 +333,7 @@ CONTAINS
   END SUBROUTINE cloud_grp
 
   ! ---------------------------------------------------------------------------
-  ! linear interpolation between two points, RETURNs indicies of the 
+  ! linear interpolation between two points, returns indicies of the
   ! interpolation points and weights
   !
   SUBROUTINE interpolate(x,ny,y,i1,i2,alpha)

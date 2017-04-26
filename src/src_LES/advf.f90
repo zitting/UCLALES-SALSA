@@ -53,7 +53,7 @@ CONTAINS
     END IF
     !
     ! loop through the scalar table, setting iscp and isct to the
-    ! appropriate scalar pointer and DO the advection, also add large
+    ! appropriate scalar pointer and do the advection, also add large
     ! scale subsidence.  Don't advect TKE here since it resides at a
     ! w-point
     !
