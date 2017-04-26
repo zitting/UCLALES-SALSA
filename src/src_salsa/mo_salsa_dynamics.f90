@@ -1141,11 +1141,14 @@ CONTAINS
          massacc,                   & ! mass accomodation coefficients in each bin
          n3,                        & ! number of molecules in one 3 nm particle [1]
          surfw0,                    & ! surface tension of water
-         surfi0                       ! surface tension of ice
+         surfi0,                    & ! surface tension of ice
+         grav,                      &
+         alv,                       & ! latent heat of vaporization
+         rv,                        & ! gas constant for water vapor
+         als                          ! latent heat of sublimation
 
     USE class_componentIndex, ONLY : ComponentIndex,IsUsed
 
-    USE mo_constants,      ONLY: g, avo, alv, rv, als
    IMPLICIT NONE
 
     !-- Input and output variables ----------
@@ -1505,8 +1508,9 @@ CONTAINS
                                massacc,avog,pstand,  &
                                in1a,in2a,  &
                                fn2b,            &
-                               lscndh2oae, lscndh2ocl, lscndh2oic
-    USE mo_constants, ONLY : alv, als  ! ice'n'snow
+                               lscndh2oae, lscndh2ocl, lscndh2oic, &
+                               alv, als  ! ice'n'snow
+
     USE mo_salsa_properties, ONLY : equilibration
     IMPLICIT NONE
 
@@ -2552,8 +2556,7 @@ CONTAINS
   !-------------------------------------------------
   REAL FUNCTION coagc(diam1,diam2,mass1,mass2,temp,pres,kernel)
 
-    USE mo_submctl, ONLY : pi, pi6, boltz, pstand, grav
-    USE mo_constants, ONLY : rd, amd
+    USE mo_submctl, ONLY : pi, pi6, boltz, pstand, grav, rd
 
     IMPLICIT NONE
 

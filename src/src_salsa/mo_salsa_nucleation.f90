@@ -528,7 +528,7 @@ CONTAINS
              zCoagS_x= MAX(1.e-20, sum(zK_x2*paero(ii,jj,:)%numc))  !            Coagulation sink for 3 nm cluster
 
              zm_para = LOG(zCoagS_x/zCoagS_c)/LOG(reglim(1)/zdcrit(ii,jj))
-             !-END of m-parater----------------------------------------------------------------------
+             !-End of m-parater----------------------------------------------------------------------
 
              zgamma= (((reglim(1)/zdcrit(ii,jj))**(zm_para+1.))-1.)/(zm_para+1.) ! Anttila et al. 2010, eq. 5
 

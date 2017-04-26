@@ -30,6 +30,8 @@ MODULE mo_submctl
 
   PUBLIC :: liqFracA, iceFracA, liqFracB, iceFracB
 
+  PUBLIC :: rd,rv,alv,als,alf
+
 
   PUBLIC :: nlcoag,                &
             nlcgaa,nlcgcc,nlcgpp,  &
@@ -358,6 +360,15 @@ MODULE mo_submctl
                                !
    n3 = 158.79               ! number of H2SO4 molecules in 3 nm cluster 
                                !  assuming d_sa = 5.54 ???     
+
+  ! Dry air and water vapour thermodynamic constants
+  REAL, PARAMETER ::     &
+      rd    = 287.05,    &        ! gas constant for dry air in J/K/kg
+      rv    = 461.51,    &        ! gas constant for water vapour in J/K/kg
+      alv    = 2.5008e6, &        ! latent heat for vaporisation in J/kg
+      als    = 2.8345e6, &        ! latent heat for sublimation in J/kg
+      alf    = als-alv            ! latent heat for fusion in J/kg
+
   !-- 4.3) Properties of condensing vapours
 
   REAL, PARAMETER :: & ! diameter of condensing molecule [m]
@@ -370,6 +381,7 @@ MODULE mo_submctl
        surfw0 = 0.073, & ! surface tension of pure water @ ~ 293 K [J/m2]
        surfi0 = 0.105, & ! surface tension of ice
        epsoc = 0.15     ! water uptake of organic material
+
 
   !-- 7) Parameters for cloud activation
 

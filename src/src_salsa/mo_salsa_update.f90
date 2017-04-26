@@ -91,10 +91,10 @@ CONTAINS
                    !-- volume ratio of the size bin
                    zVrat = paero(ii,jj,kk)%vhilim/paero(ii,jj,kk)%vlolim
                 
-                   !-- particle volume at the low END of the bin
+                   !-- particle volume at the low end of the bin
                    zVilo = 2.*zvpart/(1. + zVrat)
 
-                   !-- particle volume at the high END of the bin
+                   !-- particle volume at the high end of the bin
                    zVihi = zVrat * zVilo
                    
                    !-- volume in the grown bin which exceeds 
@@ -159,10 +159,10 @@ CONTAINS
                    !-- volume ratio of the size bin
                    zVrat = pcloud(ii,jj,kk)%vhilim/pcloud(ii,jj,kk)%vlolim
                 
-                   !-- particle volume at the low END of the bin
+                   !-- particle volume at the low end of the bin
                    zVilo = 2.*zvpart/(1. + zVrat)
 
-                   !-- particle volume at the high END of the bin
+                   !-- particle volume at the high end of the bin
                    zVihi = zVrat * zVilo
 
                    !-- Decreasing droplets
@@ -254,10 +254,10 @@ CONTAINS
                    !-- volume ratio of the size bin
                    zVrat = pprecp(ii,jj,kk)%vhilim/pprecp(ii,jj,kk)%vlolim
                 
-                   !-- particle volume at the low END of the bin
+                   !-- particle volume at the low end of the bin
                    zVilo = 2.*zvpart/(1. + zVrat)
 
-                   !-- particle volume at the high END of the bin
+                   !-- particle volume at the high end of the bin
                    zVihi = zVrat * zVilo
 
                    ! Calculate the threshold particle volume for decreasing
@@ -350,10 +350,10 @@ CONTAINS
                    !-- volume ratio of the size bin
                    zVrat = pice(ii,jj,kk)%vhilim/pice(ii,jj,kk)%vlolim
 
-                   !-- particle volume at the low END of the bin
+                   !-- particle volume at the low end of the bin
                    zVilo = 2.*zvpart/(1. + zVrat)
 
-                   !-- particle volume at the high END of the bin
+                   !-- particle volume at the high end of the bin
                    zVihi = zVrat * zVilo
 
                    !-- Decreasing droplets
@@ -444,10 +444,10 @@ CONTAINS
                    !-- volume ratio of the size bin
                    zVrat = psnow(ii,jj,kk)%vhilim/psnow(ii,jj,kk)%vlolim
 
-                   !-- particle volume at the low END of the bin
+                   !-- particle volume at the low end of the bin
                    zVilo = 2.*zvpart/(1. + zVrat)
 
-                   !-- particle volume at the high END of the bin
+                   !-- particle volume at the high end of the bin
                    zVihi = zVrat * zVilo
 
                    ! Calculate the threshold particle volume for decreasing

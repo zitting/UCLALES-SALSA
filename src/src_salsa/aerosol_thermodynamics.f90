@@ -114,7 +114,7 @@ CONTAINS
            !  Once the activity coefficients are obtained the vapour pressure can be easily calculated
            !  using tabulated equilibrium constants (referenced)
            !  This procedure differs from that of Zaveri et al (2005) in that it is not assumed one can carry
-           !  behaviour from binary mixtures in multicomponent systems. To this END we have fit the
+           !  behaviour from binary mixtures in multicomponent systems. To this end we have fit the
            ! 'interaction' parameters explicitly to a general inorganic equilibrium model (ADDEM - Topping et
            !  al 2005a,b). Such parameters take into account bisulphate ion dissociation and water content.
            !  This also allows us to consider one regime for all composition space, rather than defining

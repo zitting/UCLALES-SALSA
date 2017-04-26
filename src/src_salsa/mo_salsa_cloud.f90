@@ -157,7 +157,6 @@ CONTAINS
     ! Note: updates pactd, but does not change pcloud?
     ! Note: insoluble species are not properly accounted for
     !
-    USE mo_constants,   ONLY : g
 
     USE mo_submctl, ONLY :     &
          rg,                             & ! molar gas constant [J/(mol K)]
@@ -168,6 +167,7 @@ CONTAINS
          cpa, mair,                    & ! Air properties
          in1a,in2b,fn2a, fn2b,      & ! size regime bin indices
          t_section,                    & ! Data type for cloud/rain drops
+         grav,                      & ! Standard acceleration due to gravity
          ncld                               ! Total number of cloud bins
 
     IMPLICIT NONE
@@ -218,8 +218,8 @@ CONTAINS
              ntot,                      & ! total number conc of particles [#/m3]
              zdcrit(kbdim,klev,fn2b),   & ! critical diameter [m]
              zdcstar(kbdim,klev),                   & ! Critical diameter corresponding to Smax
-             zdcrhi(kbdim,klev,fn2b),   & ! Critical diameter at the high END of a bin
-             zdcrlo(kbdim,klev,fn2b),   & ! Critical diameter at the low END of a bin
+             zdcrhi(kbdim,klev,fn2b),   & ! Critical diameter at the high end of a bin
+             zdcrlo(kbdim,klev,fn2b),   & ! Critical diameter at the low end of a bin
              V,                         & ! updraft velocity [m/s]
              rref                       ! reference radius [m]
 
@@ -277,8 +277,8 @@ CONTAINS
                   exp(13.3185*a1-1.976*a1**2-0.6445*a1**3-0.1299*a1**4)
 
              !-- part 1, eq (11)
-             alpha = g*mwa*L/(cpa*rg*temp(ii,jj)**2)-                            &
-                  g*mair/(rg*temp(ii,jj))
+             alpha = grav*mwa*L/(cpa*rg*temp(ii,jj)**2)-                            &
+                  grav*mair/(rg*temp(ii,jj))
 
              !-- part 1, eq (12)
              gamma = rg*temp(ii,jj)/(ps*mwa) &
@@ -922,8 +922,9 @@ CONTAINS
                                rhoic,       &
                                planck,      &
                                pi,          &
-                               nlim, prlim
-    USE mo_constants, ONLY : rd, alf, avo
+                               nlim,        &
+                               prlim,       &
+                               rd, alf, avog
 
     IMPLICIT NONE
 
@@ -1021,8 +1022,8 @@ CONTAINS
                                rhoic,       &
                                pi6,         &
                                pi,          &
-                               nlim, prlim
-    USE mo_constants, ONLY : rd, alf, avo
+                               nlim, prlim,  &
+                               rd, alf, avog
 
     IMPLICIT NONE
 
@@ -1114,9 +1115,8 @@ CONTAINS
                                rhoic,       &
                                planck,      &
                                pi,          &
-                               nlim, prlim
-
-    USE mo_constants, ONLY : rd, alf, avo
+                               nlim, prlim, &
+                               rd, alf, avog
 
     IMPLICIT NONE
 
@@ -1347,8 +1347,8 @@ CONTAINS
                                nprc,        &
                                rhowa, rhoic, rhosn,      &
                                pi6,         &
-                               nlim, prlim
-    USE mo_constants, ONLY : rd
+                               nlim, prlim,  &
+                               rd
 
     IMPLICIT NONE
 
@@ -1415,8 +1415,8 @@ CONTAINS
                                nice,        &
                                nsnw,        &
                                rhosn, rhoic,       &
-                               prlim
-    USE mo_constants, ONLY : rd
+                               prlim,          &
+                               rd
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: kbdim,klev
