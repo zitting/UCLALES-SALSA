@@ -24,7 +24,7 @@ MODULE sgsm
   IMPLICIT NONE
 !
 ! setting the prandtl number to a value less than zero enforces an exponential
-! decay in its value as a FUNCTION of height from the surface with a scale
+! decay in its value as a function of height from the surface with a scale
 ! height of 100m.  This is the default
 !
 
@@ -60,14 +60,14 @@ CONTAINS
 
   !
   ! ---------------------------------------------------------------------
-  ! SUBROUTINE DIFFUSE: Driver for calculating sub-grid fluxes (thus it
-  ! includes CALL to surface routines)  Depending on value of ISGSTYP,
+  ! Subroutine DIFFUSE: Driver for calculating sub-grid fluxes (thus it
+  ! includes call to surface routines)  Depending on value of ISGSTYP,
   ! the model computes diffusivities based on smaorinsky equilibrium model
   ! or a subgrid tke model.
   !
   ! Modified for Level 4:
-  ! For water vapour: a_rv replaced by rx, which CONTAINS values
-  !                   a_rv IF level < 4 and a_rp IF level == 4.
+  ! For water vapour: a_rv replaced by rx, which contains values
+  !                   a_rv if level < 4 and a_rp if level == 4.
   !
   ! For total water amount: a_rp is replaced by rxt which is
   !                         similarly either a_rp (level < 4)
@@ -114,7 +114,7 @@ CONTAINS
 
     !
     ! the a_ut, a_wt, a_ut arrays are first used when the diffusive tendencies
-    ! are calculated and applied.  Until THEN USE them as scratch by
+    ! are calculated and applied.  Until then use them as scratch by
     ! associating them with scratch pointers (a-c)
     !
     CALL deform(nzp,nxp,nyp,dzm,dzt,dxi,dyi,a_up,a_vp,a_wp,a_tmp5,a_tmp6     &
@@ -133,7 +133,7 @@ CONTAINS
             ,dtlt)
     END SELECT
     !
-    ! DiffUSE momentum
+    ! Diffuse momentum
     !
     IF (sflg) CALL acc_tend(nzp,nxp,nyp,a_uc,a_vc,a_wc,a_ut,a_vt,a_wt         &
          ,sz4,sz5,sz6,1,'sgs')
@@ -163,7 +163,7 @@ CONTAINS
             ,2,'sgs')
     END IF
     !
-    ! DiffUSE scalars
+    ! Diffuse scalars
     !
     a_tt=0.
     DO n=1,nscl
@@ -197,8 +197,8 @@ CONTAINS
   END SUBROUTINE diffuse
   !
   ! ---------------------------------------------------------------------
-  ! SUBROUTINE deform: computes the components of the deviatoric strain
-  ! tensor, THEN computes s = du_i/dx_j(du_i/dx_j + du_j/dx_i) at a
+  ! Subroutine deform: computes the components of the deviatoric strain
+  ! tensor, then computes s = du_i/dx_j(du_i/dx_j + du_j/dx_i) at a
   ! thermo point, the dummy arrays are respectively:
   !
   ! sxz1 -> div;
@@ -275,7 +275,7 @@ CONTAINS
   END SUBROUTINE deform
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE smagor:  computes visc/diff, upon entering the routine
+  ! Subroutine smagor:  computes visc/diff, upon entering the routine
   ! kh is filled with s2 and ri is filled with N^2.  On statistical
   ! timsteps, SGS energy, dissipation, viscosity, diffusivity and
   ! lengthscales are stored.
@@ -355,7 +355,7 @@ CONTAINS
   END SUBROUTINE smagor
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE deardf:  computes visc/diff according to the prognostic
+  ! Subroutine deardf:  computes visc/diff according to the prognostic
   ! TKE formulation of Deardorff (1980). Also, forcing of TKE is
   ! calculated.  Lastly, on statistical timsteps, SGS energy, dissipation,
   ! viscosity, diffusivity and lengthscales are stored.
@@ -441,7 +441,7 @@ CONTAINS
   END SUBROUTINE deardf
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE solv_tke: solves for dissipation and diffusion of tke,
+  ! Subroutine solv_tke: solves for dissipation and diffusion of tke,
   ! using an implicit solver for vertical diffusion and dissipation
   !
   SUBROUTINE  solv_tke(n1,n2,n3,le,km,ep,et,dn0,dzm,dzt,dxi,dyi,dt)
@@ -508,9 +508,9 @@ CONTAINS
   END SUBROUTINE solv_tke
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE diff_prep: multiplies the strain components computed in
+  ! Subroutine diff_prep: multiplies the strain components computed in
   ! "deform" by the appropriately averaged value of km, in preperation
-  ! for USE by the diffusion routines
+  ! for use by the diffusion routines
   !
   SUBROUTINE  diff_prep(n1,n2,n3,s12,s22,s23,km)
 
@@ -541,7 +541,7 @@ CONTAINS
   END SUBROUTINE diff_prep
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE diff_upt: computes the diffusivity of velocities using
+  ! Subroutine diff_upt: computes the diffusivity of velocities using
   ! a tri-diagnonal solver in the vertical at a u point, the deformation
   ! tensor component d31 is passed in via the tendency array
   !
@@ -631,7 +631,7 @@ CONTAINS
   END SUBROUTINE diff_upt
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE diff_vpt: computes the diffusivity of velocities using
+  ! Subroutine diff_vpt: computes the diffusivity of velocities using
   ! a tri-diagnonal solver in the vertical at u or v pts depending on
   ! the values of ip and jp and the input arguments
   !
@@ -709,7 +709,7 @@ CONTAINS
   END SUBROUTINE diff_vpt
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE diff_wpt: computes the diffusivity of velocities at a
+  ! Subroutine diff_wpt: computes the diffusivity of velocities at a
   ! wpt
   !
   SUBROUTINE  diff_wpt(n1,n2,n3,dn0,dzm,dzt,dxi,dyi,dt,sflx,tflx,s23,km,w,u   &
@@ -797,7 +797,7 @@ CONTAINS
   END SUBROUTINE diff_wpt
   !
   ! -----------------------------------------------------------------------
-  ! SUBROUTINE diffsclr: computes the diffusivity of a scalar using
+  ! Subroutine diffsclr: computes the diffusivity of a scalar using
   ! a tri-diagnonal solver in the vertical
   !
   SUBROUTINE diffsclr(n1,n2,n3,dtlt,dxi,dyi,dzm,dzt,dn0,sflx,tflx,scp,xkh,sct &
@@ -811,7 +811,7 @@ CONTAINS
     REAL, INTENT(out)   :: flx(n1,n2,n3),sct(n1,n2,n3)
     !
     ! compute vertical diffusion matrix coefficients for scalars,
-    ! Coefficients need ONLY be calculated once and can be used repeatedly
+    ! Coefficients need only be calculated once and can be used repeatedly
     ! for other scalars
     !
     dti       = 1.0/dtlt

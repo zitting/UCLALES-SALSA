@@ -24,7 +24,7 @@ MODULE forc
   USE stat, ONLY : sflg
   IMPLICIT NONE
 
-  ! these are now all namelist PARAMETERs
+  ! these are now all namelist parameters
   CHARACTER (len=10) :: case_name = 'none'               
   CHARACTER (len=50) :: radsounding = 'datafiles/dsrt.lay'  ! Juha: Added so the radiation background sounding can be given
                                                             ! from the NAMELIST
@@ -37,7 +37,7 @@ MODULE forc
 CONTAINS
   !
   ! -------------------------------------------------------------------
-  ! SUBROUTINE forcings:  calls the appropriate large-scale forcings
+  ! Subroutine forcings:  calls the appropriate large-scale forcings
   !
   SUBROUTINE forcings(time_in, cntlat, sst)
 
@@ -79,7 +79,7 @@ CONTAINS
        ! Note, there's a slight discrepancy between lev 1-3 and lev 4 with a_rp
        ! (total water vs vapour): it perhaps doesn't make sence to change the
        ! tendency of condesated water due to subsidence in level4 and for level
-       ! 1-3 total mixing ratio is the ONLY prognostic water variable.
+       ! 1-3 total mixing ratio is the only prognostic water variable.
        ! -------------------------------------------------
        IF ( case_name /= 'none' ) THEN
           CALL case_forcing(nzp,nxp,nyp,zt,dzt,dzm,div,a_tp,a_rp,a_tt,a_rt)
@@ -110,7 +110,7 @@ CONTAINS
 
           IF (level <= 3) THEN
              znc(:,:,:) = CCN
-             zrc(:,:,:) = a_rc(:,:,:) ! Cloud water ONLY
+             zrc(:,:,:) = a_rc(:,:,:) ! Cloud water only
              IF (level == 3 .AND. RadPrecipBins > 0) THEN ! Add precipitation (all or nothing)
                 znc(:,:,:) = znc(:,:,:) + a_npp(:,:,:)
                 zrc(:,:,:) = zrc(:,:,:) + a_rpp(:,:,:)
@@ -167,7 +167,7 @@ CONTAINS
 
   !
   ! -------------------------------------------------------------------
-  ! SUBROUTINE gcss_rad:  CALL simple radiative PARAMETERization and 
+  ! Subroutine gcss_rad:  call simple radiative parameterization and
   ! simultaneously update fields due to vertical motion as given by div
   !
   SUBROUTINE gcss_rad(n1,n2,n3,xka,fr0,fr1,div,rc,dn0,flx,zt,zm,dzt,   &
@@ -223,7 +223,7 @@ CONTAINS
   END SUBROUTINE gcss_rad
   !
   ! -------------------------------------------------------------------
-  ! SUBROUTINE smoke_rad:  CALL simple radiative PARAMETERization for 
+  ! Subroutine smoke_rad:  call simple radiative parameterization for
   ! the smoke cloud
   !
   SUBROUTINE smoke_rad(n1,n2,n3,dn0,flx,zm,dzt,tt,rt)
@@ -258,7 +258,7 @@ CONTAINS
   END SUBROUTINE smoke_rad
   !
   ! -------------------------------------------------------------------
-  ! SUBROUTINE case_forcing: adjusts tendencies according to a specified
+  ! Subroutine case_forcing: adjusts tendencies according to a specified
   ! large scale forcing.  Normally CASE (run) specific.
   !
   SUBROUTINE case_forcing(n1,n2,n3,zt,dzt,dzm,zdiv,tl,rt,tt,rtt)
@@ -475,7 +475,7 @@ CONTAINS
   END SUBROUTINE case_forcing
   !
   ! -------------------------------------------------------------------
-  ! SUBROUTINE bellon_rad:  CALL simple radiative PARAMETERization
+  ! Subroutine bellon_rad:  call simple radiative parameterization
   !
   SUBROUTINE bellon(n1,n2,n3,flx,sflx,zt,dzt,dzm,tt,tl,rtt,rt, ut,u,vt,v)
 

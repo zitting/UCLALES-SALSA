@@ -29,7 +29,7 @@ MODULE prss
 CONTAINS
 !
 !----------------------------------------------------------------------
-! SUBROUTINE poisson: called by timesteping driver to invert the 
+! Subroutine poisson: called by timesteping driver to invert the 
 ! poisson equation for pressure and apply the velocity tendencies.
 !
   SUBROUTINE poisson
@@ -90,7 +90,7 @@ CONTAINS
 
   !
   ! --------------------------------------------------------------------
-  ! SUBROUTINE apl_tnd: applies tendencies to velocity field
+  ! Subroutine apl_tnd: applies tendencies to velocity field
   !
   SUBROUTINE apl_tnd(n1,n2,n3,u,v,w,ut,vt,wt,dtlt)
 
@@ -117,11 +117,11 @@ CONTAINS
   END SUBROUTINE apl_tnd
   !
   ! --------------------------------------------------------------------
-  ! SUBROUTINE poiss: called each timestep to evaluate the pressure
-  ! in accordance with the anelastic continuity equation, and THEN apply
-  ! the pressure to the velocity terms for three DIMENSIONal flow, 
+  ! Subroutine poiss: called each timestep to evaluate the pressure
+  ! in accordance with the anelastic continuity equation, and then apply
+  ! the pressure to the velocity terms for three dimensional flow,
   ! cyclic in x and y.  pp and pc are used as scratch arrays in the
-  ! CALL to trdprs.  pp is filled with its diagnostic value in fll_prs
+  ! call to trdprs.  pp is filled with its diagnostic value in fll_prs
   !
   SUBROUTINE poiss(n1,n2,n3,ix,iy,u,v,w,pp,pc,dn0,th00,dzt,dzm,dx,dy,  &
        dtlt,s1,wsvx,wsvy)
@@ -150,8 +150,8 @@ CONTAINS
   END SUBROUTINE poiss
   !
   ! --------------------------------------------------------------------
-  ! SUBROUTINE get_diverg: gets velocity divergence and puts it into
-  ! a COMPLEXvalue array for USE in pressure calculation
+  ! Subroutine get_diverg: gets velocity divergence and puts it into
+  ! a complexvalue array for use in pressure calculation
   !
   SUBROUTINE get_diverg(n1,n2,n3,ix,iy,s1,u,v,w,dn0,dz,dx,dy,dt,mxdiv)
 
@@ -195,7 +195,7 @@ CONTAINS
   END SUBROUTINE get_diverg
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE fll_prs: writes the pressure to the appropriate array
+  ! Subroutine fll_prs: writes the pressure to the appropriate array
   !
   SUBROUTINE fll_prs(n1,n2,n3,ix,iy,pp,s1)  
 
@@ -307,7 +307,7 @@ CONTAINS
   END SUBROUTINE trdprs
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE Prs_grd: apply the pressure gradient term
+  ! Subroutine Prs_grd: apply the pressure gradient term
   !
   SUBROUTINE prs_grd(n1,n2,n3,p,u,v,w,dz,dx,dy,dtlt)
 
@@ -330,7 +330,7 @@ CONTAINS
   END SUBROUTINE prs_grd
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE Prs_cor: correlate the pressure tendency with velocity
+  ! Subroutine Prs_cor: correlate the pressure tendency with velocity
   ! field for TKE budget
   !
   SUBROUTINE prs_cor(n1,n2,n3,p,u,v,w,dz,dx,dy,th00)
@@ -377,7 +377,7 @@ CONTAINS
   END SUBROUTINE prs_cor
   !
   ! --------------------------------------------------------------------
-  ! SUBROUTINE chk_tsplt
+  ! Subroutine chk_tsplt
   !
   SUBROUTINE chk_tsplt(n1,n2,n3,up,vp,wp,uc,vc,wc)
 
@@ -394,7 +394,7 @@ CONTAINS
   END SUBROUTINE chk_tsplt
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE Asselin:  Applies the asselin filter in two stages 
+  ! Subroutine Asselin:  Applies the asselin filter in two stages 
   ! depending on the value of iac
   !
   SUBROUTINE asselin(iac)
@@ -414,7 +414,7 @@ CONTAINS
   END SUBROUTINE asselin
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE predict:  This SUBROUTINE advances the leapfrog terms
+  ! Subroutine predict:  This subroutine advances the leapfrog terms
   ! in two stages.  It applies the filter equation:
   !
   !         a(n) = a(n) + eps * (a(n-1) - 2*a(n) + a(n+1))
@@ -422,9 +422,9 @@ CONTAINS
   ! the first stage of the filter applies all but the a(n+2) term.
   ! the second stage renames the variables and applies this term, i.e.,
   ! a(n+1) -> a(n), a(n+2) -> a(n+1).  Note that for iac=2 ap=a(n+2)
-  ! becaUSE the tendencies have been updated in pressure solver.  Durran,
+  ! because the tendencies have been updated in pressure solver.  Durran,
   ! in his text cites values of eps of 0.2 for convective cloud models, 
-  ! we seem to get by with eps=0.1, perhaps becaUSE of the coupling
+  ! we seem to get by with eps=0.1, perhaps because of the coupling
   ! provided by the staggered forward step.
   !
   SUBROUTINE predict(npts,ac,ap,iac,iflag)
@@ -450,7 +450,7 @@ CONTAINS
   END SUBROUTINE predict
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE Velocity_bcs: Applies boundary conditions on veolicities
+  ! Subroutine Velocity_bcs: Applies boundary conditions on veolicities
   !
   SUBROUTINE velocity_bcs
 

@@ -30,7 +30,7 @@ MODULE srfc
 
 ! Sami added ----->
 ! Initial values for surface properties
- ! REAL :: W1 = 0.9   !Water content      ... Definition in grid now becaUSE of restrat files
+ ! REAL :: W1 = 0.9   !Water content      ... Definition in grid now because of restrat files
  ! REAL :: W2 = 0.9
  ! REAL :: W3 = 0.9
 
@@ -56,13 +56,13 @@ CONTAINS
   ! SURFACE: Calcualtes surface fluxes using an algorithm chosen by ISFCLYR
   ! and fills the appropriate 2D arrays
   !
-  !     DEFAULT: specified thermo-fluxes (drtcon, dthcon)
+  !     default: specified thermo-fluxes (drtcon, dthcon)
   !     isfclyr=1: specified surface layer gradients (drtcon, dthcon)
   !     isfclyr=2: fixed lower boundary of water at certain sst
   !     isfclyr=3: bulk aerodynamic law with coefficeints (drtcon, dthcon)
   !
   ! Modified for level 4: a_rv replaced by a local variable rx, which has
-  ! values a_rv IF level < 4, and a_rp IF level == 4 (i.e. water vapour mixrat in both CASEs)
+  ! values a_rv if level < 4, and a_rp if level == 4 (i.e. water vapour mixrat in both cases)
   !
   ! Juha Tonttila, FMI, 2014
   !
@@ -283,7 +283,7 @@ CONTAINS
         W2 = W2+1./(thetaS2*D2)*(Q12-Q23)*dtl
         W3 = W3+1./(thetaS3*D3)*(Q23-Q3)*dtl
         !
-        !  Following is copied from CASE (2). No idea IF this is valid or not..
+        !  Following is copied from CASE (2). No idea if this is valid or not..
         !
 
         CALL get_swnds(nzp,nxp,nyp,usfc,vsfc,wspd,a_up,a_vp,umean,vmean)
@@ -461,7 +461,7 @@ CONTAINS
   END FUNCTION diag_ustar
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE srfcscls:  RETURNs scale values based on Businger/Dye
+  ! Subroutine srfcscls:  RETURNs scale values based on Businger/Dye
   ! similarity functions.
   !
   ! phi_h (zeta > 0) =  Pr * (1 + ah * zeta)
@@ -483,7 +483,7 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL, PARAMETER     :: ah   =  7.8   ! stability FUNCTION PARAMETER
+    REAL, PARAMETER     :: ah   =  7.8   ! stability function parameter
     REAL, PARAMETER     :: bh   = 12.0   !   "          "         "
     REAL, PARAMETER     :: am   =  4.8   !   "          "         "
     REAL, PARAMETER     :: bm   = 19.3   !   "          "         "
@@ -527,15 +527,15 @@ CONTAINS
              ustar(i,j) =  vonk*u(i,j)  /(lnz + am*zeta)
              tstar(i,j) = (vonk*dtv/(lnz + ah*zeta))/pr
              !
-             ! Neutral CASE
+             ! Neutral case
              !
           ELSE IF (dtv == 0.) THEN
              ustar =  vonk*u(i,j)  /lnz
              tstar =  vonk*dtv/(pr*lnz)
              !
-             ! ustable CASE, start iterations from values at previous tstep,
-             ! unless the sign has changed or IF it is the first call, THEN
-             ! USE neutral values.
+             ! ustable case, start iterations from values at previous tstep,
+             ! unless the sign has changed or if it is the first call, then
+             ! use neutral values.
              !
           ELSE
              IF (first_call .OR. tstar(i,j)*dtv <= 0.) THEN
@@ -566,7 +566,7 @@ CONTAINS
   END SUBROUTINE srfcscls
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE: sfcflxs:  this routine RETURNs the surface fluxes based
+  ! Subroutine: sfcflxs:  this routine RETURNs the surface fluxes based
   ! on manton-cotton algebraic surface layer equations.
   !
   SUBROUTINE sfcflxs(n2,n3,vk,ubar,u,v,xx,us,ts,rs,uw,vw,tw,rw,ww)

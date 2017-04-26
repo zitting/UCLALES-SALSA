@@ -33,7 +33,7 @@ MODULE fuliou
 CONTAINS
   !
   !---------------------------------------------------------------------------
-  ! SUBROUTINE rad_init initialize data arrays for gases, ice model and water
+  ! Subroutine rad_init initialize data arrays for gases, ice model and water
   ! model on first call
   !
   SUBROUTINE rad_init
@@ -58,13 +58,13 @@ CONTAINS
   END SUBROUTINE rad_init
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE set_random_offset is needed to generate true pseudorandom numbers for parallel runs
+  ! Subroutine set_random_offset is needed to generate true pseudorandom numbers for parallel runs
   SUBROUTINE set_random_offset(ioffset)
     IMPLICIT NONE
     INTEGER :: ioffset, i
     REAL :: randomNumber
 
-    ! Initialize random number generator, IF not yet initialized
+    ! Initialize random number generator, if not yet initialized
     IF (.NOT.Initialized) CALL rad_init
 
     ! Call randon mumbers
@@ -77,7 +77,7 @@ CONTAINS
   END SUBROUTINE set_random_offset
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE rad: Computes radiative fluxes using a band structure 
+  ! Subroutine rad: Computes radiative fluxes using a band structure 
   ! defined by input ckd file
   !
   SUBROUTINE rad (as, u0, ss, pts, ee, pp, pt, ph, po, fds, fus, fdir, fuir, &
@@ -119,7 +119,7 @@ CONTAINS
   END SUBROUTINE rad
 
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE rad_ir 
+  ! Subroutine rad_ir 
   ! Computes IR radiative fluxes using a band structure 
   ! defined by input ckd file
   !
@@ -179,11 +179,11 @@ CONTAINS
 
     IF (McICA) THEN
        !
-       ! SELECT a single band and g-point (ib, ig1) and USE these as the limits
+       ! Select a single band and g-point (ib, ig1) and use these as the limits
        !   in the loop through the spectrum below. 
        !
        CALL random_number(randomNumber)
-       CALL SELECT_bandg(ir_bands, bandweights, randomNumber, ib, ig1) 
+       CALL select_bandg(ir_bands, bandweights, randomNumber, ib, ig1) 
        ig2 = ig1
        iblimit = 1
     ELSE
@@ -248,7 +248,7 @@ CONTAINS
     fuir(:) = fuir(:) + fuq2
   END SUBROUTINE rad_ir
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE rad_vis: Computes radiative fluxes using a band structure 
+  ! Subroutine rad_vis: Computes radiative fluxes using a band structure 
   ! defined by input ckd file
   !
 
@@ -314,11 +314,11 @@ CONTAINS
   
       IF (McICA) THEN
          !
-         ! SELECT a single band and g-point (ib, ig1) and USE these as the 
+         ! Select a single band and g-point (ib, ig1) and use these as the
          ! limits in the loop through the spectrum below. 
          !
          CALL random_number(randomNumber)
-         CALL SELECT_bandg(solar_bands, bandweights, randomNumber, ib, ig1) 
+         CALL select_bandg(solar_bands, bandweights, randomNumber, ib, ig1) 
          ig2 = ig1
          iblimit = 1 
       ELSE
@@ -327,7 +327,7 @@ CONTAINS
   
       bandLoop: DO ibandloop =  1, iblimit
          !
-         ! SELECT g points either all, or one depending on McICA
+         ! Select g points either all, or one depending on McICA
          !
          IF (.NOT. McICA) THEN
            ib  = ibandloop
@@ -396,14 +396,14 @@ CONTAINS
     END IF 
   END SUBROUTINE rad_vis
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE SELECT_bandg
+  ! Subroutine select_bandg
   !
-  ! SELECTs the band (i) and the g point (j) based on the probability a 
+  ! Selects the band (i) and the g point (j) based on the probability a
   ! photon would be found in the wavelengths covered by the band and g
   ! point, which is given by g_prob.  Note g_prob sums to unity for both
   ! the solar bands (power > 0.) and the infrared bands respectively.
   ! 
-  SUBROUTINE SELECT_bandg(bands, bandweights, randomNumber, i, j)
+  SUBROUTINE select_bandg(bands, bandweights, randomNumber, i, j)
     TYPE(band_properties), &
           DIMENSION(:),    &
              INTENT ( in) :: bands
@@ -426,10 +426,10 @@ CONTAINS
        END IF
        cumulative = cumulative + gPointWeight(bands(i), j) * bandweights(i)
     END DO
-  END SUBROUTINE SELECT_bandg
+  END SUBROUTINE select_bandg
 
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE thicks: Integrates the hydrostatic equation to provide 
+  ! Subroutine thicks: Integrates the hydrostatic equation to provide 
   ! layer thicknesses
   ! 
   SUBROUTINE thicks(pp, pt, ph, dz) 
@@ -451,7 +451,7 @@ CONTAINS
   SUBROUTINE combineOpticalProperties(tau,      ssa,      pF, &
                                       tauToAdd, ssaToAdd, pFtoAdd)
     REAL, DIMENSION(:),    INTENT(inout) :: tau, ssa
-    REAL, DIMENSION(:, :), INTENT(inout) :: pF   ! Phs FUNCTION (level, moment)
+    REAL, DIMENSION(:, :), INTENT(inout) :: pF   ! Phs function (level, moment)
     REAL, DIMENSION(:),    INTENT(in)    :: tautoAdd
     REAL, DIMENSION(:),    OPTIONAL, INTENT(in) :: ssaToAdd
     REAL, DIMENSION(:, :), OPTIONAL, INTENT(in) :: pFToAdd ! Phs function
@@ -480,7 +480,7 @@ CONTAINS
        tau(:) = tau(:) + tauToAdd(:) 
     ELSE
       !
-      ! New medium is absorbing - phase FUNCTION doesn't change
+      ! New medium is absorbing - phase function doesn't change
       !
        ssa(:) = (ssa(:) * tau(:)) / (tau(:) + tauToAdd(:))
        tau(:) = tau(:) + tauToAdd(:) 
@@ -488,14 +488,14 @@ CONTAINS
  
   END SUBROUTINE combineOpticalProperties
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE rayle:  computes optical properties associated with rayleigh
+  ! Subroutine rayle:  computes optical properties associated with rayleigh
   ! scattering 
   !
   ! ri is the coefficient in Eq.(4.8) of Fu (1991) to compute the optical
   ! depth due to Rayleigh scattering in the solar bands.
   !
   ! tr, wr, and wwr are the optical depth, single scattering albedo,
-  ! and expansion coefficients of the phase FUNCTION ( 1, 2, 3, and
+  ! and expansion coefficients of the phase function ( 1, 2, 3, and
   ! 4 ) due to the Rayleigh scattering for a given layer.
   ! 
   SUBROUTINE rayle ( ib, u0, power, pp, pt, dz, tr, wr, wwr)
@@ -555,7 +555,7 @@ CONTAINS
     END IF
   END SUBROUTINE gascon
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE planck:  Integrates planck FUNCTION over band in xk sub
+  ! Subroutine planck:  Integrates planck function over band in xk sub
   ! intervals.  The temperatures at the interfaces are taken as the 
   ! average of the mid-point temperatures, the temperature at the lowest
   ! pressure interface is set to the temperature at the first mid point, 

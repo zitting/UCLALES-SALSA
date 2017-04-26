@@ -53,7 +53,7 @@ MODULE ckd
 CONTAINS
   !
   ! ---------------------------------------------------------------------------
-  ! SUBROUTINE ckd_init:  Reads the correlated K distribution data an assures 
+  ! Subroutine ckd_init:  Reads the correlated K distribution data an assures 
   ! that it conforms to expected properties
   !
   SUBROUTINE init_ckd
@@ -195,7 +195,7 @@ CONTAINS
   END SUBROUTINE init_ckd
   !
   ! ---------------------------------------------------------------------------
-  ! SUBROUTINE gases:  given an atmospheric state, a band and g point number
+  ! Subroutine gases:  given an atmospheric state, a band and g point number
   ! this routroutine calculates the optical depth at that g-point within that
   ! band for all the gases (nongray gaseous absorbers) in the band.
   !
@@ -220,7 +220,7 @@ CONTAINS
     END DO
     ! 
     ! loop through gases finding the cumulative probability for the band and g
-    ! point, weight this by the power IF in the solar bands, for which power>0.
+    ! point, weight this by the power if in the solar bands, for which power>0.
     !
     DO nn=1,this_band%ngases
 
@@ -231,7 +231,7 @@ CONTAINS
           igg=min(ig,gas(n)%ng)
           CALL qk (gas(n)%nt, gas(n)%np, gas(n)%sp, gas(n)%tbase,            &
                gas(n)%xk(1,1,igg,1), pp, pt, fkg )
-          CALL SELECT_gas(gas(n)%name, gas(n)%default_conc, gas(n)%mweight,  &
+          CALL select_gas(gas(n)%name, gas(n)%default_conc, gas(n)%mweight,  &
                pp, ph, po, pq)
           xfct = (2.24e4/gas(n)%mweight) * 10./9.81
           DO k = 1, nv
@@ -243,12 +243,12 @@ CONTAINS
                gas(n)%xk(1,1,igg,1), pp, pt, fkga )
           CALL qk (gas(n)%nt, gas(n)%np, gas(n)%sp, gas(n)%tbase,            &
                gas(n)%xk(1,1,igg,2), pp, pt, fkgb )
-          CALL SELECT_gas(gas(n)%name, gas(n)%default_conc, gas(n)%mweight,  &
+          CALL select_gas(gas(n)%name, gas(n)%default_conc, gas(n)%mweight,  &
                pp, ph, po, pq)
           DO k = 1, nv
              fkg(k) = fkga(k) + pq(k) * fkgb(k)
           END DO
-          CALL SELECT_gas('  CO2', gas(n)%default_conc, gas(n)%mweight,       &
+          CALL select_gas('  CO2', gas(n)%default_conc, gas(n)%mweight,       &
                pp, ph, po, pq)
           xfct = (2.24e4/gas(n)%mweight) * 10./9.81
           DO k = 1, nv
@@ -263,15 +263,15 @@ CONTAINS
   END SUBROUTINE gases
   !
   ! ---------------------------------------------------------------------------
-  ! SUBROUTINE SELECT_gas determintes the mixing ratio to USE in the optical
-  ! depth calculation.  For simple overlaps, this amounts to SELECTing the 
+  ! Subroutine select_gas determintes the mixing ratio to use in the optical
+  ! depth calculation.  For simple overlaps, this amounts to selecting the
   ! correct input array, ph for water vapor, po for ozone. For fixed gases 
   ! this converts a concentration to a mixing ratio given the molecular weight
   ! of the gas and some specified background concentration.  For C02 the 
-  ! mixing ratio is chosen so that IF conc = 330.e-6, the pq*xfct in SUBROUTINE
+  ! mixing ratio is chosen so that if conc = 330.e-6, the pq*xfct in subroutine
   ! po = 0.5
   !
-  SUBROUTINE SELECT_gas (name, conc_x, mx, pp, ph, po, pq)
+  SUBROUTINE select_gas (name, conc_x, mx, pp, ph, po, pq)
     
     CHARACTER (len=5), INTENT (in) :: name
     REAL, INTENT (in) :: conc_x,mx
@@ -303,10 +303,10 @@ CONTAINS
     END SELECT
 
     RETURN
-  END SUBROUTINE SELECT_gas
+  END SUBROUTINE select_gas
   !
   ! ---------------------------------------------------------------------------
-  ! SUBROUTINE qk: interpolates the gasesous absorption coefficients in units
+  ! Subroutine qk: interpolates the gasesous absorption coefficients in units
   ! of (cm-atm)**-1 to the given temperature and pressure in each layer
   ! following: ln k = a + b * ( t - tbase ) + c * ( t - tbase ) ** 2 in 
   ! temperature and  linear interpolation in pressure.
@@ -398,7 +398,7 @@ CONTAINS
   END FUNCTION gPointWeight
   !
   ! ----------------------------------------------------------------------
-  ! FUNCTION isSolar:  Returns True IF the band is in the Solar region
+  ! Function isSolar:  Returns True if the band is in the Solar region
   !
   ELEMENTAL LOGICAL FUNCTION isSolar(thisBand) 
     TYPE(band_properties), INTENT(in) :: thisBand

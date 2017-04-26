@@ -19,7 +19,7 @@
 !
 ! MODIFICATIONS:
 !
-! Added new thermodynamics SUBROUTINE to be used with SALSA *SALSAthrm*.
+! Added new thermodynamics subroutine to be used with SALSA *SALSAthrm*.
 ! It basically calculates the water vapour pressure, allowing supersaturation.
 ! SALSA provides liquid water content for cloud droplets and rain
 ! by calculating activation, condensation, autoconversion etc., providing
@@ -38,7 +38,7 @@ CONTAINS
 !
 ! -------------------------------------------------------------------------
 ! THERMO: calculates thermodynamics quantities according to level.  Level
-! is passed in to allow level of diagnosis to be determined by CALL rather
+! is passed in to allow level of diagnosis to be determined by call rather
 ! than by runtype
 !
   SUBROUTINE thermo (level)
@@ -71,7 +71,7 @@ CONTAINS
 !
 ! -------------------------------------------------------------------------
 ! update_pi1:  this routine updates a pressure associated with the
-! subtraction of a mean acceleration, ONLY incrementing it for dynamic and
+! subtraction of a mean acceleration, only incrementing it for dynamic and
 ! thermal effects for layers above the surface
 !
   SUBROUTINE update_pi1(n1,awtbar,pi1)
@@ -162,7 +162,7 @@ CONTAINS
 !
 ! -------------------------------------------------------------------------
 ! DRYTHRM:  this routine calculates theta, and pressure for
-! the CASE when no moisture is present
+! the case when no moisture is present
 !
   SUBROUTINE drythrm(n1,n2,n3,pp,p,thil,theta,t,pi0,pi1,th00,rt,rv)
 
@@ -313,8 +313,8 @@ CONTAINS
   END SUBROUTINE satadjst3
 !
 ! ---------------------------------------------------------------------
-! This FUNCTION calculates the liquid saturation vapor mixing ratio as
-! a FUNCTION of temperature and pressure
+! This function calculates the liquid saturation vapor mixing ratio as
+! a function of temperature and pressure
 !
   REAL FUNCTION rslf(p,t)
 
@@ -336,8 +336,8 @@ CONTAINS
   END FUNCTION rslf
 !
 ! ---------------------------------------------------------------------
-! This FUNCTION calculates the ice saturation vapor mixing ratio as a
-! FUNCTION of temperature and pressure
+! This function calculates the ice saturation vapor mixing ratio as a
+! function of temperature and pressure
 !
   REAL FUNCTION rsif(p,t)
 

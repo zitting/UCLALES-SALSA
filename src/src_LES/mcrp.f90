@@ -65,7 +65,7 @@ CONTAINS
 
   !
   ! ---------------------------------------------------------------------
-  ! MICRO: sets up CALL to microphysics
+  ! MICRO: sets up call to microphysics
   !
   SUBROUTINE micro(level)
     USE class_componentIndex, ONLY : GetNcomp
@@ -99,7 +99,7 @@ CONTAINS
 
   !
   ! ---------------------------------------------------------------------
-  ! MCRPH: calls microphysical PARAMETERization
+  ! MCRPH: calls microphysical parameterization
   !
   SUBROUTINE mcrph(n1,n2,n3,dn0,th,tk,rv,rs,rc,rp,np,rrate,         &
        rtt,tlt,rpt,npt)
@@ -221,7 +221,7 @@ CONTAINS
     REAL, INTENT (in)    :: dn0(n1), rc(n1,n2,n3), rp(n1,n2,n3)
     REAL, INTENT (inout) :: rpt(n1,n2,n3), npt(n1,n2,n3)
 
-    REAL, PARAMETER :: nu_c  = 0           ! width PARAMETER of cloud DSD
+    REAL, PARAMETER :: nu_c  = 0           ! width parameter of cloud DSD
     REAL, PARAMETER :: k_c  = 9.44e+9      ! Long-Kernel
     REAL, PARAMETER :: k_1  = 6.e+2        ! Parameter for phi function
     REAL, PARAMETER :: k_2  = 0.68         ! Parameter for phi function
@@ -272,7 +272,7 @@ CONTAINS
   ! ---------------------------------------------------------------------
   ! ACCR_SB calculates the evolution of mass mxng-ratio due to accretion
   ! and self collection following Seifert & Beheng (2001).  Included is
-  ! an alternative formulation for accretion ONLY, following
+  ! an alternative formulation for accretion only, following
   ! Khairoutdinov and Kogan
   !
   SUBROUTINE accr_SB(n1,n2,n3,dn0,rc,rp,np,rpt,npt)
@@ -317,7 +317,7 @@ CONTAINS
    ! SEDIM_RD: calculates the sedimentation of the rain drops and its
    ! effect on the evolution of theta_l and r_t.  This is expressed in
    ! terms of Dp the mean diameter, not the mass weighted mean diameter
-   ! as is used ELSEwhere.  This is just 1/lambda in the exponential
+   ! as is used elsewhere.  This is just 1/lambda in the exponential
    ! distribution
    !
    SUBROUTINE sedim_rd(n1,n2,n3,dt,dn0,rp,np,tk,th,rrate,rtt,tlt,rpt,npt)
@@ -510,7 +510,7 @@ CONTAINS
   !
   ! Juha: Rain is now treated completely separately (20151013)
   !
-  ! Jaakko: Modified for the USE of ice and snow bins
+  ! Jaakko: Modified for the use of ice and snow bins
 
   SUBROUTINE sedim_SALSA(n1,n2,n3,n4,tstep,tk,th,          &
                          Rawet, Rcwet, Rpwet,              &
@@ -1240,7 +1240,7 @@ CONTAINS
                 DO WHILE ( fd < fdmax )
                    fd = fd + ( 1./dzt(k-fi) )
                    fi = fi + 1
-                   ! Check IF sedimentation occurs for current parcel
+                   ! Check if sedimentation occurs for current parcel
                    IF (k-fi <= 1) THEN
                       prcdep = .TRUE.
                       EXIT

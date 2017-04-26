@@ -40,10 +40,10 @@ MODULE mpi_interface
   INTEGER :: wrxid, wryid, nxprocs, nyprocs
   INTEGER, ALLOCATABLE, DIMENSION(:) :: xoffset, yoffset, nxpa, nypa
   CHARACTER(len=80) :: ver='', author=''
-  ! Additional, e.g. CASE specific, information
+  ! Additional, e.g. case specific, information
   CHARACTER(len=180), PARAMETER :: info=''
 
-  ! these are the PARAMETERs used in the alltoallw CALL in the fft
+  ! these are the parameters used in the alltoallw call in the fft
 
 CONTAINS
   !
@@ -149,7 +149,7 @@ CONTAINS
   END SUBROUTINE define_decomp
   !
   !----------------------------------------------------------------------
-  ! INIT_ALLTOALL_REORDERXY: Defines the mpi derived types to DO a data 
+  ! INIT_ALLTOALL_REORDERXY: Defines the mpi derived types to do a data
   ! movement of the form A(m,n/p,z) -> B(n,m/p,z) for data of type MY_CMPLX
   !
   SUBROUTINE init_alltoall_reorder(nxp,nyp,nzp)
@@ -163,7 +163,7 @@ CONTAINS
 
   END SUBROUTINE init_alltoall_reorder
   ! ---------------------------------------------------------------------
-  ! SUBROUTINE cyclics: commits exchange cyclic x boundary conditions
+  ! Subroutine cyclics: commits exchange cyclic x boundary conditions
   !
   SUBROUTINE cyclics(n1,n2,n3,var,req)
 
@@ -194,7 +194,7 @@ CONTAINS
   END SUBROUTINE cyclics
   !
   ! ---------------------------------------------------------------------
-  ! SUBROUTINE cyclicc: comits excahnging cyclic boundary conditions
+  ! Subroutine cyclicc: comits excahnging cyclic boundary conditions
   SUBROUTINE cyclicc(n1,n2,n3,var,req)
 
     INTEGER :: n1,n2,n3,req(16)

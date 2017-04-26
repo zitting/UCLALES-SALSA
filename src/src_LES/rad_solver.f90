@@ -265,10 +265,10 @@ CONTAINS
   END SUBROUTINE coefft0
 
   ! **********************************************************************
-  ! In the solar band  asbs is the surface albedo, WHILE in the infrared
+  ! In the solar band  asbs is the surface albedo, while in the infrared
   ! band asbs is  blackbody intensity emitted at the surface temperature
-  ! times surface emissivity.  In this SUBROUTINE, the delta-four-stream
-  ! is applied to nonhomogeneous atmospheres. See comments in SUBROUTINE
+  ! times surface emissivity.  In this subroutine, the delta-four-stream
+  ! is applied to nonhomogeneous atmospheres. See comments in subroutine
   ! 'qcfel' for array AB(13,4*n).
   ! **********************************************************************
   SUBROUTINE qccfe (solar,asbs,ee,t,w,w1,w2,w3,u0,f0,fk1,fk2,a4,g4,z4 )  
@@ -405,7 +405,7 @@ CONTAINS
   !    top and bottom of the atmosphere,  together with  continuity condi-
   !    tions  at  layer interfaces lead to a system of algebraic equations
   !    from which 4*n unknown constants in the problom can be solved.
-  ! 3. This SUBROUTINE is used for solving the 4*n unknowns of A *X = B by
+  ! 3. This subroutine is used for solving the 4*n unknowns of A *X = B by
   !    considering the fact that the coefficient matrix is a sparse matrix
   !    with the precise pattern in this special problom.
   ! 4. The method is not different in principle from the general scheme of
@@ -566,7 +566,7 @@ CONTAINS
   END SUBROUTINE qcfel
 
   ! **********************************************************************
-  ! In this SUBROUTINE, we incorporate a delta-FUNCTION adjustment to
+  ! In this subroutine, we incorporate a delta-function adjustment to
   ! account for the  forward  diffraction  peak in the context of the 
   ! four-stream approximation ( Liou, Fu and Ackerman, 1988 ). w1(n),
   ! w2(n), w3(n), w(n), and t(n) are the adjusted PARAMETERs.
@@ -597,7 +597,7 @@ CONTAINS
 
   END SUBROUTINE adjust
   ! --------------------------------------------------------------------------
-  ! SUBROUTINE qft: Delta 4-stream solver for fluxes
+  ! Subroutine qft: Delta 4-stream solver for fluxes
   !
   SUBROUTINE qft (solar, ee, as, u0, bf, tt, ww, ww1, ww2, ww3, ww4, ffu, ffd)
 

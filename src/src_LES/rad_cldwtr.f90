@@ -35,7 +35,7 @@ MODULE cldwtr
 CONTAINS
   !
   !---------------------------------------------------------------------------
-  ! SUBROUTINE cloud_init initialize data arrays for the cloud model,
+  ! Subroutine cloud_init initialize data arrays for the cloud model,
   ! checking for consistency between band structure of cloud model and CKD
   !
   SUBROUTINE init_cldwtr
@@ -80,7 +80,7 @@ CONTAINS
 
   !
   !---------------------------------------------------------------------------
-  ! SUBROUTINE cloud_init initialize data arrays for the cloud model,
+  ! Subroutine cloud_init initialize data arrays for the cloud model,
   ! checking for consistency between band structure of cloud model and CKD
   !
   SUBROUTINE init_cldice
@@ -122,7 +122,7 @@ CONTAINS
 
   !
   !---------------------------------------------------------------------------
-  ! SUBROUTINE cloud_init initialize data arrays for the cloud model,
+  ! Subroutine cloud_init initialize data arrays for the cloud model,
   ! checking for consistency between band structure of cloud model and CKD
   !
   SUBROUTINE init_cldgrp
@@ -148,8 +148,8 @@ CONTAINS
   END SUBROUTINE init_cldgrp
 
   ! -----------------------------------------------------------------------
-  ! SUBROUTINE cloud_water:  calculates the optical depth (tw), single 
-  ! scattering albedo (ww), and phase FUNCTION (www(4)) given the cloud 
+  ! Subroutine cloud_water:  calculates the optical depth (tw), single 
+  ! scattering albedo (ww), and phase function (www(4)) given the cloud
   ! water [g/m^3] and effective radius [microns] by interpolating based on
   ! known optical properties at predefined sizes  
   !
@@ -207,8 +207,8 @@ CONTAINS
   END SUBROUTINE cloud_water
 
   ! -----------------------------------------------------------------------
-  ! SUBROUTINE cloud_ice:  calculates the optical depth (ti), single
-  ! scattering albedo (wi), and phase FUNCTION (wwi(4)) given the cloud
+  ! Subroutine cloud_ice:  calculates the optical depth (ti), single
+  ! scattering albedo (wi), and phase function (wwi(4)) given the cloud
   ! ice [g/m^3] and effective radius [microns] by interpolating based on
   ! known optical properties at predefined sizes
   !
@@ -279,13 +279,13 @@ CONTAINS
 
 
   ! -----------------------------------------------------------------------
-  ! SUBROUTINE cloud_grp:  calculates the optical depth (ti), single
-  ! scattering albedo (wi), and phase FUNCTION (wwi(4)) given the cloud
+  ! Subroutine cloud_grp:  calculates the optical depth (ti), single
+  ! scattering albedo (wi), and phase function (wwi(4)) given the cloud
   ! ice [g/m^3] and effective radius [microns] by interpolating based on
   ! known optical properties at predefined sizes
   !
   ! tgr, wgr, and wwgr are the optical depth, single scattering albedo,
-  ! and expansion coefficients of the phase FUNCTION ( 1, 2, 3, and 4 )
+  ! and expansion coefficients of the phase function ( 1, 2, 3, and 4 )
   ! due to the Mie scattering of graupel for a given layer.
   !                        Jan. 19, 1993
   ! -----------------------------------------------------------------------

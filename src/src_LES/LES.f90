@@ -37,7 +37,7 @@ PROGRAM ucla_les
 CONTAINS
 
   !----------------------------------------------------------------------
-  ! SUBROUTINE Driver:  This is the main program driver.  It calls routines
+  ! Subroutine Driver:  This is the main program driver.  It calls routines
   ! to read the model initialization file, and configure memory and pointes.
   ! It also calls the routines which initialize the model and timestep it.
   !
@@ -83,7 +83,7 @@ CONTAINS
 
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE Read_nl: Driver for reading model namelist
+  ! Subroutine Read_nl: Driver for reading model namelist
   !
   SUBROUTINE define_parm
 
@@ -102,7 +102,7 @@ CONTAINS
          zrand
     USE stat, ONLY : ssam_intvl, savg_intvl, mcflg, csflg
     USE forc, ONLY : radsounding, &        ! Juha: added for radiation background profile
-                     div, case_name, &     ! Divergence, forcing CASE name
+                     div, case_name, &     ! Divergence, forcing case name
                      sfc_albedo, &         ! Surface albedo
                      useMcICA,RadConstPress,RadPrecipBins
     USE mcrp, ONLY : sed_aero, sed_cloud, sed_precp, sed_ice, sed_snow
@@ -124,14 +124,14 @@ CONTAINS
          iseed  , zrand  , & ! random seed
          nxp    , nyp    , nzp   ,  & ! number of x, y, z points
          deltax , deltay , deltaz , & ! delta x, y, z (meters)
-         dzrat  , dzmax  , igrdtyp, & ! stretched grid PARAMETERs
+         dzrat  , dzmax  , igrdtyp, & ! stretched grid parameters
          timmax , dtlong , istpfl , & ! timestep control
          runtype, hfilin , filprf , & ! type of run (INITIAL or HISTORY)
          frqhis , frqanl , outflg , & ! freq of history/anal writes, output flg
          iradtyp, radfrq , strtim , & ! radiation type flag
-         isfctyp, ubmin  , zrough , & ! surface PARAMETERization type
-         sst    , dthcon , drtcon , & ! SSTs, surface flx PARAMETERs
-         isgstyp, csx    , prndtl , & ! SGS model type, PARAMETERs
+         isfctyp, ubmin  , zrough , & ! surface parameterization type
+         sst    , dthcon , drtcon , & ! SSTs, surface flx parameters
+         isgstyp, csx    , prndtl , & ! SGS model type, parameters
          ipsflg , itsflg ,          & ! sounding flags
          hs     , ps     , ts    ,  & ! sounding heights, pressure, temperature
          us     , vs     , rts   ,  & ! sounding E/W winds, water vapor
@@ -145,7 +145,7 @@ CONTAINS
          nudge_ccn, tau_ccn,   & ! Aerosol number concentration nudging
          radsounding, div, case_name, & ! Name of the radiation sounding file, divergence for LEVEL 4
          sfc_albedo,                  & ! Surface albedo
-         useMcICA,           & ! USE the Monte Carlo Independent Column Approximation method (T/F)
+         useMcICA,           & ! use the Monte Carlo Independent Column Approximation method (T/F)
          RadConstPress,      & ! keep constant pressure levels (T/F),
          RadPrecipBins,      & ! add precipitation bins cloud water (0, 1, 2, 3,...)
          sed_aero, sed_cloud, sed_precp, sed_ice, sed_snow ! Sedimentation (T/F)
@@ -180,7 +180,7 @@ CONTAINS
        END IF
        IF (outflg) WRITE(*,602) filprf, frqhis, frqanl, Tspinup
        !
-       ! DO some cursory error checking in namelist variables
+       ! Do some cursory error checking in namelist variables
        !
 
        IF (min(nxp,nyp) < 5) THEN

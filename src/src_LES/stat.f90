@@ -51,8 +51,8 @@ MODULE stat
 
   ! New output variables:
   ! 1. Add them to one of the arrays below
-  ! 2. Update the DIMENSIONs of the output arrays accordingly
-  ! 3. Make a SUBROUTINE for accumulating the new data and to plane them
+  ! 2. Update the dimensions of the output arrays accordingly
+  ! 3. Make a subroutine for accumulating the new data and to plane them
   !    in the output arrays
   ! 4. Add the new variables in ncio.f90 list of variables
   ! 5. Make sure stat_init is up to date (boolean arrays etc).
@@ -168,7 +168,7 @@ CONTAINS
   ! INIT_STAT:  This routine initializes the statistical arrays which
   ! are user/problem defined.  Note that svctr is given 100 elements, and
   ! elements 90 and above are used for computing the TKE budget. Hence
-  ! IF (nvar2 >= 90 the program stops
+  ! if (nvar2 >= 90 the program stops
   !
   SUBROUTINE init_stat(time, filprf, expnme, nzp)
 
@@ -270,7 +270,7 @@ CONTAINS
        s2bool(1:nvar2) = .TRUE.     ! Original LES vars (assume always used...)
 
        s1bool(nvar1+1:nvar1+3) = .TRUE.  ! Number concentrations
-       s2bool(nvar2+1:nvar2+15) = .TRUE. ! Bin DIMENSIONs, number concentrations and radius
+       s2bool(nvar2+1:nvar2+15) = .TRUE. ! Bin dimensions, number concentrations and radius
 
        ! Bin number concentrations
        i = nvar2+nv2sbulk+1  ! binned
@@ -500,13 +500,13 @@ CONTAINS
   END SUBROUTINE init_stat
   !
   ! ---------------------------------------------------------------------
-  ! SUBROUTINE Statistics:  This SUBROUTINE is the statistics driver
-  ! it calls various other SUBROUTINEs to compute and accumulate
+  ! Subroutine Statistics:  This subroutine is the statistics driver
+  ! it calls various other subroutines to compute and accumulate
   ! statistical quantities.  These are stored in two arrays:  SVCTR,
   ! and SSCLR (which accumulate scalar and vector statistics respectively
   !
-  ! Modified for level 4: rxt CONTAINS a_rp IF level < 4 and a_rp+a_rc
-  ! IF level == 4
+  ! Modified for level 4: rxt contains a_rp if level < 4 and a_rp+a_rc
+  ! if level == 4
   ! Juha Tonttila, FMI, 2014
   !
   ! Modified for level 5
@@ -610,7 +610,7 @@ CONTAINS
   END SUBROUTINE statistics
   !
   ! -----------------------------------------------------------------------
-  ! SUBROUTINEs set_cs_warm, cs_rem_set, cs_rem_save and set_cs_any:
+  ! Subroutines set_cs_warm, cs_rem_set, cs_rem_save and set_cs_any:
   ! WRITE(and compute) column average statistics
   !
   ! Save named data (already available)
@@ -637,7 +637,7 @@ CONTAINS
     USE mo_submctl, ONLY : nbins, ncld, nprc, nice,  nsnw
     IMPLICIT NONE
 
-    INTEGER, INTENT(in) :: n2,n3,n4   ! Grid DIMENSIONs
+    INTEGER, INTENT(in) :: n2,n3,n4   ! Grid dimensions
     REAL, INTENT(in) :: raer(n2,n3,n4*nbins), & ! Removal arrays
                                rcld(n2,n3,n4*ncld), &
                                rprc(n2,n3,n4*nprc), &
@@ -859,7 +859,7 @@ CONTAINS
   END SUBROUTINE set_cs_warm
   !
   ! -----------------------------------------------------------------------
-  ! SUBROUTINE set_ts: computes and writes time sequence stats
+  ! Subroutine set_ts: computes and writes time sequence stats
   !
   SUBROUTINE set_ts(n1,n2,n3,w,th,dn0,zt,zm,dzt,dzm,th00,time)
 
@@ -894,8 +894,8 @@ CONTAINS
   END SUBROUTINE set_ts
   !
   ! -----------------------------------------------------------------------
-  ! SUBROUTINE ts_lvl1: computes and writes time sequence stats; for the
-  ! zi calculation setting itype=1 SELECTs a concentration threshold
+  ! Subroutine ts_lvl1: computes and writes time sequence stats; for the
+  ! zi calculation setting itype=1 selects a concentration threshold
   !
   SUBROUTINE ts_lvl1(n1,n2,n3,dn0,zt,dzm,q)
 
@@ -911,7 +911,7 @@ CONTAINS
   END SUBROUTINE ts_lvl1
   !
   ! -----------------------------------------------------------------------
-  ! SUBROUTINE ts_lvl2: computes and writes time sequence stats
+  ! Subroutine ts_lvl2: computes and writes time sequence stats
   !
   SUBROUTINE ts_lvl2(n1,n2,n3,rt,rs,zt)
 
@@ -949,7 +949,7 @@ CONTAINS
   END SUBROUTINE ts_lvl2
  !
   ! -----------------------------------------------------------------------
-  ! SUBROUTINE ts_lvl4: computes and writes time sequence stats of Salsa variables --
+  ! Subroutine ts_lvl4: computes and writes time sequence stats of Salsa variables --
   !  Implemented by Zubair Maalick 20/07/2015
   !  Some rewriting and adjusting by Juha Tonttila
   !
@@ -1004,7 +1004,7 @@ CONTAINS
   END SUBROUTINE ts_lvl4
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_STAT: Accumulates various statistics over an
+  ! Subroutine ACCUM_STAT: Accumulates various statistics over an
   ! averaging period for base (level 0) version of model
   !
   SUBROUTINE accum_stat(n1,n2,n3,u,v,w,t,p,um,vm,th00)
@@ -1038,7 +1038,7 @@ CONTAINS
   END SUBROUTINE accum_stat
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_STAT: Accumulates various statistics over an
+  ! Subroutine ACCUM_STAT: Accumulates various statistics over an
   ! averaging period for radiation variables
   !
   SUBROUTINE accum_rad(n1,n2,n3,rflx,sflx,alb)
@@ -1070,7 +1070,7 @@ CONTAINS
   END SUBROUTINE accum_rad
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_LVL1: Accumulates various statistics over an
+  ! Subroutine ACCUM_LVL1: Accumulates various statistics over an
   ! averaging period for moisture variable (smoke or total water)
   !
   SUBROUTINE accum_lvl1(n1,n2,n3,rt)
@@ -1094,7 +1094,7 @@ CONTAINS
   END SUBROUTINE accum_lvl1
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_LVL2: Accumulates specialized statistics that depend
+  ! Subroutine ACCUM_LVL2: Accumulates specialized statistics that depend
   ! on level 2 variables.
   !
   SUBROUTINE accum_lvl2(n1, n2, n3, th00, dn0, zm, w, th, tl, &
@@ -1124,7 +1124,7 @@ CONTAINS
     svctr(:,61)=svctr(:,61) + a3(:)
 
     !
-    ! DO some conditional sampling statistics: cloud, cloud-core
+    ! Do some conditional sampling statistics: cloud, cloud-core
     !
     tv(:,:,:) = th(:,:,:)*(1.+ep2*rt(:,:,:) - rl(:,:,:))
     CALL get_avg3(n1,n2,n3,tv,tvbar)
@@ -1211,7 +1211,7 @@ CONTAINS
   END SUBROUTINE accum_lvl2
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_LVL3: Accumulates specialized statistics that depend
+  ! Subroutine ACCUM_LVL3: Accumulates specialized statistics that depend
   ! on level 3 variables.
   !
   SUBROUTINE accum_lvl3(n1, n2, n3, dn0, zm, rr, nr, rrate, CCN)
@@ -1321,7 +1321,7 @@ CONTAINS
   END SUBROUTINE accum_lvl3
 
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_LVL4: Accumulates specialized statistics that depend
+  ! Subroutine ACCUM_LVL4: Accumulates specialized statistics that depend
   ! on level 4 variables.
   !
   SUBROUTINE accum_lvl4(n1,n2,n3)
@@ -1621,7 +1621,7 @@ CONTAINS
   END SUBROUTINE get_shear
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE write_ts: writes the statistics file
+  ! Subroutine write_ts: writes the statistics file
   !
   SUBROUTINE write_ts
 
@@ -1651,7 +1651,7 @@ CONTAINS
   END SUBROUTINE write_ts
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE write_ps: writes the time averaged elements of the
+  ! Subroutine write_ps: writes the time averaged elements of the
   ! statistics file
   !
   SUBROUTINE  write_ps(n1,dn0,u0,v0,zm,zt,time)
@@ -1812,7 +1812,7 @@ CONTAINS
   END SUBROUTINE write_ps
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE: sfc_stat:  Updates statistical arrays with surface flux
+  ! Subroutine: sfc_stat:  Updates statistical arrays with surface flux
   ! variables
   !
   SUBROUTINE sfc_stat(n2,n3,tflx,qflx,ustar,sst)
@@ -1830,7 +1830,7 @@ CONTAINS
   END SUBROUTINE sfc_stat
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE: fills scalar array based on index
+  ! Subroutine: fills scalar array based on index
   ! 1: cfl; 2 max divergence
   !
   SUBROUTINE fill_scalar(index,xval)
@@ -1848,8 +1848,8 @@ CONTAINS
   END SUBROUTINE fill_scalar
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE: calculates the dissipation for output diagnostics, if
-  ! isgstyp equals 2 THEN le is passed in via diss
+  ! Subroutine: calculates the dissipation for output diagnostics, if
+  ! isgstyp equals 2 then le is passed in via diss
   !
   SUBROUTINE sgs_vel(n1,n2,n3,v1,v2,v3)
 
@@ -1885,7 +1885,7 @@ CONTAINS
     END IF
     rnpts = 1./REAL((n2-4)*(n3-4))
     !
-    ! calculate fluxes assuming the possibility of liquid water.  IF liquid
+    ! calculate fluxes assuming the possibility of liquid water.  if liquid
     ! water does not exist sgs_rl = 0.
     !
     IF ( level >= 2 ) THEN
@@ -1947,7 +1947,7 @@ CONTAINS
   END SUBROUTINE sgsflxs
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE fill_tend: fills arrays with current value of tendencies
+  ! Subroutine fill_tend: fills arrays with current value of tendencies
   !
   SUBROUTINE acc_tend(n1,n2,n3,f1,f2,f3,t1,t2,t3,v1,v2,v3,ic,routine)
 
@@ -1989,7 +1989,7 @@ CONTAINS
   END SUBROUTINE acc_tend
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE updtst: updates appropriate statistical arrays
+  ! Subroutine updtst: updates appropriate statistical arrays
   !
   SUBROUTINE updtst(n1,routine,nfld,values,ic)
 
@@ -2090,10 +2090,10 @@ CONTAINS
     USE class_componentIndex, ONLY : IsUsed, GetIndex
     IMPLICIT NONE
 
-    INTEGER, INTENT(in)           :: n2,n3,n4                     ! Grid DIMENSIONs
+    INTEGER, INTENT(in)           :: n2,n3,n4                     ! Grid dimensions
     REAL, INTENT(in)              :: raer(n2,n3,n4*nbins)        ! Array containing the binned 2d-field
     REAL, OPTIONAL, INTENT(in)    :: rcld(n2,n3,n4*ncld), &
-                                     rprc(n2,n3,n4*nprc), &     ! 2 OPTIONAL arrays for calculating total removals
+                                     rprc(n2,n3,n4*nprc), &     ! 2 optional arrays for calculating total removals
                                      rice(n2,n3,n4*nice), &
                                      rsnw(n2,n3,n4*nsnw)
 

@@ -104,10 +104,10 @@ MODULE grid
   ! -- Masses given in kg/kg, number concentrations in #/kg
   ! -- Each size bin/species will be treated as a separate tracer.
   ! -- NOTE: Volume concentration arrays are reduced to 4 dims.
-  !          The 4th dim CONTAINS all the size bins sequentially for
+  !          The 4th dim contains all the size bins sequentially for
   !          each aerosol species  + water
   !
-  !          Gas tracers are contained sequentially in DIMENSION
+  !          Gas tracers are contained sequentially in dimension
   !          4 as: 1. SO4, 2. HNO3, 3. NH3, 4. OCNV, 5. OCSV
 
   ! Prognostic tracers
@@ -152,11 +152,11 @@ MODULE grid
   REAL, ALLOCATABLE :: a_press(:,:,:)  ! pressure (hpa)
   REAL, ALLOCATABLE :: a_rc(:,:,:)     ! Total cloud water
   REAL, ALLOCATABLE :: a_ri(:,:,:)     ! Total ice cloud content
-  REAL, ALLOCATABLE :: a_rv(:,:,:)     ! water vapor (used ONLY for levels < 4!)
-  REAL, ALLOCATABLE :: a_srp(:,:,:)    ! Total rain water for USE with LEVEL 4 (Diagnostic scalar!!)
-  REAL, ALLOCATABLE :: a_snrp(:,:,:)   ! Total number of rain drops for USE with LEVEL 4 (Diagnostic scalar!!)
-  REAL, ALLOCATABLE :: a_srs(:,:,:)    ! Total snow for USE with SALSA
-  REAL, ALLOCATABLE :: a_snrs(:,:,:)   ! Total number of snow particles for USE with LEVEL 5 (Diagnostic scalar!!)
+  REAL, ALLOCATABLE :: a_rv(:,:,:)     ! water vapor (used only for levels < 4!)
+  REAL, ALLOCATABLE :: a_srp(:,:,:)    ! Total rain water for use with LEVEL 4 (Diagnostic scalar!!)
+  REAL, ALLOCATABLE :: a_snrp(:,:,:)   ! Total number of rain drops for use with LEVEL 4 (Diagnostic scalar!!)
+  REAL, ALLOCATABLE :: a_srs(:,:,:)    ! Total snow for use with SALSA
+  REAL, ALLOCATABLE :: a_snrs(:,:,:)   ! Total number of snow particles for use with LEVEL 5 (Diagnostic scalar!!)
   REAL, ALLOCATABLE :: a_rh(:,:,:)     ! Relative humidity
   REAL, ALLOCATABLE :: a_rsl(:,:,:)     ! water saturation vapor mixing ratio
   REAL, ALLOCATABLE :: a_rhi(:,:,:)     ! Relative humidity over ice
@@ -181,7 +181,7 @@ MODULE grid
 
   ! Juha:
   ! Diagnostic variables needed to track mass conservation (of water).
-  ! These are reset at every statistical output timestep (better USE quite long statistical periods...)
+  ! These are reset at every statistical output timestep (better use quite long statistical periods...)
   REAL :: mc_Mtot           ! Initial mass of water normalized by domain volume (== domain mean concentration)
   REAL :: mc_Matm           ! Atmospheric water content (instantaneous, domain mean concentration)
   REAL :: mc_Mevap          ! Evaporated water content, accumulated, Normalized by *domain surface area*/*domain volume*
@@ -197,7 +197,7 @@ MODULE grid
 CONTAINS
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE define_vars
+  ! Subroutine define_vars
   !
   ! Modified for level 4
   ! Juha Tonttila, FMI, 2014.
@@ -228,11 +228,11 @@ CONTAINS
 
     END IF
 
-    ! Juha: Stuff that's ALLOCATEd for all configurations
+    ! Juha: Stuff that's allocated for all configurations
     !----------------------------------------------------------
     ALLOCATE (u0(nzp),v0(nzp),pi0(nzp),pi1(nzp),th0(nzp),dn0(nzp),rt0(nzp))
 
-    memsize = 2*nxyzp ! COMPLEXarray in pressure solver
+    memsize = 2*nxyzp ! complexarray in pressure solver
 
     ALLOCATE (a_up(nzp,nxp,nyp),a_vp(nzp,nxp,nyp),a_wp(nzp,nxp,nyp))
     a_up(:,:,:) = 0.
@@ -274,7 +274,7 @@ CONTAINS
     a_rsl(:,:,:) = 0.
     memsize = memsize + nxyzp*3
 
-    ! Juha: Stuff that's ALLOCATEd IF SALSA is NOT used
+    ! Juha: Stuff that's allocated if SALSA is not used
     !-----------------------------------------------------
     IF (level < 4) THEN
 
@@ -315,7 +315,7 @@ CONTAINS
           a_qt=>a_sclrt(:,:,:,nscl - naddsc)
        END IF
 
-    !Juha: Stuff that's ALLOCATEd when SALSA is used
+    !Juha: Stuff that's allocated when SALSA is used
     !---------------------------------------------------
     ELSE IF (level >= 4) THEN
 
@@ -544,7 +544,7 @@ CONTAINS
      zm(nzp-1) = dzmax
      zm(nzp)   = dzmax + zm(2)*zm(2)/(zm(3)-zm(2))
      !
-     ! define zm array for grid 1 from deltaz and dzrat, IF dzrat is
+     ! define zm array for grid 1 from deltaz and dzrat, if dzrat is
      ! negative compress grid so that dzmin is the grid spacing in a 100m
      ! interval below dzmax.  In both CASEs stretcvh grid uniformly by the
      ! ration |dzrat| above dzmax
@@ -657,7 +657,7 @@ CONTAINS
   END SUBROUTINE define_grid
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE init_anal:  Defines the netcdf Analysis file
+  ! Subroutine init_anal:  Defines the netcdf Analysis file
   !
   ! Modified for level 4.
   ! Juha Tonttila, FMI, 2014
@@ -828,7 +828,7 @@ CONTAINS
   END SUBROUTINE init_anal
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE close_anal:  Closes netcdf anal file
+  ! Subroutine close_anal:  Closes netcdf anal file
   !
   INTEGER FUNCTION close_anal()
 
@@ -839,7 +839,7 @@ CONTAINS
   END FUNCTION close_anal
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE Write_anal:  Writes the netcdf Analysis file
+  ! Subroutine Write_anal:  Writes the netcdf Analysis file
   !
   ! Modified for levels 4 and 5
   ! Juha Tonttila, FMI, 2014
@@ -1578,7 +1578,7 @@ CONTAINS
   END SUBROUTINE write_anal
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE write_hist:  This SUBROUTINE writes a binary history file
+  ! Subroutine write_hist:  This subroutine writes a binary history file
   !
   SUBROUTINE write_hist(htype, time)
 
@@ -1650,7 +1650,7 @@ CONTAINS
   END SUBROUTINE write_hist
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE read_hist:  This SUBROUTINE reads a binary history file
+  ! Subroutine read_hist:  This subroutine reads a binary history file
   !
   !                        Modified for level 4
   !                Juha Tonttila, FMI, 20140828
@@ -1756,7 +1756,7 @@ CONTAINS
   END SUBROUTINE read_hist
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE newsclr:  This routine updates the scalar pointer to the
+  ! Subroutine newsclr:  This routine updates the scalar pointer to the
   ! value corresponding to the next scalar in the scalar table
   !
   SUBROUTINE newsclr(iscnum)
@@ -1770,7 +1770,7 @@ CONTAINS
   END SUBROUTINE newsclr
   !
   ! -----------------------------------
-  ! SUBROUTINE bulkMixrat: Find and calculate
+  ! Subroutine bulkMixrat: Find and calculate
   ! the total mixing ratio of a given compound
   ! in aerosol particles or hydrometeors
   !
@@ -1793,7 +1793,7 @@ CONTAINS
 
     CHARACTER(len=*), INTENT(in) :: ipart  ! This should be either:
                                            ! aerosol,cloud,rain,ice,snow
-    CHARACTER(len=*), INTENT(in) :: itype  ! SELECT bin regime: a or b
+    CHARACTER(len=*), INTENT(in) :: itype  ! Select bin regime: a or b
 
     REAL, INTENT(out) :: mixrat(nzp,nxp,nyp)
 
@@ -1852,8 +1852,8 @@ CONTAINS
   END SUBROUTINE bulkMixrat
   !
   ! ----------------------------------------------
-  ! SUBROUTINE binSpecMixrat: Calculate the mixing
-  ! ratio of SELECTed aerosol species in individual
+  ! Subroutine binSpecMixrat: Calculate the mixing
+  ! ratio of selected aerosol species in individual
   ! bins.
   !
   ! Juha Tonttila, FMI, 2015
@@ -1892,7 +1892,7 @@ CONTAINS
 
   !
   ! ----------------------------------------------
-  ! SUBROUTINE binMixrat: Calculate the total dry or wet
+  ! Subroutine binMixrat: Calculate the total dry or wet
   ! Mass concentration for individual bins
   !
   ! Juha Tonttila, FMI, 2015
@@ -1937,7 +1937,7 @@ CONTAINS
 
   !
   ! ----------------------------------------------
-  ! SUBROUTINE bulkNumc: Calculate the total number
+  ! Subroutine bulkNumc: Calculate the total number
   ! concentration of particles of given type
   !
   ! Juha Tonttila, FMI, 2015
@@ -2001,7 +2001,7 @@ CONTAINS
 
   !
   ! -------------------------------------------------
-  ! SUBROUTINE meanRadius
+  ! Subroutine meanRadius
   ! Gets the mean wet radius for particles.
   !
   SUBROUTINE meanRadius(ipart,itype,rad)
@@ -2023,7 +2023,7 @@ CONTAINS
 
     rad = 0.
 
-    ! Get the total number concentration for SELECTed particle type
+    ! Get the total number concentration for selected particle type
     CALL bulkNumc(ipart,itype,zvar1)
 
     SELECT CASE(ipart)
@@ -2088,7 +2088,7 @@ CONTAINS
   END SUBROUTINE meanRadius
   !
   ! ---------------------------------------------------
-  ! SUBROUTINE getRadius
+  ! Subroutine getRadius
   !
   SUBROUTINE getRadius(zstr,zend,nb,numc,ntot,numlim,rpart,zrad)
     IMPLICIT NONE

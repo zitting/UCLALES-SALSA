@@ -19,7 +19,7 @@
 !
 MODULE radiation
 
-  ! 20151022: Made some modifications for PARAMETERs going to *rad* to
+  ! 20151022: Made some modifications for parameters going to *rad* to
   ! avoid errors with SALSA. 
   ! Juha Tonttila, FMI
 
@@ -64,7 +64,7 @@ MODULE radiation
       IF (PRESENT(ConstPrs)) ConstPress = ConstPrs
 
       IF (first_time) THEN
-         ! Possible to USE constant LES pressure levels (fixed during the first call)
+         ! Possible to use constant LES pressure levels (fixed during the first call)
          ALLOCATE(exner(n1), pres(n1))
          exner(1:n1) = (pi0(1:n1)+pi1(1:n1))/cp
          pres(1:n1) = p00*( exner(1:n1) )**cpr
@@ -98,8 +98,8 @@ MODULE radiation
       ! Avoid identical random numbers by adding an offset for each PU
       !     myid=0,1,2,...
       !     (n3-4)*(n2-4) is the number of random numbers for each PU
-      !     IR and OPTIONALly also visible wavelengths
-      ! First, CALL random numbers to add offset for PUs before myid
+      !     IR and optionally also visible wavelengths
+      ! First, call random numbers to add offset for PUs before myid
       IF (McICA .AND. myid>0) THEN
         IF (u0 > minSolarZenithCosForVis) THEN
             kk=myid*(n3-4)*(n2-4)*2
@@ -109,7 +109,7 @@ MODULE radiation
         CALL set_random_offset( kk )
       END IF
       !
-      ! CALL the radiation
+      ! call the radiation
       !
       prw = (4./3.)*pi*rowt
       pri = (3.*sqrt(3.)/8.)*roice
@@ -126,7 +126,7 @@ MODULE radiation
             pp(nv-n1+2) = pres(n1)/100. - 0.5*(pres(n1-1)-pres(n1)) / 100.
             IF ( pp(nv-n1+2) < pp(nv-n1+1)+1.0 ) THEN
                 ! Simple solution to the problem: remove sounding level nv-n1+1, which means that LES data is written over that
-                nv1=nv1-1       ! This should DO it (start from the previos location)
+                nv1=nv1-1       ! This should do it (start from the previos location)
                 nv=nv-1
                 pp(nv-n1+2) = pres(n1)/100. - 0.5*(pres(n1-1)-pres(n1)) / 100. ! Update
 
@@ -226,7 +226,7 @@ MODULE radiation
 
   ! ---------------------------------------------------------------------------
   ! sets up the input data to extEND through an atmosphere of appreiciable
-  ! depth using a background souding specified as a PARAMETER, match this to
+  ! depth using a background souding specified as a parameter, match this to
   ! the original sounding using p0 as this does not depEND on time and thus
   ! allows us to recompute the same background matching after a history start
   !
@@ -253,7 +253,7 @@ MODULE radiation
     CLOSE(08)
 
     !
-    ! identify what part, IF any, of background sounding to use
+    ! identify what part, if any, of background sounding to use
     !
     ptop = zp(n1)
     IF (sp(2) < ptop) THEN
@@ -271,7 +271,7 @@ MODULE radiation
        blEND = .FALSE.
     END IF
     !
-    ! IF blEND is true THEN the free atmosphere above the sounding will be
+    ! if blend is true then the free atmosphere above the sounding will be
     ! specified based on the specified background climatology, here the
     ! pressure levels for this part of the sounding are determined
     !
@@ -295,8 +295,8 @@ MODULE radiation
     END IF
     nv = nv1-1
     !
-    ! ALLOCATE the arrays for the sounding data to be used in the radiation 
-    ! profile and THEN fill them first with the sounding data, by afill, THEN
+    ! Allocate the arrays for the sounding data to be used in the radiation
+    ! profile and then fill them first with the sounding data, by afill, then
     ! by interpolating the background profile at pressures less than the
     ! pressure at the top of the sounding
     !
@@ -362,9 +362,9 @@ MODULE radiation
     ! The highest LES model pressure - defined for cell interface
     ptop=zp(n1)-0.5*(zp(n1-1)-zp(n1))
     !
-    ! The first sounding level must be somewhat higher (lower pressure) THEN the last LES pressure level
+    ! The first sounding level must be somewhat higher (lower pressure) then the last LES pressure level
     !  - Must avoid overlapping pressure levels when LES pressures change with time
-    !  - 10 hPa should be large enough for most CASEs (LES has typically high pressure resolution)
+    !  - 10 hPa should be large enough for most cases (LES has typically high pressure resolution)
     dp=MAX(10.0,zp(n1-1)-zp(n1))
     !
     k=1 ! Note: increasing pressure and decreasing altitude
@@ -382,8 +382,8 @@ MODULE radiation
     nv1 = n1+nb+nt  ! Total number of pressure points (cell interfaces)
     nv = nv1-1   ! Total number of scalars (cell centers)
 
-    ! ALLOCATE the arrays for the sounding data to be used in the radiation
-    ! profile and THEN fill them first with the sounding data, by afill, THEN
+    ! Allocate the arrays for the sounding data to be used in the radiation
+    ! profile and then fill them first with the sounding data, by afill, then
     ! by interpolating the background profile at pressures less than the
     ! pressure at the top of the sounding
     !

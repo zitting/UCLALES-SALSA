@@ -46,10 +46,10 @@ MODULE step
 CONTAINS
     !
     ! ----------------------------------------------------------------------
-    ! SUBROUTINE model:  This is the main driver for the model's time
+    ! Subroutine model:  This is the main driver for the model's time
     ! integration.  It calls the routine tstep, which steps through the
     ! physical processes active on a time-step and updates variables.  It
-    ! THEN checks to see whether or not different output options are
+    ! then checks to see whether or not different output options are
     ! satisfied.
     SUBROUTINE stepper
 
@@ -152,7 +152,7 @@ CONTAINS
     END SUBROUTINE stepper
     !
     !----------------------------------------------------------------------
-    ! SUBROUTINE tstep_reset: Called to adjust current velocity and reset
+    ! Subroutine tstep_reset: Called to adjust current velocity and reset
     ! timestep based on cfl limits
     !
     SUBROUTINE tstep_reset(n1,n2,n3,up,vp,wp,uc,vc,wc,dtl,dtmx,cfl,c1,c2)
@@ -185,14 +185,14 @@ CONTAINS
 
     !
     !----------------------------------------------------------------------
-    ! SUBROUTINE t_step: Called by driver to timestep through the LES
-    ! routines.  Within many SUBROUTINEs, data is accumulated during
+    ! Subroutine t_step: Called by driver to timestep through the LES
+    ! routines.  Within many subroutines, data is accumulated during
     ! the course of a timestep for the purposes of statistical analysis.
     !
     SUBROUTINE t_step(cflflg,cflmax)
 
         USE grid, ONLY : level, dtl, dtlt, Tspinup,                            &
-            ! Added PARAMETERs for interfacing with SALSA
+            ! Added parameters for interfacing with SALSA
             nxp, nyp, nzp, a_press, a_temp, a_rsl,                             &
             a_rc, a_wp, a_rp, a_rt, a_rh,                                      &
             a_naerop, a_naerot, a_ncloudp, a_ncloudt, a_nprecpp, a_nprecpt,    &
@@ -237,7 +237,7 @@ CONTAINS
         xtime = time/86400. + strtim
         cflflg = .FALSE.
 
-        ! The runmode PARAMETER zrm is used by SALSA ONLY
+        ! The runmode parameter zrm is used by SALSA only
         zrm = 3
         IF ( time < Tspinup ) zrm = 2
 
@@ -325,7 +325,7 @@ CONTAINS
 
         !-------------------------------------------
         ! "Deposition" timestep
-        ! -- Reset ONLY scalar tendencies
+        ! -- Reset only scalar tendencies
         CALL tend0(.TRUE.)
 
         ! Dont perform sedimentation or level 3 autoconversion during spinup
@@ -336,7 +336,7 @@ CONTAINS
 
         !-------------------------------------------
         ! "Advection" timestep
-        ! -- Reset ONLY scalar tendencies
+        ! -- Reset only scalar tendencies
         CALL tend0(.TRUE.)
 
         ! Mask for cloud base activation
@@ -455,7 +455,7 @@ CONTAINS
             !
             ! Aerosol concentration for level 4. Nudge aerosol concentration based on
             ! total CCN = aerosol + cloud droplets + ice (a_nicep). Precipitation and snow
-            ! are not included, becaUSE these cannot be related to a specific aerosol bin
+            ! are not included, because these cannot be related to a specific aerosol bin
             ! and their concentrations are low.
             IF (level>3 .AND. nudge_ccn/=0) THEN
                 ! Nudge aerosol based on the total number (aerosol+cloud+ice)
@@ -575,13 +575,13 @@ CONTAINS
     END SUBROUTINE nudge_any_2d
     !
     !----------------------------------------------------------------------
-    ! SUBROUTINE tend0: sets all tendency arrays to zero
+    ! Subroutine tend0: sets all tendency arrays to zero
     !
     SUBROUTINE tend0(sclONLY)
 
         USE grid, ONLY : a_ut, a_vt, a_wt, nscl, a_st, newsclr
 
-        LOGICAL, INTENT(in) :: sclONLY ! If true, ONLY put scalar tendencies to zero
+        LOGICAL, INTENT(in) :: sclONLY ! If true, only put scalar tendencies to zero
 
         INTEGER :: n
 
@@ -596,7 +596,7 @@ CONTAINS
     END SUBROUTINE tend0
     !
     !----------------------------------------------------------------------
-    ! In CASE of negative tendencies to SALSA arrays, put some constrains
+    ! In case of negative tendencies to SALSA arrays, put some constrains
     ! in order to avoid concentrations going negative. This will possibly
     ! slightly affect the conservation of mass - needs testing/revision
     ! Juha Tonttila, FMI, 2014
@@ -705,7 +705,7 @@ CONTAINS
     END SUBROUTINE tend_constrain
     !
     !----------------------------------------------------------------------
-    ! SUBROUTINE cfl: Driver for calling CFL computation SUBROUTINE
+    ! Subroutine cfl: Driver for calling CFL computation subroutine
     !
     SUBROUTINE cfl(cflflg,cflmax)
 
@@ -725,7 +725,7 @@ CONTAINS
     END SUBROUTINE cfl
     !
     !----------------------------------------------------------------------
-    ! SUBROUTINE cfll: Checks CFL criteria, brings down the model IF the
+    ! Subroutine cfll: Checks CFL criteria, brings down the model if the
     ! maximum thershold is exceeded
     !
     REAL(KIND=8) FUNCTION cfll(n1,n2,n3,u,v,w,dxi,dyi,dzt,dtlt)
@@ -748,7 +748,7 @@ CONTAINS
     END FUNCTION cfll
     !
     !----------------------------------------------------------------------
-    ! SUBROUTINE update_sclrs:  Updates scalars by applying tendency and
+    ! Subroutine update_sclrs:  Updates scalars by applying tendency and
     ! boundary conditions
     !
     SUBROUTINE update_sclrs
@@ -773,7 +773,7 @@ CONTAINS
     END SUBROUTINE update_sclrs
     !
     ! ----------------------------------------------------------------------
-    ! SUBROUTINE update:
+    ! Subroutine update:
     !
     SUBROUTINE update(n1,n2,n3,a,fa,dt)
 
@@ -793,7 +793,7 @@ CONTAINS
     END SUBROUTINE update
     !
     ! ----------------------------------------------------------------------
-    ! SUBROUTINE buoyancy:
+    ! Subroutine buoyancy:
     !
     SUBROUTINE buoyancy
 
@@ -819,7 +819,7 @@ CONTAINS
     END SUBROUTINE buoyancy
     !
     ! ----------------------------------------------------------------------
-    ! SUBROUTINE boyanc:
+    ! Subroutine boyanc:
     !
     SUBROUTINE boyanc(n1,n2,n3,level,wt,th,rt,th00,scr,rx)
 
@@ -866,7 +866,7 @@ CONTAINS
     END SUBROUTINE boyanc
     !
     ! ----------------------------------------------------------------------
-    ! SUBROUTINE corlos:  This is the coriolis driver, its purpose is to
+    ! Subroutine corlos:  This is the coriolis driver, its purpose is to
     ! from the coriolis accelerations for u and v and add them into the
     ! accumulated tendency arrays of ut and vt.
     !
@@ -898,7 +898,7 @@ CONTAINS
     END SUBROUTINE corlos
     !
     ! ----------------------------------------------------------------------
-    ! SUBROUTINE sponge: does the rayleigh friction for the momentum terms,
+    ! Subroutine sponge: does the rayleigh friction for the momentum terms,
     ! and newtonian damping of thermal term the damping is accumulated with the
     ! other tendencies
     !
@@ -934,7 +934,7 @@ CONTAINS
     !
     ! ---------------------------------------------------------------------
     ! SALSA_diagnostics: Update properties for the current timestep:
-    !                    E.g. IF enough water has evaporated from droplets,
+    !                    E.g. if enough water has evaporated from droplets,
     !                    deplete the cloud droplet bins and move CCN material
     !                    back to the aerosol regime.
     !                    In addition, update the diagnostic scalars for total grid-cell
@@ -1237,7 +1237,7 @@ CONTAINS
                             zvol = zvol/rhowa
                             zdh2o = (zvol/a_ncloudp(k,i,j,bc)/pi6)**(1./3.)
 
-                            ! Loose the droplets IF smaller than the critical size
+                            ! Loose the droplets if smaller than the critical size
                             IF ( zdh2o < MAX(0.2*cdcld(k,i,j,bc),2.e-6) ) THEN
                                 IF (bc<=fca%cur) THEN
                                     ba = ica%par + (bc-ica%cur) ! Index for parallel aerosol bin
@@ -1271,12 +1271,12 @@ CONTAINS
                             zvol = zvol/rhowa
                             zdh2o = (zvol/a_nprecpp(k,i,j,bc)/pi6)**(1./3.)
 
-                            ! Loose the droplets IF smaller than critical radius
+                            ! Loose the droplets if smaller than critical radius
                             IF ( zdh2o < MAX(0.02*cdprc(k,i,j,bc),2.e-6)  ) THEN
 
                                 ! Move evaporating rain drops to a soluble aerosoln bin with
                                 ! the closest match in dry particle radius. Ain't perfect but
-                                ! the bin update SUBROUTINE in SALSA will take care of the rest.
+                                ! the bin update subroutine in SALSA will take care of the rest.
                                 zvol = 0.
                                 zclosest = .FALSE.
                                 CALL binMixrat('precp','dry',bc,i,j,k,zvol)
@@ -1317,7 +1317,7 @@ CONTAINS
                             zvol = zvol/rhoic
                             zdh2o = (zvol/a_nicep(k,i,j,bc)/pi6)**(1./3.)
 
-                            ! Loose the droplets IF smaller than the critical size !!huomhuom ice'n'snow
+                            ! Loose the droplets if smaller than the critical size !!huomhuom ice'n'snow
                             IF ( zdh2o < MAX(0.2*cdice(k,i,j,bc),2.e-6) ) THEN
                                 IF (bc<=fia%cur) THEN
                                     ba = iia%par + (bc-iia%cur) ! Index for parallel aerosol bin
@@ -1352,12 +1352,12 @@ CONTAINS
                             zvol = zvol/rhosn
                             zdh2o = (zvol/a_nsnowp(k,i,j,bc)/pi6)**(1./3.)
 
-                            ! Loose the droplets IF smaller than critical radius !!huomhuom a_rhi ice'n'snow
+                            ! Loose the droplets if smaller than critical radius !!huomhuom a_rhi ice'n'snow
                             IF ( zdh2o < MAX(0.02*cdsnw(k,i,j,bc),2.e-6) ) THEN
 
                                 ! Move evaporating rain drops to a soluble aerosoln bin with
                                 ! the closest match in dry particle radius. Ain't perfect but
-                                ! the bin update SUBROUTINE in SALSA will take care of the rest.
+                                ! the bin update subroutine in SALSA will take care of the rest.
                                 zclosest = .FALSE.
                                 CALL binMixrat('snow','dry',bc,i,j,k,zvol)
                                 zvol = zvol/rhosu
@@ -1399,7 +1399,7 @@ CONTAINS
                             CALL binMixrat('aerosol','dry',ba,i,j,k,zvol)
                             zvol = zvol/rhosu
 
-                            ! Particles smaller THEN 0.1 nm diameter are set to zero
+                            ! Particles smaller than 0.1 nm diameter are set to zero
                             zddry = (zvol/a_naerop(k,i,j,ba)/pi6)**(1./3.)
                             IF ( zddry < 1.e-10 ) THEN
                                 ! Volatile species to the gas phase

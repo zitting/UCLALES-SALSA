@@ -27,7 +27,7 @@ MODULE util
 
 CONTAINS
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE sclrset: Sets upper and lower boundaries to a constant
+  ! Subroutine sclrset: Sets upper and lower boundaries to a constant
   ! gradient via extrapolation, or a zero-gradient condition depending
   ! on the flag, typically used to set boundary conditions for scalars
   !
@@ -116,7 +116,7 @@ CONTAINS
   END SUBROUTINE vELSEt
   !
   !---------------------------------------------------------------------
-  ! GET_AVG2dh: Get the average of a 2 DIMENSIONal (horizontal) input field
+  ! GET_AVG2dh: Get the average of a 2 dimensional (horizontal) input field
   !
   REAL FUNCTION get_avg2dh(n2,n3,a)
 
@@ -197,8 +197,8 @@ CONTAINS
   END FUNCTION get_avg_ts
   !
   !---------------------------------------------------------------------
-  ! GET_AVG3: gets average across outer two DIMENSIONs at each
-  ! point along inner DIMENSION - calculated over all PUs
+  ! GET_AVG3: gets average across outer two dimensions at each
+  ! point along inner dimension - calculated over all PUs
   !
   SUBROUTINE get_avg3(n1,n2,n3,a,avg,normalize,cond)
 
@@ -262,7 +262,7 @@ CONTAINS
   END SUBROUTINE get_avg3
   !
   !---------------------------------------------------------------------
-  ! FUNCTION get_cor: gets mean correlation between two fields at a 
+  ! Function get_cor: gets mean correlation between two fields at a
   ! given level
   !
   REAL FUNCTION get_cor(n1,n2,n3,k,a,b)
@@ -283,8 +283,8 @@ CONTAINS
   END FUNCTION get_cor
   !
   !---------------------------------------------------------------------
-  ! FUNCTION get_cor3: gets mean correlation accross outer two DIMENSIONs
-  ! at each point along inner DIMENSION
+  ! Function get_cor3: gets mean correlation accross outer two dimensions
+  ! at each point along inner dimension
   !
   SUBROUTINE get_cor3(n1,n2,n3,a,b,avg)
 
@@ -307,7 +307,7 @@ CONTAINS
   END SUBROUTINE get_cor3
   !
   !---------------------------------------------------------------------
-  ! FUNCTION get_var3: gets variance for a field whose mean is known
+  ! Function get_var3: gets variance for a field whose mean is known
   !
   SUBROUTINE get_var3(n1,n2,n3,a,b,avg)
 
@@ -327,7 +327,7 @@ CONTAINS
   END SUBROUTINE get_var3
   !
   !---------------------------------------------------------------------
-  ! FUNCTION get_3rd3: gets the third moment for a field whose mean is known
+  ! Function get_3rd3: gets the third moment for a field whose mean is known
   !
   SUBROUTINE get_3rd3(n1,n2,n3,a,b,avg)
 
@@ -347,7 +347,7 @@ CONTAINS
   END SUBROUTINE get_3rd3
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE tridiff: standard tri-diagonal solver for nh columns
+  ! Subroutine tridiff: standard tri-diagonal solver for nh columns
   ! uses the LU decomposition of the equation 
   !
   !     cin1(k)*x(k-1)+ci(k)*x(k)+cip1(k)*x(k+1) = b(k)
@@ -399,7 +399,7 @@ CONTAINS
   END SUBROUTINE tridiff
   !
   ! --------------------------------------------------------------------
-  ! SUBROUTINE ae1mm: subtracts mean value from given field (a=a-a_bar)
+  ! Subroutine ae1mm: subtracts mean value from given field (a=a-a_bar)
   !
   SUBROUTINE ae1mm(n1,n2,n3,a,abar)
 
@@ -439,7 +439,7 @@ CONTAINS
   END SUBROUTINE ae1mm
   !
   !---------------------------------------------------------------------
-  ! CRAYFFTUSE:  Uses the cray routines to DO a 2D transform
+  ! CRAYFFTUSE:  Uses the cray routines to do a 2D transform
   !
   SUBROUTINE get_fft_twodim(nx,ny,nz,a,wsavex,wsavey,isgn)
 
@@ -628,7 +628,7 @@ CONTAINS
        cldp1(:,:,:) = .TRUE.
        cldp1(2:nz,:,:) = ( .NOT. cldpm(1:nz-1,:,:) ) 
 
-       ! Take the lowest level of the two CASEs
+       ! Take the lowest level of the two cases
        
        notused = .TRUE.
        DO k = 2,nz-1

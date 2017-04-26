@@ -1,13 +1,13 @@
 !c test
 !c---------------------------------------------------------------------
-!c SUBROUTINE FFT2DC: This routine computes the two DIMENSIONal 
-!c transform of a COMPLEXcubic array of square N and length NZ.
+!c SUBROUTINE FFT2DC: This routine computes the two dimensional
+!c transform of a complexcubic array of square N and length NZ.
 !c FFT's are done for each square level for k=2->NZ inclusive.  The 
 !c first level is used as a scratch array for storing the transpose
 !c matrix for the second half of the transform.  The code uses
 !c Swartztrauber's fft routines.  ISGN=1 implies the backward 
 !c transform otherwise the forward transform is carried out, 
-!c normalization is done ONLY on the backward transform
+!c normalization is done only on the backward transform
 !c
       SUBROUTINE FFT2DC_ALT(N,NZ,A,WSAVE,ISGN)
 !c 
@@ -64,14 +64,14 @@
       END 
 !c
 !c---------------------------------------------------------------------
-!c SUBROUTINE FFT2DC: This routine computes the two DIMENSIONal 
-!c transform of a COMPLEXcubic array of square N and length NZ.
+!c SUBROUTINE FFT2DC: This routine computes the two dimensional
+!c transform of a complexcubic array of square N and length NZ.
 !c FFT's are done for each square level for k=2->NZ inclusive.  The 
 !c first level is used as a scratch array for storing the transpose
 !c matrix for the second half of the transform.  The code uses
 !c Swartztrauber's fft routines.  ISGN=1 implies the backward 
 !c transform otherwise the forward transform is carried out, 
-!c normalization is done ONLY on the backward transform
+!c normalization is done only on the backward transform
 !c
       SUBROUTINE FFT2DC(N,NZ,A,WSAVE,ISGN)
 
@@ -129,10 +129,10 @@
 !c
 !c---------------------------------------------------------------------
 !c SUBROUTINE FFT1DC: This routine computes the fourier transform of 
-!c a COMPLEXN element vector defined at NZ levels, for levels 2 --> NZ
+!c a complex N element vector defined at NZ levels, for levels 2 --> NZ
 !c inclusive. FFT's are done using Swartztrauber's fft routines.  
 !c ISGN=1 implies the backward transform, otherwise the forward
-!c transform is carried out, normalization is done ONLY on the backward
+!c transform is carried out, normalization is done only on the backward
 !c transform
 !c
       SUBROUTINE FFT1DC(N,NZ,A,WSAVE,ISGN,FFTINI)

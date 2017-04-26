@@ -27,7 +27,7 @@ MODULE advf
 CONTAINS
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE fadvect: This is the driver for scalar advection.  It
+  ! Subroutine fadvect: This is the driver for scalar advection.  It
   ! advects using the average of the velocities at the current and past
   ! times.
   !
@@ -83,7 +83,7 @@ CONTAINS
 
        CALL advtnd(nzp,nxp,nyp,a_sp,a_tmp1,a_st,dtlt)
       ELSE IF (sflg) THEN
-       ! Averages & statistics even for zeros (might be non-zero ELSEwhere)
+       ! Averages & statistics even for zeros (might be non-zero elsewhere)
        a_tmp2(:,:,:)=0.
        CALL get_avg3(nzp,nxp,nyp,a_tmp2,v1da)
        CALL updtst(nzp,'adv',n,v1da,1)
@@ -93,7 +93,7 @@ CONTAINS
   END SUBROUTINE fadvect
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE newdroplet: Calculates the actual tendency in cloud droplets
+  ! Subroutine newdroplet: Calculates the actual tendency in cloud droplets
   ! and aerosols due to cloud activation.
   !
   SUBROUTINE newdroplet(pactmask)
@@ -188,8 +188,8 @@ CONTAINS
 
     END DO ! kk
 
-    ! Mask the number of activated for diagnostic output to be shown ONLY in
-    ! the points defined by the activation mask (0 ELSEwhere)
+    ! Mask the number of activated for diagnostic output to be shown only in
+    ! the points defined by the activation mask (0 elsewhere)
     DO bb = ica%cur,fca%cur
        a_nactd(:,:,:,bb) = MERGE(a_nactd(:,:,:,bb),0.,pactmask(:,:,:))
        DO ss = 1,GetNcomp(prtcl) + 1
@@ -204,7 +204,7 @@ CONTAINS
 
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE add_vel: Adds current and past timelevels of velocities
+  ! Subroutine add_vel: Adds current and past timelevels of velocities
   ! into scratch arrays for advection
   !
   SUBROUTINE add_vel(n1,n2,n3,su,up,uc,lwpt)
@@ -238,7 +238,7 @@ CONTAINS
   END SUBROUTINE add_vel
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE advtnd: Backs out the advective tendencies
+  ! Subroutine advtnd: Backs out the advective tendencies
   !
   SUBROUTINE advtnd(n1,n2,n3,varo,varn,tnd,dt)
 
@@ -264,7 +264,7 @@ CONTAINS
   END SUBROUTINE advtnd
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE mamaos: An alternative second order flux limited scheme
+  ! Subroutine mamaos: An alternative second order flux limited scheme
   ! written by Verica and Christiana as part of the MAMAOS program.
   !
   ! July 21, 2003
@@ -289,7 +289,7 @@ CONTAINS
     INTEGER :: i, j, k, kp1, k1, k2
     INTEGER :: gamma
     !
-    ! initialize fields for USE later
+    ! initialize fields for use later
     !
     DO k = 1, n1
        kp1 = min(k+1,n1)
@@ -374,7 +374,7 @@ CONTAINS
   END SUBROUTINE mamaos
  !
   !----------------------------------------------------------------------
-  ! SUBROUTINE mamaos_x: An alternative second order flux limited scheme
+  ! Subroutine mamaos_x: An alternative second order flux limited scheme
   ! for advection in the x direction.  (adapted from mamaos)
   !
   ! September 3, 2003
@@ -453,7 +453,7 @@ CONTAINS
   END SUBROUTINE mamaos_x
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE mamaos_y: An alternative second order flux limited scheme
+  ! Subroutine mamaos_y: An alternative second order flux limited scheme
   ! for advection in the y direction.  (adapted from mamaos)
   !
   ! September 3, 2003

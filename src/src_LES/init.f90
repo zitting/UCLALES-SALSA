@@ -74,7 +74,7 @@ CONTAINS
        CALL fldinit ! Juha: aerosol size distributions are initialized here.
                     !       Also thermodynamics!
 
-       ! If SALSA is used, CALL SALSA with full configuration once before beginning
+       ! If SALSA is used, call SALSA with full configuration once before beginning
        ! spin-up period to set up aerosol and cloud fields.
        IF (level >= 4) THEN
 
@@ -138,7 +138,7 @@ CONTAINS
             rv=a_rp,rc=a_rc,prc=a_srp)
     END IF ! mcflg
     !
-    ! write analysis and history files from restart IF appropriate
+    ! write analysis and history files from restart if appropriate
     !
     IF (outflg) THEN
        IF (runtype == 'INITIAL') THEN
@@ -218,7 +218,7 @@ CONTAINS
           END IF
 
        CASE(4,5)
-          ! Condensation will be calculated by the initial CALL of SALSA, so USE the
+          ! Condensation will be calculated by the initial call of SALSA, so use the
           ! saturation adjustment method to estimate the amount of liquid water,
           ! which is needed for theta_l
           DO j = 1,nyp
@@ -353,7 +353,7 @@ CONTAINS
     ns=1
     DO WHILE (ps(ns) /= 0. .AND. ns <= nns)
        !
-       ! filling relative humidity array ONLY accepts sounding in mixing
+       ! filling relative humidity array only accepts sounding in mixing
        ! ratio (g/kg) converts to (kg/kg)
        !
        rts(ns)=rts(ns)*1.e-3
@@ -410,7 +410,7 @@ CONTAINS
           END IF
           tks(ns)=xx
        CASE (2)
-          tks(ns) = ts(ns) ! a long way of saying DO nothing
+          tks(ns) = ts(ns) ! a long way of saying do nothing
        CASE DEFAULT
           IF (myid == 0) PRINT *, '  ABORTING: itsflg not supported'
           CALL appl_abort(0)
@@ -489,7 +489,7 @@ CONTAINS
     END IF
     !
     ! calculate theta_v for an unsaturated layer, neglecting condensate here is
-    ! okay as this is ONLY used for the first estimate of pi1, which will be
+    ! okay as this is only used for the first estimate of pi1, which will be
     ! updated in a consistent manner on the first dynamic timestep
     !
     DO k=1,nzp
@@ -503,7 +503,7 @@ CONTAINS
        pi1(k) = pi1(k-1)-g/(dzm(k-1)*0.5*(v1dc(k)+v1dc(k-1)))
     END DO
     !
-    ! calculate hydrostatic exner FUNCTION associated with th00 constant along
+    ! calculate hydrostatic exner function associated with th00 constant along
     ! with associated basic state density
     !
     pi0(1)=cp*(ps(1)*p00i)**rcp + g*(hs(1)-zt(1))/th00
@@ -602,7 +602,7 @@ CONTAINS
 
   !
   !----------------------------------------------------------------------
-  ! HSTART:  This SUBROUTINE reads a history file and does
+  ! HSTART:  This subroutine reads a history file and does
   ! a history start
   !
   SUBROUTINE hstart
@@ -698,7 +698,7 @@ CONTAINS
 
   !
   !--------------------------------------------------------------------
-  ! CLDINIT: Apply the tendencies from the initialization CALL of SALSA
+  ! CLDINIT: Apply the tendencies from the initialization call of SALSA
   !          instantaneously to account for the basic state thermodynamics
   !          and microphysics.
   !
@@ -913,7 +913,7 @@ CONTAINS
 
     !
   ! --------------------------------------------------------------------------------------------------
-  ! Replacement for SUBROUTINE init_aero_sizedist (init.f90): initilize altitude-dependent aerosol
+  ! Replacement for subroutine init_aero_sizedist (init.f90): initilize altitude-dependent aerosol
   ! size distributions and compositions.
   !
   ! Tomi Raatikainen, FMI, 29.2.2016
@@ -930,7 +930,7 @@ CONTAINS
 
     IMPLICIT NONE
     REAL :: core(nbins), nsect(1,1,nbins)             ! Size of the bin mid aerosol particle, local aerosol size dist
-    REAL :: pndist(nzp,nbins)                         ! Aerosol size dist as a FUNCTION of height
+    REAL :: pndist(nzp,nbins)                         ! Aerosol size dist as a function of height
     REAL :: pvf2a(nzp,nspec), pvf2b(nzp,nspec)        ! Mass distributions of aerosol species for a and b-bins
     REAL :: pnf2a(nzp)                                ! Number fraction for bins 2a
     REAL :: pvfOC1a(nzp)                              ! Mass distribution between SO4 and OC in 1a
@@ -999,12 +999,12 @@ CONTAINS
        CALL READ_AERO_INPUT(iso4,ioc,pndist,pvfOC1a,pvf2a,pvf2b,pnf2a)
 
     !
-    ! Uniform profiles based on NAMELIST PARAMETERs
+    ! Uniform profiles based on namelist parameters
     ! ---------------------------------------------------------------------------------------------------
     ELSE IF (isdtyp == 0) THEN
 
        IF (ioc>0 .AND. iso4>0) THEN
-          ! Both are there, so USE the given "massDistrA"
+          ! Both are there, so use the given "massDistrA"
           pvfOC1a(:) = volDistA(ioc)/(volDistA(ioc)+volDistA(iso4)) ! Normalize
        ELSE IF (ioc>0) THEN
           ! Pure OC
@@ -1026,7 +1026,7 @@ CONTAINS
        pnf2a(:) = nf2a
        !
        ! Uniform aerosol size distribution with height.
-       ! Using distribution PARAMETERs (n, dpg and sigmag) from the SALSA namelist
+       ! Using distribution parameters (n, dpg and sigmag) from the SALSA namelist
        !
        ! Convert to SI
        n = n*1.e6
@@ -1059,7 +1059,7 @@ CONTAINS
 
              !
              ! b) Aerosol mass concentrations
-             ! bin regime 1, done here separately becaUSE of the SO4/OC convention
+             ! bin regime 1, done here separately because of the SO4/OC convention
              ! SO4
              IF (iso4 > 0) THEN
                 ss = (iso4-1)*nbins + in1a; ee = (iso4-1)*nbins + fn1a
@@ -1150,7 +1150,7 @@ CONTAINS
 !!! initialize liquid and ice cloud particles ie. move particle fractions from aerosol bins to liquid cloud and ice particle bins
 !!!
 
- ! ---------- Juha: This should be replaced ASAP with a physical treatment. Do NOT USE for liquid clouds.
+ ! ---------- Juha: This should be replaced ASAP with a physical treatment. Do NOT use for liquid clouds.
   SUBROUTINE liq_ice_init
 
     !USE mo_salsa_driver, ONLY : aero
@@ -1164,7 +1164,7 @@ CONTAINS
     REAL :: zumA, zumB, zumCumIce, zumCumLiq, &
             excessIce, excessLiq,excessFracIce,excessFracLiq
 
-    ! initialize liquid and ice ONLY IF it is determinded so in the namelist.salsa
+    ! initialize liquid and ice only if it is determinded so in the namelist.salsa
     IF(initliqice) THEN
         IF(level==4) THEN
             iceFracA = 0.0; iceFracB = 0.0;
@@ -1185,7 +1185,7 @@ CONTAINS
 
                  DO bb=fn2a,in2a,-1
 
-                    IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce<iceFracA*zumA .AND. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice IF it is cold enough
+                    IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce<iceFracA*zumA .AND. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice if it is cold enough
 
                        excessIce =min(abs(zumCumIce-iceFracA*zumA),a_naerop(k,i,j,bb))
                        a_nicep(k,i,j,bb-3) = a_nicep(k,i,j,bb-3) + excessIce
@@ -1233,7 +1233,7 @@ CONTAINS
                 excessFracIce = 1.0
                 excessFracLiq = 1.0
                 DO bb=fn2b,in2b,-1
-                   IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce<iceFracB*zumB  .AND. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice IF it is cold enough
+                   IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce<iceFracB*zumB  .AND. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice if it is cold enough
 
                       excessIce =min(abs(zumCumIce-iceFracB*zumB),a_naerop(k,i,j,bb))
                       a_nicep(k,i,j,bb-3) = a_nicep(k,i,j,bb-3) + excessIce
@@ -1321,7 +1321,7 @@ END SUBROUTINE liq_ice_init
   END SUBROUTINE setAeroMass
   !
   ! -------------------------------------------------------------------------
-  ! Reads vertical profiles of aerosol size distribution PARAMETERs, aerosol species volume fractions and
+  ! Reads vertical profiles of aerosol size distribution parameters, aerosol species volume fractions and
   ! number concentration fractions between a and b bins
   !
   SUBROUTINE READ_AERO_INPUT(piso4,pioc,ppndist,ppvfOC1a,ppvf2a,ppvf2b,ppnf2a)
@@ -1333,7 +1333,7 @@ END SUBROUTINE liq_ice_init
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: piso4,pioc
-    REAL, INTENT(out) :: ppndist(nzp,nbins)                   ! Aerosol size dist as a FUNCTION of height
+    REAL, INTENT(out) :: ppndist(nzp,nbins)                   ! Aerosol size dist as a function of height
     REAL, INTENT(out) :: ppvf2a(nzp,nspec), ppvf2b(nzp,nspec) ! Volume distributions of aerosol species for a and b-bins
     REAL, INTENT(out) :: ppnf2a(nzp)                          ! Number fraction for bins 2a
     REAL, INTENT(out) :: ppvfOC1a(nzp)                        ! Volume distribution between SO4 and OC in 1a
@@ -1362,7 +1362,7 @@ END SUBROUTINE liq_ice_init
     ! Open the input file
     IF (READ_NC) CALL open_aero_nc(ncid, nc_levs, nc_nspec, nc_nmod)
 
-    ! Check that the input DIMENSIONs are compatible with SALSA initialization
+    ! Check that the input dimensions are compatible with SALSA initialization
     ! ....
 
     ! Allocate input variables
@@ -1434,11 +1434,11 @@ END SUBROUTINE liq_ice_init
     CALL htint2d(nc_levs,znsect(1:nc_levs,:),zlevs(1:nc_levs),nzp,ppndist,zt,nbins)
     CALL htint(nc_levs,znf2a(1:nc_levs),zlevs(1:nc_levs),nzp,ppnf2a,zt)
 
-    ! Since 1a bins by SALSA convention can ONLY contain SO4 or OC,
+    ! Since 1a bins by SALSA convention can only contain SO4 or OC,
     ! get renormalized mass fractions.
     ! --------------------------------------------------------------
     IF (pioc>0 .AND. piso4>0) THEN
-       ! Both are there, so USE the given "massDistrA"
+       ! Both are there, so use the given "massDistrA"
        ppvfOC1a(:) = ppvf2a(:,pioc)/(ppvf2a(:,pioc)+ppvf2a(:,piso4)) ! Normalize
     ELSE IF (pioc>0) THEN
        ! Pure OC

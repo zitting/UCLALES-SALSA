@@ -12,7 +12,7 @@ MODULE ncio
 CONTAINS
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE Open_NC: Opens a NetCDF File and identifies starting record
+  ! Subroutine Open_NC: Opens a NetCDF File and identifies starting record
   !
   SUBROUTINE open_nc (fname, ename, time, npts, ncid, nrec, version, author, info)
 
@@ -73,10 +73,10 @@ CONTAINS
   END SUBROUTINE open_nc
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE Define_NC: Defines the structure of the nc file (IF not
+  ! Subroutine Define_NC: Defines the structure of the nc file (if not
   ! already open)
   !
-  ! Juha: Added more DIMENSIONs to represent bins for aerosol, cloud and
+  ! Juha: Added more dimensions to represent bins for aerosol, cloud and
   ! precipitation particles.
   !
   SUBROUTINE define_nc(ncID, nRec, nVar, sx, n1, n2, n3, &
@@ -135,7 +135,7 @@ CONTAINS
           iret = nf90_def_dim(ncID, 'yt', n3, ytID)
           iret = nf90_def_dim(ncID, 'ym', n3, ymID)
        END IF
-       ! If this is analysis file, dont write binned output by DEFAULT!
+       ! If this is analysis file, dont write binned output by default!
        ! --------------------------------------------------------------
        IF (PRESENT(inae_a)) THEN
           iret = nf90_def_dim(ncID, 'aea', inae_a, aeaID)
@@ -169,7 +169,7 @@ CONTAINS
        dim_tmtt= (/ztID,xmID,ytID,timeID/)  ! upoint
        dim_ttmt= (/ztID,xtID,ymID,timeID/)  ! ypoint
 
-       ! Juha: DIMENSION environments for size distribution variables
+       ! Juha: dimension environments for size distribution variables
        dim_ttttaea = (/ztID,xtID,ytID,aeaID,timeID/)
        dim_ttttaeb = (/ztID,xtID,ytID,aebID,timeID/)
        dim_ttttcla = (/ztID,xtID,ytID,claID,timeID/)
@@ -181,7 +181,7 @@ CONTAINS
        dim_tttticb = (/ztID,xtID,ytID,icbID,timeID/)
        dim_ttttsnw = (/ztID,xtID,ytID,snowID,timeID/)
        ! ---
-       ! Zubair: DIMENSION environments for avegare size distribution variables per bin - ts files
+       ! Zubair: dimension environments for avegare size distribution variables per bin - ts files
        dim_ttaea = (/aeaID,timeID/)
        dim_ttaeb = (/aebID,timeID/)
        dim_ttcla = (/claID,timeID/)
@@ -191,7 +191,7 @@ CONTAINS
        dim_ttica = (/icaID,timeID/)
        dim_tticb = (/icbID,timeID/)
        dim_ttsnw = (/snowID,timeID/)
-       ! Zubair: DIMENSION environments for avegare size distribution variables per bin - ps files
+       ! Zubair: dimension environments for avegare size distribution variables per bin - ps files
        dim_ttztaea = (/ztID,aeaID,timeID/)
        dim_ttztaeb = (/ztID,aebID,timeID/)
        dim_ttztcla = (/ztID,claID,timeID/)
@@ -327,7 +327,7 @@ CONTAINS
   END SUBROUTINE define_nc
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE define_nc_cs: Defines the structure of a new column statistics nc file
+  ! Subroutine define_nc_cs: Defines the structure of a new column statistics nc file
   !
   SUBROUTINE define_nc_cs(ncID, nRec, n2, n3, level, rad_level, spec_list, nspec )
     INTEGER, INTENT (in) :: ncID, n2, n3, level, rad_level, nspec
@@ -447,7 +447,7 @@ CONTAINS
   END SUBROUTINE define_nc_cs
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE nc_info: Gets long_name, units and DIMENSION info given a
+  ! Subroutine nc_info: Gets long_name, units and dimension info given a
   ! short name.
   !
   CHARACTER (len=80) FUNCTION ncinfo(itype,short_name)

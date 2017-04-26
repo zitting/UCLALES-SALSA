@@ -40,7 +40,7 @@ CONTAINS
     REAL ::  v1da(nzp), v1db(nzp), v1dc(nzp), v1dd(nzp), v1de(nzp), &
          a_tmp1(nzp,nxp,nyp), a_tmp2(nzp,nxp,nyp)
     !
-    ! prepare density weights for USE vertical advection
+    ! prepare density weights for use vertical advection
     !
     IF (sflg) CALL acc_tend(nzp,nxp,nyp,a_uc,a_vc,a_wc,a_ut,a_vt,a_wt,        &
          v1dc,v1dd,v1de,1,'adv')
@@ -88,7 +88,7 @@ CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! LADVXU: Advection of U, by U, div is a scratch array, 
-  ! tendencies are accumulated IF ut variable, dxi is the inverse of 
+  ! tendencies are accumulated if ut variable, dxi is the inverse of
   ! delta-x the grid spacing in the horizontal direction.
   !
   SUBROUTINE ladvxu(n1,n2,n3,uc,ut,flx,dxi)
@@ -119,7 +119,7 @@ CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! LADVYU: Advection of U, by V, div is a scratch array, 
-  ! tendencies are accumulated IF fu variable, dyi is the inverse of 
+  ! tendencies are accumulated if fu variable, dyi is the inverse of
   ! delta-y.
   !
   SUBROUTINE ladvyu(n1,n2,n3,uc,ut,vc,flx,dyi)
@@ -151,8 +151,8 @@ CONTAINS
   END SUBROUTINE ladvyu
   !
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE ladvzu: Advection of U, by W*rho, div is a scratch array, 
-  ! tendencies are accumulated IF ut variable, v1 is the inverse density
+  ! Subroutine ladvzu: Advection of U, by W*rho, div is a scratch array, 
+  ! tendencies are accumulated if ut variable, v1 is the inverse density
   ! array valid at thermo points
   !
   SUBROUTINE ladvzu(n1,n2,n3,uc,ut,wm,flx,v1)
@@ -186,7 +186,7 @@ CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! LADVXV: Advection of V, by U, div is a scratch array, 
-  ! tendencies are accumulated IF vt variable, dxi is the inverse of 
+  ! tendencies are accumulated if vt variable, dxi is the inverse of
   ! delta-x the grid spacing in the horizontal direction.
   !
   SUBROUTINE ladvxv(n1,n2,n3,uc,vc,vt,flx,dxi)
@@ -217,7 +217,7 @@ CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! LADVYV: Advection of V, by V, div is a scratch array, 
-  ! tendencies are accumulated IF vt variable, dyi is the inverse of 
+  ! tendencies are accumulated if vt variable, dyi is the inverse of
   ! delta-y.
   !
   SUBROUTINE ladvyv(n1,n2,n3,vc,vt,flx,dyi)
@@ -250,7 +250,7 @@ CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! LADVZV: Advection of V, by W*rho, div is a scratch array, 
-  ! tendencies are accumulated IF vt variable, v1 is the inverse density
+  ! tendencies are accumulated if vt variable, v1 is the inverse density
   ! array valid at thermo points
   !
   SUBROUTINE ladvzv(n1,n2,n3,vc,vt,wm,flx,v1)
@@ -284,7 +284,7 @@ CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! LADVXW: Advection of W, by U, div is a scratch array, 
-  ! tendencies are accumulated IF wt variable, dxi is the inverse of 
+  ! tendencies are accumulated if wt variable, dxi is the inverse of
   ! delta-x the grid spacing in the horizontal direction.
   !
   SUBROUTINE ladvxw(n1,n2,n3,uc,wc,wt,flx,dxi)
@@ -315,7 +315,7 @@ CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! LADVYW: Advection of W, by V, div is a scratch array, 
-  ! tendencies are accumulated IF wt variable, dyi is the inverse of 
+  ! tendencies are accumulated if wt variable, dyi is the inverse of
   ! delta-y.
   !
   SUBROUTINE ladvyw(n1,n2,n3,vm,wc,wt,flx,dyi)
@@ -348,7 +348,7 @@ CONTAINS
   !
   ! ----------------------------------------------------------------------
   ! LADVZW: Advection of W, by W*rho, div is a scratch array, 
-  ! tendencies are accumulated IF wt variable, v2 is the inverse density
+  ! tendencies are accumulated if wt variable, v2 is the inverse density
   ! array valid at w-points
   !
   SUBROUTINE ladvzw(n1,n2,n3,wc,wt,wm,flx,v2)
