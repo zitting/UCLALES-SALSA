@@ -8,7 +8,7 @@ IMPLICIT NONE
 !
 ! MO_SALSA_DRIVER:
 ! Contains the primary SALSA input/output variables as well as
-! SUBROUTINEs used to CALL the main SALSA routine.
+! Subroutines used to call the main SALSA routine.
 !
 ! Juha Tonttila, FMI, 2014
 !
@@ -48,8 +48,8 @@ IMPLICIT NONE
   !
   !----------------------------------------------------
   ! RUN_SALSA
-  ! Performs necessary unit and DIMENSION conversion between
-  ! the host model and SALSA MODULE, and calls the main SALSA
+  ! Performs necessary unit and dimension conversion between
+  ! the host model and SALSA module, and calls the main SALSA
   ! routine
   !
   ! Partially adobted form the original SALSA boxmodel version.
@@ -87,7 +87,7 @@ IMPLICIT NONE
     USE class_componentIndex, ONLY : ComponentIndex, GetIndex, GetNcomp, IsUsed
     IMPLICIT NONE
 
-    INTEGER, INTENT(in) :: pnx,pny,pnz,n4                       ! DIMENSIONs: x,y,z,number of chemical species  
+    INTEGER, INTENT(in) :: pnx,pny,pnz,n4                       ! dimensions: x,y,z,number of chemical species
     REAL, INTENT(in)    :: tstep                     ! Model timestep length
 
     REAL, INTENT(in)    :: press(pnz,pnx,pny), &            ! Pressure (Pa)
@@ -193,7 +193,7 @@ IMPLICIT NONE
              in_rsi(1,1) = rsi(kk,ii,jj)
              in_w(1,1) = wp(kk,ii,jj)
 
-             ! For initialization and spinup, limit the RH with the PARAMETER rhlim (assign in namelist.salsa)
+             ! For initialization and spinup, limit the RH with the parameter rhlim (assign in namelist.salsa)
              IF (prunmode < 3) THEN
                 in_rv(1,1) = MIN(rv(kk,ii,jj), rs(kk,ii,jj)*rhlim)
              ELSE
@@ -941,7 +941,7 @@ IMPLICIT NONE
 
     END SELECT
 
-    ! IF thermodynamical level is 4, set all ice process switches to false
+    ! if thermodynamical level is 4, set all ice process switches to false
     IF(level == 4) THEN
           lscgia      = .FALSE.
           lscgic      = .FALSE.

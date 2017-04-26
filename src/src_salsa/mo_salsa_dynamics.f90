@@ -3,7 +3,7 @@
 !*                                                              *
 !*   MODULE MO_SALSA_DYNAMICS                               *
 !*                                                              *
-!*   Contains SUBROUTINEs and functions that are used           *
+!*   Contains subroutines and functions that are used           *
 !*   to calculate aerosol dynamics                              *
 !*                                                              *
 !****************************************************************
@@ -18,7 +18,7 @@ CONTAINS
   ! AL_note: Diagnostic variables of cond and nucl mass
   !********************************************************************
   !
-  ! SUBROUTINE COAGULATION(kproma,kbdim,klev, &
+  ! Subroutine COAGULATION(kproma,kbdim,klev, &
   !       pnaero,pvols,pdwet, &
   !       pcore, ptstep)
   !
@@ -35,7 +35,7 @@ CONTAINS
   ! Semi-implicit, non-iterative method:
   !  Volume concentrations of the smaller colliding particles
   !  added to the bin of the larger colliding particles.
-  !  Start from first bin and USE the updated number and volume
+  !  Start from first bin and use the updated number and volume
   !  for calculation of following bins. NB! Our bin numbering
   !  does not follow particle size in regime 2.
   !
@@ -47,9 +47,9 @@ CONTAINS
   !    +-------------------------------------------+
   !
   ! Exact coagulation coefficients for each pressure level
-  !  are calculated in SUBROUTINE SET_COAGC (in mo_salsa_init)
+  !  are calculated in subroutine SET_COAGC (in mo_salsa_init)
   !  which is called once at the beginning of the simulation
-  !  from model driver. In SUBROUTINE COAGULATION, these exact
+  !  from model driver. In subroutine COAGULATION, these exact
   !  coefficients are scaled according to current particle wet size
   !  (linear scaling).
   !
@@ -57,7 +57,7 @@ CONTAINS
   !       and hydrometeors and aerosols.
   !
   !       Since the bins are organized in terms of the dry size of
-  !       of the condensation nucleus, WHILE coagulation kernell is
+  !       of the condensation nucleus, while coagulation kernell is
   !       calculated with the actual hydrometeor size, some assumptions
   !       are laid out:
   !                 1. Cloud droplets from each size bin are lost by
@@ -72,7 +72,7 @@ CONTAINS
   !                 3. Coagulation between drizzle bins acts like 1.
   !
   !       ISSUES:
-  !           Process SELECTion should be made smarter - now just lots of IFs
+  !           Process selection should be made smarter - now just lots of ifs
   !           inside loops. Bad.
   !
   !
@@ -123,7 +123,7 @@ CONTAINS
 
     !-- Input and output variables -------------
     INTEGER, INTENT(IN) ::          &
-         kbdim,                     & ! DIMENSION for arrays
+         kbdim,                     & ! dimension for arrays
          klev                         ! number of vertical klev
 
     TYPE(t_section), INTENT(inout) :: &
@@ -922,10 +922,10 @@ CONTAINS
 
   ! fxm: calculated for empty bins too
   ! fxm: same diffusion coefficients and mean free paths used for sulphuric acid
-  !      and organic vapours (average values? 'REAL' values for each?)
+  !      and organic vapours (average values? 'real' values for each?)
   !********************************************************************
   !
-  ! SUBROUTINE CONDENSATION(kbdim,  klev,        &
+  ! Subroutine CONDENSATION(kbdim,  klev,        &
   !                         pnaero, pvols,  pdwet, plwc, &
   !                         pcsa,   pcocnv, pcocsv,      &
   !                         ptemp,  ppres,  ptstep)
@@ -942,8 +942,8 @@ CONTAINS
   !
   ! Method:
   ! -------
-  ! Regime 3 particles ONLY act as a sink for condensing vapours
-  !  WHILE their size and composition does not change.
+  ! Regime 3 particles only act as a sink for condensing vapours
+  !  while their size and composition does not change.
   ! Exception: Soluble fraction of regime 3c particles can change
   !  and thus they can be moved to regime 3b
   !
@@ -953,7 +953,7 @@ CONTAINS
   !  when growth is coupled to reversible reactions,
   !  Aerosol Sci. Tech., 27, pp 491-498.
   !
-  ! fxm: one should REALly couple with vapour production and loss terms as well
+  ! fxm: one should really couple with vapour production and loss terms as well
   !      should nucleation be coupled here as well????
   !
   ! Juha: Now does the condensation of water vapour on hydrometeors as well,
@@ -974,7 +974,7 @@ CONTAINS
   !
   !---------------------------------------------------------------
   !
-  ! Following PARAMETERization has been used:
+  ! Following parameterization has been used:
   ! ------------------------------------------
   !
   ! Molecular diffusion coefficient of condensing vapour [m2/s]
@@ -1016,7 +1016,7 @@ CONTAINS
 
     !-- Input and output variables ----------
     INTEGER, INTENT(IN) ::          &
-         kbdim,                     & ! DIMENSION for arrays
+         kbdim,                     & ! dimension for arrays
          klev                         ! number of vertical klev
 
     REAL, INTENT(IN) ::         &
@@ -1150,7 +1150,7 @@ CONTAINS
 
     !-- Input and output variables ----------
     INTEGER, INTENT(IN) ::          &
-         kbdim,                     & ! DIMENSION for arrays
+         kbdim,                     & ! dimension for arrays
          klev                       ! number of vertical klev
 
     REAL, INTENT(IN) ::         &
@@ -1243,7 +1243,7 @@ CONTAINS
           !  Fuchs and Sutugin (1971), In: Hidy et al. (ed.)
           !  Topics in current aerosol research, Pergamon.
           !
-          !  Size of condensing molecule considered ONLY for
+          !  Size of condensing molecule considered only for
           !  nucleation mode (3 - 20 nm)
           !
 
@@ -1276,7 +1276,7 @@ CONTAINS
           zbetasa = 1./zbetasa
           !-- 3) Collision rate of molecules to particles -------------------
           !
-          !  Particle diffusion coefficient considered ONLY for
+          !  Particle diffusion coefficient considered only for
           !  nucleation mode (3 - 20 nm)
           !
 
@@ -1376,7 +1376,7 @@ CONTAINS
 
              !-- Change of number concentration in the smallest bin caused by nucleation
              !   Jacobson (2005), equation (16.75)
-             ! If zxocnv = 0, THEN the chosen nucleation mechanism does not take into account
+             ! If zxocnv = 0, then the chosen nucleation mechanism does not take into account
              ! the nonvolatile organic vapors and thus the pnaero does not have to be updated.
              IF (zxocnv(ii,jj) > 0.) THEN
                 paero(ii,jj,in1a)%numc = paero(ii,jj,in1a)%numc + &
@@ -1555,7 +1555,7 @@ CONTAINS
     zhlp1 = 0.
     zrh(:,:) = prv(:,:)/prs(:,:)
 
-    ! Calculate the condensation ONLY for 2a/2b aerosol bins
+    ! Calculate the condensation only for 2a/2b aerosol bins
     nstr = in2a
 
     ! Save the current aerosol water content
@@ -2219,7 +2219,7 @@ CONTAINS
 
     REAL :: zns,znhno3
 
-    ! Solute ~everything ELSE (soluble)?
+    ! Solute ~everything else (soluble)?
     zns = ( 3.*(ppart%volc(1)*rhosu/msu)  + &
                   (ppart%volc(2)*rhooc/moc)  + &
             2.*(ppart%volc(5)*rhoss/mss)  + &
@@ -2255,7 +2255,7 @@ CONTAINS
 
     REAL :: zns,znnh3
 
-    ! Solute ~everything ELSE (soluble)?
+    ! Solute ~everything else (soluble)?
     zns = ( 3.*(ppart%volc(1)*rhosu/msu)  + &
                   (ppart%volc(2)*rhooc/moc)  + &
             2.*(ppart%volc(5)*rhoss/mss)  + &
@@ -2500,7 +2500,7 @@ CONTAINS
   FUNCTION satvaph2o(ptemp) RESULT(psat)
     !-----------------------------------------------------------------
     ! Saturation vapour pressure of water vapour
-    ! This is a local FUNCTION for the SUBROUTINE *cloud_condensation*
+    ! This is a local function for the subroutine *cloud_condensation*
     !
     ! J. Tonttila, FMI, 03/2014
     !-----------------------------------------------------------------
@@ -2538,11 +2538,11 @@ CONTAINS
   !------------------------------------------------
   !
   ! ***************
-  ! FUNCTION coagc
+  ! Function coagc
   ! ***************
   !
   ! Calculation of coagulation coefficients.
-  ! Extended version of the FUNCTION originally
+  ! Extended version of the function originally
   ! found in mo_salsa_init. This is now placed
   ! here to avoid cyclic dependencies between
   ! MODULEs upon coupling with UCLALES.

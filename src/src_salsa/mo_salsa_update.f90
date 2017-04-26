@@ -2,7 +2,7 @@
 !*                                                              *
 !*   MODULE MO_SALSA_UPDATE                                 *
 !*                                                              *
-!*   Contains SUBROUTINEs and functions that are used           *
+!*   Contains subroutines and functions that are used           *
 !*   to calculate aerosol dynamics                              *
 !*                                                              *
 !****************************************************************
@@ -26,7 +26,7 @@ CONTAINS
 
     !-- Input and output variables ----------
     INTEGER, INTENT(IN) ::          &
-         kbdim,                     & ! DIMENSION for arrays 
+         kbdim,                     & ! dimension for arrays
          klev                         ! number of vertical levels
 
     TYPE(t_section), INTENT(inout) :: pcloud(kbdim,klev,ncld), & ! Cloud size distribution and properties
@@ -53,7 +53,7 @@ CONTAINS
           ! ------------------------------------------------------------------------
 
           within_bins = .FALSE.
-          !-- Check IF the volume of the bin is within bin limits after update
+          !-- Check if the volume of the bin is within bin limits after update
           count = 0
           DO WHILE(.NOT.within_bins)
              within_bins = .TRUE.
@@ -153,7 +153,7 @@ CONTAINS
 
                 IF ( pcloud(ii,jj,kk)%numc > nlim .AND. sum(pcloud(ii,jj,kk)%volc(1:7)) > 1.e-30 ) THEN
                 
-                   ! Don't convert cloud or rain droplets to anything ELSE here.
+                   ! Don't convert cloud or rain droplets to anything else here.
                    zvpart = sum(pcloud(ii,jj,kk)%volc(1:7))/pcloud(ii,jj,kk)%numc
                 
                    !-- volume ratio of the size bin
@@ -233,7 +233,7 @@ CONTAINS
 
           ! ------------------------------------------------------------------------
           ! ************* RAIN DROPS **************
-          ! Everything ELSE the same as with cloud 
+          ! Everything else the same as with cloud
           ! droplets & aerosols, except that the rain 
           ! bins are organized according to the wet 
           ! diameter.
@@ -328,7 +328,7 @@ CONTAINS
           END DO !within_bins
 
 
-        IF(level < 5 ) CYCLE ! skip ice and snow distr. updates IF thermodynamical level doesn't include ice microphysics
+        IF(level < 5 ) CYCLE ! skip ice and snow distr. updates if thermodynamical level doesn't include ice microphysics
 
           ! ------------------------------------------------------------------------
           ! ************* ICE PARTICLES  **************
@@ -344,7 +344,7 @@ CONTAINS
 
                 IF ( pice(ii,jj,kk)%numc > prlim .AND. sum(pice(ii,jj,kk)%volc(1:7)) > 1.e-30 ) THEN
 
-                   ! Don't convert cloud or rain droplets to anything ELSE here. !!huomhuom
+                   ! Don't convert cloud or rain droplets to anything else here. !!huomhuom
                    zvpart = sum(pice(ii,jj,kk)%volc(1:7))/pice(ii,jj,kk)%numc
 
                    !-- volume ratio of the size bin
@@ -423,7 +423,7 @@ CONTAINS
 
           ! ------------------------------------------------------------------------
           ! ************* SNOW DROPS **************
-          ! Everything ELSE the same as with cloud
+          ! Everything else the same as with cloud
           ! droplets & aerosols, except that the snow
           ! bins are organized according to the wet
           ! diameter. !!huomhuom onko näin?

@@ -12,7 +12,7 @@ MODULE aerosol_thermodynamics
    ! based on VOCs predicted in MCM simulations performed by Mike Jenkin. Delivered by
    ! Gordon McFiggans as Deliverable D22 from WP1.4 in the EU FP6 EUCAARI Integrated Project.
    !
-   ! Queries concerning the USE of this code through Gordon McFiggans, g.mcfiggans@manchester.ac.uk,
+   ! Queries concerning the use of this code through Gordon McFiggans, g.mcfiggans@manchester.ac.uk,
    ! Ownership: D. Topping, Centre for Atmospheric Sciences, University of Manchester, 2007
 
 CONTAINS
@@ -20,7 +20,7 @@ CONTAINS
 
     SUBROUTINE inorganic_pdfite(rh,temp,ions,water_total,Press_HNO3,Press_HCl,Press_NH3,gamma_out,mols_out)
 
-           !the following SUBROUTINE calculates the water content of a mixed inorganic/organic
+           !the following subroutine calculates the water content of a mixed inorganic/organic
            !particle as well as equilibrium vapour pressures above the solution (HNO3,HCl,NH3 and
            !representative organic compounds)
            !Inorganic ions treated (H-NH4-Na-SO4-NO3-Cl) - bisulphate ion concentration calculated
@@ -29,19 +29,19 @@ CONTAINS
            !- commented sections indicate how 16 components (to follow, after completion of D30 and
            !D34). The one representative SOA compound currently carries the abundance weighted
            !average properties from >3000 potentially condensable organic compounds predicted in
-           !the base CASE simulation using the Master Chemical Mechanism (MCM). This MODULE accounts for
+           !the base case simulation using the Master Chemical Mechanism (MCM). This MODULE accounts for
            !no interaction between the inorganic & organic components
            !
            !--CALCULATION PROCEDURE----
            !
            !the following code determines inorganic solutes and 'equivalent' mole fractions from the
-           !ionic inputs (ions), for USE in calculating the water content (water_total) and activity
-           !coefficients. after activity coefficients are calculated these are THEN used for calculating
+           !ionic inputs (ions), for use in calculating the water content (water_total) and activity
+           !coefficients. after activity coefficients are calculated these are then used for calculating
            !vapour pressures using appropriate equilibrium constants (Press_HNO3,Press_NH3,Press_HCl).
            !the one representative organic is treated as ideal for contributions to the total water and for
            !calculating its equilibrium vapour pressure using raoults law.
            !note: the organic pure component vapour pressures for >3000 potentially condensable organic
-           !compounds from the base CASE simulation of the Master Chemical Mechanism (MCM) are calculated
+           !compounds from the base case simulation of the Master Chemical Mechanism (MCM) are calculated
            !from boiling point predictions. absorptive partitioning of all compounds at their total predicted
            !atmospheric burden to a similar organic mass is used to calculate the relative abundance of organic
            !species. the properties of the single representative organic component in this simulation are
@@ -54,7 +54,7 @@ CONTAINS
            ! a)Inorganic ion pairing
            !
            !  in order to calculate the water content, which is also used in calculating vapour
-           !  pressures, one needs to pair the anions and cations for USE in the ZSR mixing rule
+           !  pressures, one needs to pair the anions and cations for use in the ZSR mixing rule
            !  The equation provided by Clegg et al (2001) is used for ion pairing.
            !  The solutes chosen comprise of 9 inorganic salts and acids which provide a pairing between
            !  each anion and cation:
@@ -76,7 +76,7 @@ CONTAINS
            !  Binary water contents for inorganic components were calculated using AIM online (Clegg et al 1998)
            !  The water associated with the organic compound is calculated assuming ideality and that aw=RH
            !
-           ! b)molality of each inorganic ion and organic solute (initial input) is calculated for USE in
+           ! b)molality of each inorganic ion and organic solute (initial input) is calculated for use in
            !  vapour pressure calculation
            !
            !3) - BISULPHATE DISSOCIATION CALCULATION
@@ -88,7 +88,7 @@ CONTAINS
            !  manner. these are calulated using the same format as described in 4) below, where both activity
            !  coefficients were fit to the output from ADDEM (Topping et al 2005a,b) covering an extensive
            !  composition space, providing the activity coefficients and bisulphate ion dissociation as a
-           !  FUNCTION of equivalent mole fractions and relative humidity.
+           !  function of equivalent mole fractions and relative humidity.
            !
            !4) ACTIVITY COEFFICIENTS -for vapour pressures of HNO3,HCl and NH3
            !
@@ -100,14 +100,14 @@ CONTAINS
            !  the following procedure is used:
            !
            !  Zaveri et al (2005) found that one could express the variation of activity coefficients
-           !  linearly in log space IF equivalent mole fractions were used. So, by a taylor series expansion
+           !  linearly in log space if equivalent mole fractions were used. So, by a taylor series expansion
            !  log(activity coefficient)=log(binary activity coefficient at a given RH)+
-           !   (equivalent mole fraction compound A)*('interaction' PARAMETER between A and condensing specie)+
-           !   (equivalent mole fraction compound B)*('interaction' PARAMETER between B and condensing specie)+
-           !  here, the interaction PARAMETERs have been fit to ADDEM by searching the whole compositon space
+           !   (equivalent mole fraction compound A)*('interaction' parameter between A and condensing specie)+
+           !   (equivalent mole fraction compound B)*('interaction' parameter between B and condensing specie)+
+           !  here, the interaction parameters have been fit to ADDEM by searching the whole compositon space
            !  and fit usign the Levenberg-Marquardt nonlinear least squares algorithm.
            !
-           !  They are given as a FUNCTION of RH and vary with COMPLEXity ranging from linear to 5th order
+           !  They are given as a function of RH and vary with complexity ranging from linear to 5th order
            !  polynomial expressions, the binary activity coefficients were calculated using AIM online.
            !  note: for NH3, no binary activity coefficient was used and the data were fit to the ratio of
            !  the activity coefficients for the ammonium and hydrogen ions
@@ -115,8 +115,8 @@ CONTAINS
            !  using tabulated equilibrium constants (referenced)
            !  This procedure differs from that of Zaveri et al (2005) in that it is not assumed one can carry
            !  behaviour from binary mixtures in multicomponent systems. To this END we have fit the
-           ! 'interaction' PARAMETERs explicitly to a general inorganic equilibrium model (ADDEM - Topping et
-           !  al 2005a,b). Such PARAMETERs take into account bisulphate ion dissociation and water content.
+           ! 'interaction' parameters explicitly to a general inorganic equilibrium model (ADDEM - Topping et
+           !  al 2005a,b). Such parameters take into account bisulphate ion dissociation and water content.
            !  This also allows us to consider one regime for all composition space, rather than defining
            !  sulphate rich and sulphate poor regimes
            !
@@ -141,7 +141,7 @@ CONTAINS
                 ! 6: gamma_NH4HSO2
                 ! 7: gamma_HHSO4
 
-        REAL, DIMENSION(7) :: gamma_out  ! Juha: Changed DIMENSION 5->7
+        REAL, DIMENSION(7) :: gamma_out  ! Juha: Changed dimension 5->7
 
         REAL,DIMENSION(7)::ions,ions_mol
 
@@ -156,7 +156,7 @@ CONTAINS
 
         REAL:: water_total, h_out, hso4_out, so4_out
 		
-        INTEGER::binary_CASE, full_complexity
+        INTEGER::binary_case, full_complexity
 
         REAL::binary_hno3
 
@@ -236,7 +236,7 @@ CONTAINS
         Press_NH3=0.0e0                         !Initialising vapour pressure over the multicomponent
 										        !particle
 	
-        gamma_out = 1e0           ! i.e. don't alter the ideal mixing ratios IF there's nothing there.
+        gamma_out = 1e0           ! i.e. don't alter the ideal mixing ratios if there's nothing there.
 
            !------------------------------------------------------------------------
            !
@@ -290,7 +290,7 @@ CONTAINS
 
         !***
         !At this point we may need to introduce a method for prescribing H+ when
-        !there is no 'REAL' value for H+..i.e. in the sulphate poor domain
+        !there is no 'real' value for H+..i.e. in the sulphate poor domain
         !this will give a value for
         !-solve quadratic proposed by Zaveri et al 2005
 
@@ -301,7 +301,7 @@ CONTAINS
         !
         !3) BISULPHATE ION DISSOCIATION
         !
-        !Note: the flags "binary_CASE" and "full_complexity" are not used in this prototype
+        !Note: the flags "binary_case" and "full_complexity" are not used in this prototype
         !They are used for simplification of the fit expressions when using limited composition regions
         !
         !--this section of code calculates the bisulphate ion concentration
@@ -309,7 +309,7 @@ CONTAINS
         IF (ions(1) .GT. 0.0e0 .AND. ions(4) .GT. 0.0e0) THEN
 
             !----------HHSO4-------------
-            binary_CASE=1;
+            binary_case=1;
 
             IF (RH .GT. 0.1 .AND. RH .LT. 0.9) THEN
                 binary_hhso4=- 4.9521*(RH**3)+9.2881*(RH**2)-10.777*RH+6.0534;
@@ -499,14 +499,14 @@ CONTAINS
         !-----------binary hno3 act coeff---------------
         IF (ions(1) .GT. 0 .AND. ions(6) .GT. 0) THEN
 
-            binary_CASE=1;
+            binary_case=1;
 
             IF (RH .GT. 0.1 .AND. RH .LT. 0.98) THEN
                         !10 to 98! RH full run
-                IF (binary_CASE.EQ.1) THEN
+                IF (binary_case.EQ.1) THEN
                     binary_hno3=1.8514*(RH**3)-4.6991*(RH**2)+1.5514*(RH)+0.90236
                         !40 to 98 full
-                ELSE IF (binary_CASE.EQ.2) THEN
+                ELSE IF (binary_case.EQ.2) THEN
                     binary_hno3=-1.1751*(RH**2)-0.53794*(RH)+1.2808
                 END IF
             ELSE IF (RH .GE. 0.98 .AND. RH .LT. 0.9999) THEN
@@ -770,14 +770,14 @@ CONTAINS
 
         IF (ions(1) .GT. 0 .AND. ions(7) .GT. 0) THEN
             !-----------binary hcl act coeff---------------
-            binary_CASE=1;
+            binary_case=1;
             IF (RH .GT. 0.1 .AND. RH .LT. 0.98) THEN
                         !10 to 98! RH full run
-                IF (binary_CASE.EQ.1) THEN
+                IF (binary_case.EQ.1) THEN
                     !binary = 1.7526*(RH**2) - 6.9942*(RH) + 5.0046;
                     binary_hcl=- 5.0179*(RH**3)+9.8816*(RH**2)-10.789*(RH)+5.4737
                 !40 to 98 full
-                ELSE IF (binary_CASE.EQ.2) THEN
+                ELSE IF (binary_case.EQ.2) THEN
                     binary_hcl=- 4.6221*(RH)+4.2633
                 END IF
             ELSE IF (RH .GE. 0.98 .AND. RH .LT. 0.9999) THEN

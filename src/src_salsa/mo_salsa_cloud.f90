@@ -34,7 +34,7 @@ CONTAINS
 
     !-- Input and output variables ----------
     INTEGER, INTENT(IN) ::              &
-             kbdim,                     & ! DIMENSION for arrays
+             kbdim,                     & ! dimension for arrays
              klev                       ! number of vertical levels
 
     REAL, INTENT(in) ::             &
@@ -143,12 +143,12 @@ CONTAINS
   SUBROUTINE ActCloudBase(kbdim,klev,paero,pres,temp,w,pactd)
     ! Cloud base activation following:
     !
-    ! Abdul-Razzak et al: "A PARAMETERization of aerosol activation -
+    ! Abdul-Razzak et al: "A parameterization of aerosol activation -
     !                      3. Sectional representation"
     !                      J. Geophys. Res. 107, 10.1029/2001JD000483, 2002.
     !                      [Part 3]
     !
-    ! Abdul Razzak et al: "A PARAMETERization of aerosol activation -
+    ! Abdul Razzak et al: "A parameterization of aerosol activation -
     !                      1. Single aerosol type"
     !                      J. Geophys. Res. 103, 6123-6130, 1998.
     !                      [Part 1]
@@ -174,7 +174,7 @@ CONTAINS
 
     !-- Input and output variables ----------
     INTEGER, INTENT(IN) ::              &
-             kbdim,                     & ! DIMENSION for arrays
+             kbdim,                     & ! dimension for arrays
              klev                       ! number of vertical levels
 
     REAL, INTENT(in) ::             &
@@ -371,14 +371,14 @@ CONTAINS
 
   SUBROUTINE actInterst(kbdim,klev,paero,pcloud,prv,prs,temp)
     !
-    ! Activate interstitial aerosols IF they've reached their critical size
+    ! Activate interstitial aerosols if they've reached their critical size
     !
     ! 1. Formulate the profiles of Dwet within bins
     !      - Get the slopes between adjacent bin mids (known)
     !      - Interpolate Dwet to bin edges
     ! 2. Based on Dcrit and Dwet slopes, estimate the Ddry where Dwet becomes > Dcrit
     ! 3. Formulate the slopes for number concentration
-    ! 4. USE the Dry limits from (2) as the integration limits IF they are defined
+    ! 4. Use the Dry limits from (2) as the integration limits if they are defined
     !
     ! Note: insoluble species are not properly accounted for
     !
@@ -408,7 +408,7 @@ CONTAINS
     REAL :: Nact, Vact(8)        ! Helper variables for transferring the activated particles
 
     REAL :: Nmid, Nim1, Nip1     ! Bin number concentrations in current and adjacent bins
-    REAL :: dNmid, dNim1, dNip1  ! Density FUNCTION value of the number distribution for current and adjacent bins
+    REAL :: dNmid, dNim1, dNip1  ! Density function value of the number distribution for current and adjacent bins
 
     REAL :: Vmid, Vim1, Vip1     ! Dry particle volume in the middle of the bin
     REAL :: Vlo, Vhi             ! Dry particle volume scaled to bin edges
@@ -454,7 +454,7 @@ CONTAINS
              IF ( paero(ii,jj,ab)%numc < nlim) CYCLE
              intrange = .FALSE.
 
-             ! Define some PARAMETERs
+             ! Define some parameters
              Nmid = paero(ii,jj,ab)%numc     ! Number concentration at the current bin center
              Vwmid = SUM(paero(ii,jj,ab)%volc(:))/Nmid  ! Wet volume at the current bin center
              Vmid = SUM(paero(ii,jj,ab)%volc(1:7))/Nmid ! Dry volume at the current bin center
@@ -770,7 +770,7 @@ CONTAINS
 
              IF (zvcstar < Vmid) THEN
 
-                ! USE actual critical volume ONLY in the critical bin, otherwise current bin limits
+                ! Use actual critical volume only in the critical bin, otherwise current bin limits
                 zvcint = MAX(zvcstar, Vlo)
 
                 pactd(ii,jj,cb)%numc = (Nmid/Nnorm) * ( intgN(zs1,N01,zvcint,Vmid) + intgN(zs2,N02,Vmid,Vhi) )
@@ -782,7 +782,7 @@ CONTAINS
 
              ELSE IF (zvcstar >= Vmid) THEN
 
-                ! USE actual critical volume ONLY in the critical bin, otherwise current bin limits
+                ! Use actual critical volume only in the critical bin, otherwise current bin limits
                 zvcint = MIN(zvcstar,Vhi)
 
                 pactd(ii,jj,cb)%numc = (Nmid/Nnorm) * ( intgN(zs2,N02,zvcint,Vhi) )
@@ -835,7 +835,7 @@ CONTAINS
   !
   ! Uses a more straightforward method for converting cloud droplets to drizzle.
   ! Assume a lognormal cloud droplet distribution for each bin. Sigma_g is an adjustable
-  ! PARAMETER and is set to 1.2 by default
+  ! parameter and is set to 1.2 by default
   !
     
     USE mo_submctl, ONLY : t_section,   &
@@ -1408,7 +1408,7 @@ CONTAINS
   !
   ! Uses a more straightforward method for converting cloud droplets to drizzle.
   ! Assume a lognormal cloud droplet distribution for each bin. Sigma_g is an adjustable
-  ! PARAMETER and is set to 1.2 by default
+  ! parameter and is set to 1.2 by default
   !
     
     USE mo_submctl, ONLY : t_section,   &

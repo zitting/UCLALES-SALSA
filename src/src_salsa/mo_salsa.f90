@@ -1,7 +1,7 @@
 MODULE mo_salsa
 
   ! --------------------------------------------------------------------------
-  ! The SALSA SUBROUTINE
+  ! The SALSA subroutine
   !
   ! Modified for the new aerosol datatype,
   ! Juha Tonttila, FMI, 2014.
@@ -10,7 +10,7 @@ MODULE mo_salsa
 
   PRIVATE
 
-  ! -- SUBROUTINEs
+  ! -- subroutines
   PUBLIC :: salsa
 
 CONTAINS
@@ -51,9 +51,9 @@ CONTAINS
 
     IMPLICIT NONE
 
-    !-- Input PARAMETERs and variables --------------------------------------------------
+    !-- Input parameters and variables --------------------------------------------------
     INTEGER, INTENT(in) ::          &
-         kbdim,                     & ! DIMENSION for arrays (='kbdim')
+         kbdim,                     & ! dimension for arrays (='kbdim')
          klev                         ! number of vertical levels (='klev')
 
 
