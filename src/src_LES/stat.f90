@@ -1,4 +1,5 @@
 !----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 ! This file is part of UCLALES.
 !
 ! UCLALES is free software; you can redistribute it and/or modify
@@ -17,17 +18,17 @@
 ! Copyright 1999-2007, Bjorn B. Stevens, Dep't Atmos and Ocean Sci, UCLA
 !----------------------------------------------------------------------------
 !
-module stat
+MODULE stat
 
-  use ncio, only : open_nc, define_nc
-  use grid, only : level
-  use util, only : get_avg, get_cor, get_avg3, get_cor3, get_var3, get_csum, get_avg_ts, &
-                   get_cavg, get_avg2dh, get_3rd3
+  USE ncio, ONLY : open_nc, define_nc, define_nc_cs
+  USE grid, ONLY : level
+  USE util, ONLY : get_avg3, get_cor3, get_var3, get_avg_ts, &
+                   get_avg2dh, get_3rd3
 
-  implicit none
-  private
+  IMPLICIT NONE
+  PRIVATE
 
-  integer, parameter :: nvar1 = 28,               &
+  INTEGER, PARAMETER :: nvar1 = 28,               &
                         nv1sbulk = 62,            &
                         nv1MB = 4,                &
                         nvar2 = 92,               &
@@ -36,14 +37,17 @@ module stat
                         nv2sca = 8, nv2scb = 8,   &
                         nv2sp = 8
 
-  integer, save      :: nrec1, nrec2, ncid1, ncid2, nv1=nvar1, nv2 = nvar2
-  real, save         :: fsttm, lsttm, nsmp = 0
+  INTEGER, SAVE      :: nvar_spec3=0
+
+  INTEGER, SAVE      :: nrec1, nrec2, nrec3, ncid1, ncid2, ncid3, nv1=nvar1, nv2 = nvar2
+  REAL, SAVE         :: fsttm, lsttm, nsmp = 0
   REAL, SAVE         :: avgtime = 0
 
-  logical            :: sflg = .false.
+  LOGICAL            :: sflg = .FALSE.
   LOGICAL            :: mcflg = .FALSE.
-  real               :: ssam_intvl = 30.   ! statistical sampling interval
-  real               :: savg_intvl = 1800. ! statistical averaging interval
+  LOGICAL            :: csflg = .FALSE.
+  REAL               :: ssam_intvl = 30.   ! statistical sampling interval
+  REAL               :: savg_intvl = 1800. ! statistical averaging interval
 
   ! New output variables:
   ! 1. Add them to one of the arrays below
@@ -54,7 +58,7 @@ module stat
   ! 5. Make sure stat_init is up to date (boolean arrays etc).
 
 
-  character (len=7), save :: s1(nvar1)=(/                           &
+  CHARACTER (len=7), SAVE :: s1(nvar1)=(/                           &
        'time   ','cfl    ','maxdiv ','zi1_bar','zi2_bar','zi3_bar', & ! 1
        'vtke   ','sfcbflx','wmax   ','tsrf   ','ustar  ','shf_bar', & ! 7
        'lhf_bar','zi_bar ','lwp_bar','lwp_var','zc     ','zb     ', & !13
@@ -138,11 +142,13 @@ module stat
         s1Total(nvar1+nv1sbulk),                                     &
         s2Total(nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+nv2sp)
 
+  CHARACTER (len=7), SAVE :: spec3(7)
 
-  LOGICAL, save :: s2bool(nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+nv2sp)
-  LOGICAL, save :: s1bool(nvar1+nv1sbulk)
 
-  real, save, allocatable   :: tke_sgs(:), tke_res(:), tke0(:), wtv_sgs(:),  &
+  LOGICAL, SAVE :: s2bool(nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+nv2sp)
+  LOGICAL, SAVE :: s1bool(nvar1+nv1sbulk)
+
+  REAL, SAVE, ALLOCATABLE   :: tke_sgs(:), tke_res(:), tke0(:), wtv_sgs(:),  &
        wtv_res(:), wrl_sgs(:), thvar(:), svctr(:,:), ssclr(:),               &
        ! Additional ssclr and svctr for BULK SALSA output
        svctr_b(:,:), ssclr_b(:),                                             &
@@ -150,13 +156,13 @@ module stat
        svctr_aa(:,:,:), svctr_ca(:,:,:), svctr_p(:,:,:),                     &
        svctr_ab(:,:,:), svctr_cb(:,:,:),                                     &
        ! Mass budget arrays
-       massbdg(:)
+       massbdg(:), scs_rm(:,:,:)
 
-  public :: sflg, ssam_intvl, savg_intvl, statistics, init_stat, write_ps,   &
+  PUBLIC :: sflg, ssam_intvl, savg_intvl, statistics, init_stat, write_ps,   &
        acc_tend, updtst, sfc_stat, close_stat, fill_scalar, tke_sgs, sgsflxs,&
-       sgs_vel, comp_tke, get_zi, acc_removal, acc_massbudged, write_massbudged, mcflg
+       sgs_vel, comp_tke, get_zi, acc_removal, cs_rem_set, acc_massbudged, write_massbudged, mcflg, csflg
 
-contains
+CONTAINS
   !
   ! ---------------------------------------------------------------------
   ! INIT_STAT:  This routine initializes the statistical arrays which
@@ -164,22 +170,22 @@ contains
   ! elements 90 and above are used for computing the TKE budget. Hence
   ! if (nvar2 >= 90 the program stops
   !
-  subroutine init_stat(time, filprf, expnme, nzp)
+  SUBROUTINE init_stat(time, filprf, expnme, nzp)
 
-    use grid, only : nxp, nyp, iradtyp, prtcl
-    use mpi_interface, only : myid, ver, author
-    use mo_submctl, only : nprc, fn2a,fn2b,fca,fcb,fra
+    USE grid, ONLY : nxp, nyp, iradtyp, prtcl
+    USE mpi_interface, ONLY : myid, ver, author, info
+    USE mo_submctl, ONLY : nprc, fn2a,fn2b,fca,fcb,fra
     USE class_ComponentIndex, ONLY : IsUsed
 
-    character (len=80), intent (in) :: filprf, expnme
-    integer, intent (in)            :: nzp
-    real, intent (in)               :: time
+    CHARACTER (len=80), INTENT (in) :: filprf, expnme
+    INTEGER, INTENT (in)            :: nzp
+    REAL, INTENT (in)               :: time
 
     INTEGER :: i,e
-    character (len=80) :: fname
+    CHARACTER (len=80) :: fname
 
-    allocate (wtv_sgs(nzp),wtv_res(nzp),wrl_sgs(nzp))
-    allocate (tke_res(nzp),tke_sgs(nzp),tke0(nzp),thvar(nzp))
+    ALLOCATE (wtv_sgs(nzp),wtv_res(nzp),wrl_sgs(nzp))
+    ALLOCATE (tke_res(nzp),tke_sgs(nzp),tke0(nzp),thvar(nzp))
 
     ! Combine name arrays
     i = 1; e = nvar1
@@ -209,25 +215,25 @@ contains
     tke_sgs(:) = 0.
     tke0(:)    = 0.
 
-    select case(level)
-    case (0)
+    SELECT CASE(level)
+    CASE (0)
        nv1 = 13
        nv2 = 58
-    case (1)
+    CASE (1)
        nv1 = 14
        nv2 = 58
-    case (2)
+    CASE (2)
        nv1 = 20
        nv2 = 83
-       if (iradtyp == 3) nv1=21
+       IF (iradtyp == 3) nv1=21
     ! For SALSA
-    case (4)
+    CASE (4)
        nv1 = nvar1
        nv2 = nvar2
-    case default
+    CASE DEFAULT
        nv1 = nvar1
        nv2 = nvar2
-    end select
+    END SELECT
 
     IF ( level < 4 ) THEN
        ALLOCATE ( ssclr(nvar1), svctr(nzp,nvar2) )
@@ -282,6 +288,8 @@ contains
        i = nvar1+25; e = nvar1+27
        s1bool(i:e) = .TRUE.
 
+       nvar_spec3 = 0
+
        IF (IsUsed(prtcl,'SO4')) THEN
 
           i = nvar1+4; e = nvar1+6
@@ -302,6 +310,8 @@ contains
           i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+2
           s2bool(i) = .TRUE.
 
+         nvar_spec3 = nvar_spec3 +1
+         spec3(nvar_spec3)='SO4'
        END IF
        IF (IsUsed(prtcl,'OC')) THEN
 
@@ -323,6 +333,8 @@ contains
           i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+3
           s2bool(i) = .TRUE.
 
+         nvar_spec3 = nvar_spec3 +1
+         spec3(nvar_spec3)='OC'
        END IF
        IF (IsUsed(prtcl,'BC')) THEN
 
@@ -344,6 +356,8 @@ contains
           i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+4
           s2bool(i) = .TRUE.
 
+         nvar_spec3 = nvar_spec3 +1
+         spec3(nvar_spec3)='BC'
        END IF
        IF (IsUsed(prtcl,'DU')) THEN
 
@@ -365,6 +379,8 @@ contains
           i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+5
           s2bool(i) = .TRUE.
 
+         nvar_spec3 = nvar_spec3 +1
+         spec3(nvar_spec3)='DU'
        END IF
        IF (IsUsed(prtcl,'SS')) THEN
 
@@ -386,6 +402,8 @@ contains
           i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+6
           s2bool(i) = .TRUE.
 
+         nvar_spec3 = nvar_spec3 +1
+         spec3(nvar_spec3)='SS'
        END IF
        IF (IsUsed(prtcl,'NH')) THEN
 
@@ -407,6 +425,8 @@ contains
           i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+7
           s2bool(i) = .TRUE.
 
+         nvar_spec3 = nvar_spec3 +1
+         spec3(nvar_spec3)='NH'
        END IF
        IF (IsUsed(prtcl,'NO')) THEN
 
@@ -428,32 +448,56 @@ contains
           i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+8
           s2bool(i) = .TRUE.
 
+         nvar_spec3 = nvar_spec3 +1
+         spec3(nvar_spec3)='NO'
        END IF
 
        s2bool(nvar2+37:nvar2+40) = .TRUE.     ! Water mixing ratios
 
+       IF (csflg .AND. level>3) THEN
+           ! Allocate array for level 4 removal rate column statistics
+           ! Total number of ouputs is 3 for warm (aerosol, cloud and precipitation)
+           ! and 5 (add ice and snow) for each species including water
+           IF (level==4) THEN
+              ALLOCATE( scs_rm(3*(nvar_spec3+1),nxp,nyp) )
+           ELSE
+              ALLOCATE( scs_rm(5*(nvar_spec3+1),nxp,nyp) )
+          END IF
+          scs_rm=0. ! Set to zero (during spinup)
+       END IF
     END IF ! If level >=4
 
     fname =  trim(filprf)//'.ts'
-    if(myid == 0) print                                                  &
+    IF(myid == 0) PRINT                                                  &
          "(//' ',49('-')/,' ',/,'  Initializing: ',A20)",trim(fname)
-    call open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid1, nrec1, ver, author)
+    CALL open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid1, nrec1, ver, author, info)
     ! Juha: Modified for SALSA output
-    call define_nc( ncid1, nrec1, COUNT(s1bool), PACK(s1Total,s1bool))
-    if (myid == 0) print *, '   ...starting record: ', nrec1
+    CALL define_nc( ncid1, nrec1, COUNT(s1bool), PACK(s1Total,s1bool))
+    IF (myid == 0) PRINT *, '   ...starting record: ', nrec1
 
 
 
     fname =  trim(filprf)//'.ps'
-    if(myid == 0) print                                                  &
+    IF(myid == 0) PRINT                                                  &
          "(//' ',49('-')/,' ',/,'  Initializing: ',A20)",trim(fname)
-    call open_nc( fname, expnme, time,(nxp-4)*(nyp-4), ncid2, nrec2, ver, author)
+    CALL open_nc( fname, expnme, time,(nxp-4)*(nyp-4), ncid2, nrec2, ver, author, info)
     ! Juha: Modified due to SALSA output
-    call define_nc( ncid2, nrec2, COUNT(s2bool), PACK(s2Total,s2bool), n1=nzp, inae_a=fn2a, inae_b=fn2b-fn2a, &
+    CALL define_nc( ncid2, nrec2, COUNT(s2bool), PACK(s2Total,s2bool), n1=nzp, inae_a=fn2a, inae_b=fn2b-fn2a, &
                     incld_a=fca%cur, incld_b=fcb%cur-fca%cur, inprc=fra)
-    if (myid == 0) print *, '   ...starting record: ', nrec2
+    IF (myid == 0) PRINT *, '   ...starting record: ', nrec2
 
-  end subroutine init_stat
+
+
+    ! Optional column statistics
+    IF (csflg) THEN
+        fname =  trim(filprf)//'.cs'
+        IF(myid == 0) PRINT "(//' ',49('-')/,' ',/,'  Initializing: ',A20)",trim(fname)
+        CALL open_nc( fname, expnme, time,(nxp-4)*(nyp-4), ncid3, nrec3, ver, author, info)
+        IF (ncid3>=0) CALL define_nc_cs(ncid3, nrec3, nxp-4, nyp-4, level, iradtyp, spec3, nvar_spec3)
+        IF (myid == 0) PRINT *, '   ...starting record: ', nrec3
+    END IF
+
+  END SUBROUTINE init_stat
   !
   ! ---------------------------------------------------------------------
   ! Subroutine Statistics:  This subroutine is the statistics driver
@@ -467,16 +511,16 @@ contains
   !
   ! Modified for level 5
   ! Jaakko Ahola, FMI, 2016
-  subroutine statistics(time)
+  SUBROUTINE statistics(time)
 
-    use grid, only : a_up, a_vp, a_wp, a_rc, a_theta, a_scr2                    &
+    USE grid, ONLY : a_up, a_vp, a_wp, a_rc, a_theta, a_rsl           &
          , a_rp, a_tp, a_press, nxp, nyp, nzp, dzm, dzt, zm, zt, th00, umean            &
          , vmean, dn0, precip, a_rpp, a_npp, CCN, iradtyp, a_rflx               &
-         , a_sflx, albedo, a_srp, a_snrp
+         , a_sflx, albedo, a_srp, a_snrp, a_ncloudp, xt, yt
 
-    real, intent (in) :: time
+    REAL, INTENT (in) :: time
 
-    real :: rxt(nzp,nxp,nyp)
+    REAL :: rxt(nzp,nxp,nyp), rnt(nzp,nxp,nyp)
     REAL :: xrpp(nzp,nxp,nyp), xnpp(nzp,nxp,nyp)
 
     SELECT CASE(level)
@@ -490,52 +534,343 @@ contains
           xnpp = a_snrp
     END SELECT
 
-    if (nsmp == 0.) fsttm = time
+    IF (nsmp == 0.) fsttm = time
     nsmp=nsmp+1.
     ssclr(14:nvar1) = -999.
     !
     ! profile statistics
     !
-    call accum_stat(nzp, nxp, nyp, a_up, a_vp, a_wp, a_tp, a_press, umean &
+    CALL accum_stat(nzp, nxp, nyp, a_up, a_vp, a_wp, a_tp, a_press, umean &
          ,vmean,th00)
-    if (iradtyp == 3) then
-       call accum_rad(nzp, nxp, nyp, a_rflx, sflx=a_sflx, alb=albedo)
-    elseif (iradtyp > 0) then
-       call accum_rad(nzp, nxp, nyp, a_rflx)
-    end if
-    if (level >=1) call accum_lvl1(nzp, nxp, nyp, rxt)
-    if (level >=2) call accum_lvl2(nzp, nxp, nyp, th00, dn0, zm, a_wp,        &
-                                   a_theta, a_tp, a_rc, a_scr2, rxt   )
-    if (level >=3) call accum_lvl3(nzp, nxp, nyp, dn0, zm, a_rc, xrpp,  &
+    IF (iradtyp == 3) THEN
+       CALL accum_rad(nzp, nxp, nyp, a_rflx, sflx=a_sflx, alb=albedo)
+    ELSE IF (iradtyp > 0) THEN
+       CALL accum_rad(nzp, nxp, nyp, a_rflx)
+    END IF
+    IF (level >=1) CALL accum_lvl1(nzp, nxp, nyp, rxt)
+    IF (level >=2) CALL accum_lvl2(nzp, nxp, nyp, th00, dn0, zm, a_wp,        &
+                                   a_theta, a_tp, a_rc, a_rsl, rxt   )
+    IF (level >=3) CALL accum_lvl3(nzp, nxp, nyp, dn0, zm, xrpp,  &
                                    xnpp, precip, CCN                    )
-    if (level >=4)  call accum_lvl4(nzp, nxp, nyp)
+    IF (level >=4)  CALL accum_lvl4(nzp, nxp, nyp)
      !for Salsa output in ps files .. by Zubair Maalick
 
     !
     ! scalar statistics
     !
-    call set_ts(nzp, nxp, nyp, a_wp, a_theta, dn0, zt,zm,dzt,dzm,th00,time)
+    CALL set_ts(nzp, nxp, nyp, a_wp, a_theta, dn0, zt,zm,dzt,dzm,th00,time)
     IF ( level >=1 ) CALL ts_lvl1(nzp, nxp, nyp, dn0, zt, dzm, rxt)
-    IF ( level >=2 ) CALL ts_lvl2(nzp, nxp, nyp, rxt, a_scr2, zt)
+    IF ( level >=2 ) CALL ts_lvl2(nzp, nxp, nyp, rxt, a_rsl, zt)
     IF ( level >=4 ) CALL ts_lvl4(nzp, nxp, nyp, a_rc)
 
-    call write_ts
+    CALL write_ts
 
-  end subroutine statistics
+    !
+    ! Column statistics
+    !
+    IF (csflg) THEN
+        ! Radiation
+        IF (iradtyp == 3) CALL set_cs_any(nxp,nyp,albedo,'albedo')
+
+        ! Deposition statistics
+        IF (level == 3) THEN
+            CALL set_cs_any(nxp,nyp,precip(2,:,:),'prcp')
+        ELSE IF (level>3) THEN
+            ! Surface deposition fluxes
+            CALL cs_rem_save(nxp,nyp)
+        END IF
+
+        ! Warm cloud statistics
+        rxt = 0.    ! Condensate
+        rnt = 0.
+        xrpp = 0.   ! Precipitate
+        xnpp = 0.
+        IF (level==1) THEN
+            ! No clouds or precipitation
+        ELSE IF (level==2) THEN
+            ! Clouds available
+            rxt = a_rc
+            rnt = CCN
+        ELSE IF (level==3) THEN
+            ! Clouds and precipitation available
+            rxt = a_rc
+            rnt = CCN
+            xrpp = a_rpp
+            xnpp = a_npp
+        ELSE
+            ! Levels 4 and 5
+            rxt = a_rc
+            rnt = SUM(a_ncloudp,DIM=4)
+            xrpp = a_srp
+            xnpp = a_snrp
+        END IF
+        CALL set_cs_warm(nzp,nxp,nyp,rxt,rnt,xrpp,a_theta,dn0,zm,zt,dzm,xt,yt,time)
+    END IF
+
+  END SUBROUTINE statistics
   !
   ! -----------------------------------------------------------------------
-  ! subroutine set_ts: computes and writes time sequence stats
+  ! Subroutines set_cs_warm, cs_rem_set, cs_rem_save and set_cs_any:
+  ! write (and compute) column average statistics
   !
-  subroutine set_ts(n1,n2,n3,w,th,dn0,zt,zm,dzt,dzm,th00,time)
+  ! Save named data (already available)
+  SUBROUTINE set_cs_any(n2,n3,r,nam)
+    USE netcdf
+    INTEGER, INTENT(in) :: n2,n3
+    REAL, INTENT(IN) :: r(n2,n3)
+    CHARACTER (LEN=*) :: nam
+    INTEGER :: iret, VarID
 
-    use defs, only : cp
+    IF (csflg) THEN
+        iret = nf90_inq_varid(ncid3,trim(nam),VarID)
+        IF (iret==NF90_NOERR) THEN
+            iret = nf90_put_var(ncid3, VarID, r(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+            iret = nf90_sync(ncid3)
+        END IF
+    END IF
 
-    integer, intent(in) :: n1,n2,n3
-    real, intent(in)    :: w(n1,n2,n3),th(n1,n2,n3)
-    real, intent(in)    :: dn0(n1),zt(n1),zm(n1),dzt(n1),dzm(n1),th00,time
+  END SUBROUTINE set_cs_any
+  !
+  ! Removal statistics (level>3): calculate values for further use
+  SUBROUTINE cs_rem_set(n2,n3,n4,raer,rcld,rprc,rice,rsnw)
 
-    integer :: k
-    real    :: bf(n1)
+    USE mo_submctl, ONLY : nbins, ncld, nprc, nice,  nsnw
+    IMPLICIT NONE
+
+    INTEGER, INTENT(in) :: n2,n3,n4   ! Grid dimensions
+    REAL, INTENT(in) :: raer(n2,n3,n4*nbins), & ! Removal arrays
+                               rcld(n2,n3,n4*ncld), &
+                               rprc(n2,n3,n4*nprc), &
+                               rice(n2,n3,n4*nice), &
+                               rsnw(n2,n3,n4*nsnw)
+
+    INTEGER :: si, i, end,str
+
+    IF (.NOT.csflg) RETURN
+
+    ! Calculate all removal fluxes and save those to scs_rm for later use
+    i=1
+    DO si = 1,nvar_spec3+1 ! +1 for water
+        ! Removal by sedimentation of aerosol
+        str = (si-1)*nbins+1
+        END = si*nbins
+        scs_rm(i,:,:) = SUM(raer(:,:,str:end),DIM=3)
+        i=i+1
+
+        ! Removal by sedimentation of cloud droplets
+        str = (si-1)*ncld+1
+        END = si*ncld
+        scs_rm(i,:,:) = SUM(rcld(:,:,str:end),DIM=3)
+        i=i+1
+
+        ! Removal by precipitation
+        str = (si-1)*nprc+1
+        END = si*nprc
+        scs_rm(i,:,:) = SUM(rprc(:,:,str:end),DIM=3)
+        i=i+1
+
+        IF (level>4) THEN
+            ! Removal by sedimentation of ice particles
+            str = (si-1)*nice+1
+            END = si*nice
+            scs_rm(i,:,:) = SUM(rice(:,:,str:end),DIM=3)
+            i=i+1
+
+            ! Removal by snow
+            str = (si-1)*nsnw+1
+            END = si*nsnw
+            scs_rm(i,:,:) = SUM(rsnw(:,:,str:end),DIM=3)
+            i=i+1
+        END IF
+    END DO
+
+  END SUBROUTINE cs_rem_set
+  !
+  ! Removal statistics (level>3): save values
+  SUBROUTINE cs_rem_save(n2,n3)
+
+    IMPLICIT NONE
+
+    INTEGER, INTENT(in) :: n2,n3
+
+    INTEGER :: si, i
+    CHARACTER(LEN=3) :: nam
+
+    IF (.NOT.csflg) RETURN
+
+    ! Save all previously calculated removal fluxes
+    !   Note: fluxes not calculated during spinup, so saving zeros
+    i=1
+    DO si = 1,nvar_spec3+1 ! +1 for water
+        IF (si==nvar_spec3+1) THEN
+            nam='H2O'
+        ELSE
+            nam=spec3(si)
+        END IF
+
+        ! Removal by sedimentation of aerosol
+        CALL set_cs_any(n2,n3,scs_rm(i,:,:),'rm'//nam//'dr') ! 'dr' should be for aerosol and 'ae' for water
+        i=i+1
+
+        ! Removal by sedimentation of cloud droplets
+        CALL set_cs_any(n2,n3,scs_rm(i,:,:),'rm'//nam//'cl')
+        i=i+1
+
+        ! Removal by precipitation
+        CALL set_cs_any(n2,n3,scs_rm(i,:,:),'rm'//nam//'pr')
+        i=i+1
+
+        IF (level>4) THEN
+            ! Removal by sedimentation of ice particles
+            !CALL set_cs_any(n2,n3,scs_rm(i,:,:),'rm'//name//'ic')
+            i=i+1
+
+            ! Removal by snow
+            !CALL set_cs_any(n2,n3,scs_rm(i,:,:),'rm'//nam//'sn')
+            i=i+1
+        END IF
+    END DO
+
+  END SUBROUTINE cs_rem_save
+  !
+  ! Calculate warm cloud statistics
+  SUBROUTINE set_cs_warm(n1,n2,n3,rc,nc,rp,th,dn0,zm,zt,dzm,xt,yt,time)
+
+    USE netcdf
+    INTEGER :: iret, VarID
+
+    INTEGER, INTENT(in) :: n1,n2,n3
+    REAL, INTENT(in)    :: rc(n1,n2,n3),nc(n1,n2,n3),rp(n1,n2,n3),th(n1,n2,n3)
+    REAL, INTENT(in)    :: dn0(n1),zm(n1),zt(n1),dzm(n1),xt(n2),yt(n3),time
+    REAL :: lwp(n2,n3), ncld(n2,n3), rwp(n2,n3), nrain(n2,n3), zb(n2,n3), zc(n2,n3), &
+                th1(n2,n3), lmax(n2,n3)
+    INTEGER :: ncloudy(n2,n3), nrainy(n2,n3)
+    INTEGER :: i, j, k
+    REAL    :: cld, rn, sval, dmy
+
+    ! No outputs for level 1
+    IF (level<2) RETURN
+
+    ! Calculate stats
+    lwp=0.      ! LWP (kg/m^2)
+    ncld=0.     ! Average CDNC (#/kg)
+    ncloudy=0 ! Number of cloudy grid cells
+    rwp=0.      ! RWP (kg/m^2)
+    nrain=0.    ! Average RDNC (#/kg)
+    nrainy=0    ! Number of cloudy grid cells
+    zb=zm(n1)+100.  ! Cloud base (m)
+    zc=0.           ! Cloud top (m)
+    lmax=0.     ! Liquid water mixing ratio (kg/kg)
+    th1=0.      ! Height of the maximum theta gradient
+    DO j=3,n3-2
+       DO i=3,n2-2
+          cld=0.
+          rn=0.
+          sval = 0.
+          DO k=2,n1
+             IF (rc(k,i,j)>0.01e-3) THEN
+                ! Cloudy grid
+                lwp(i,j)=lwp(i,j)+rc(k,i,j)*dn0(k)*(zm(k)-zm(k-1))
+                ! Volume weighted average of the CDNC
+                ncld(i,j)=ncld(i,j)+nc(k,i,j)*dn0(k)*(zm(k)-zm(k-1))
+                cld=cld+dn0(k)*(zm(k)-zm(k-1))
+                ! Number of cloudy pixels
+                ncloudy(i,j)=ncloudy(i,j)+1
+                ! Cloud base and top
+                zb(i,j)=min(zt(k),zb(i,j))
+                zc(i,j)=max(zt(k),zc(i,j))
+             END IF
+             IF (rp(k,i,j) > 0.001e-3) THEN
+                ! Rainy grid cell
+                rwp(i,j)=rwp(i,j)+rp(k,i,j)*dn0(k)*(zm(k)-zm(k-1))
+                ! Volume weighted average of the RDNC
+                nrain(i,j)=ncld(i,j)+nc(k,i,j)*dn0(k)*(zm(k)-zm(k-1))
+                rn=rn+dn0(k)*(zm(k)-zm(k-1))
+                ! Number of rainy pixels
+                nrainy(i,j)=nrainy(i,j)+1
+             END IF
+             ! Maximum liquid water mixing ratio
+             lmax(i,j) = max(lmax(i,j),rc(k,i,j))
+             ! Height of the maximum theta gradient
+             IF (k<=n1-5) THEN
+                dmy = (th(k+1,i,j)-th(k,i,j))*dzm(k)
+                IF (dmy > sval ) THEN
+                   sval = dmy
+                   th1(i,j) = zt(k)
+                END IF
+            END IF
+          END DO
+          IF (cld>0.) THEN
+            ncld(i,j)=ncld(i,j)/cld
+          ELSE
+            zb(i,j)=-999.
+            zc(i,j)=-999.
+          END IF
+          IF (rn>0.) THEN
+            nrain(i,j)=nrain(i,j)/rn
+          END IF
+       END DO
+    END DO
+
+    ! Save the data
+    iret = nf90_inq_varid(ncid3,'time',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, time, start=(/nrec3/))
+
+    IF (nrec3 == 1) THEN
+       iret = nf90_inq_varid(ncid3, 'xt', VarID)
+       iret = nf90_put_var(ncid3, VarID, xt(3:n2-2), start = (/nrec3/))
+       iret = nf90_inq_varid(ncid3, 'yt', VarID)
+       iret = nf90_put_var(ncid3, VarID, yt(3:n3-2), start = (/nrec3/))
+    END IF
+
+    iret = nf90_inq_varid(ncid3,'lwp',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, lwp(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'rwp',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, rwp(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'Nc',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, ncld(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'Nr',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, nrain(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'nccnt',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, ncloudy(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'nrcnt',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, nrainy(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'zb',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, zb(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'zc',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, zc(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'zi1',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, th1(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_inq_varid(ncid3,'lmax',VarID)
+    IF (iret==NF90_NOERR) iret = nf90_put_var(ncid3, VarID, lmax(3:n2-2,3:n3-2), start=(/1,1,nrec3/))
+
+    iret = nf90_sync(ncid3)
+    nrec3 = nrec3 + 1
+
+  END SUBROUTINE set_cs_warm
+  !
+  ! -----------------------------------------------------------------------
+  ! Subroutine set_ts: computes and writes time sequence stats
+  !
+  SUBROUTINE set_ts(n1,n2,n3,w,th,dn0,zt,zm,dzt,dzm,th00,time)
+
+    USE defs, ONLY : cp
+
+    INTEGER, INTENT(in) :: n1,n2,n3
+    REAL, INTENT(in)    :: w(n1,n2,n3),th(n1,n2,n3)
+    REAL, INTENT(in)    :: dn0(n1),zt(n1),zm(n1),dzt(n1),dzm(n1),th00,time
+
+    INTEGER :: k
+    REAL    :: bf(n1)
 
     ssclr(1) = time
     ssclr(4) = get_zi(n1, n2, n3, 2, th, dzm, zt, 1.)   ! maximum gradient
@@ -544,11 +879,11 @@ contains
     ! buoyancy flux statistics
     !
     ssclr(7) = 0.
-    do k = 2,n1-2
+    DO k = 2,n1-2
        bf(k) = wtv_res(k) + wtv_sgs(k)
        ssclr(7) = ssclr(7) + (tke_res(k)+tke_sgs(k))*dn0(k)/dzt(k)
        svctr(k,33) = svctr(k,33) + wtv_sgs(k)*9.8/th00
-    end do
+    END DO
     ssclr(6) = get_zi(n1, n2, n3, 4, th, bf, zm, 1.) ! minimum buoyancy flux
 
     ssclr(8) = bf(2)
@@ -556,80 +891,80 @@ contains
 
     ssclr(12) = ssclr(12)*cp*(dn0(1)+dn0(2))*0.5
 
-  end subroutine set_ts
+  END SUBROUTINE set_ts
   !
   ! -----------------------------------------------------------------------
-  ! subroutine ts_lvl1: computes and writes time sequence stats; for the
+  ! Subroutine ts_lvl1: computes and writes time sequence stats; for the
   ! zi calculation setting itype=1 selects a concentration threshold
   !
-  subroutine ts_lvl1(n1,n2,n3,dn0,zt,dzm,q)
+  SUBROUTINE ts_lvl1(n1,n2,n3,dn0,zt,dzm,q)
 
-    use defs, only : alvl
+    USE defs, ONLY : alvl
 
-    integer, intent(in) :: n1,n2,n3
-    real, intent(in)    :: q(n1,n2,n3)
-    real, intent(in)    :: dn0(n1),zt(n1),dzm(n1)
+    INTEGER, INTENT(in) :: n1,n2,n3
+    REAL, INTENT(in)    :: q(n1,n2,n3)
+    REAL, INTENT(in)    :: dn0(n1),zt(n1),dzm(n1)
 
     ssclr(13) = ssclr(13)*alvl*(dn0(1)+dn0(2))*0.5
     ssclr(14) = get_zi(n1, n2, n3, 1, q, dzm, zt, 0.5e-3)
 
-  end subroutine ts_lvl1
+  END SUBROUTINE ts_lvl1
   !
   ! -----------------------------------------------------------------------
-  ! subroutine ts_lvl2: computes and writes time sequence stats
+  ! Subroutine ts_lvl2: computes and writes time sequence stats
   !
-  subroutine ts_lvl2(n1,n2,n3,rt,rs,zt)
+  SUBROUTINE ts_lvl2(n1,n2,n3,rt,rs,zt)
 
-    integer, intent(in) :: n1,n2,n3
-    real, intent(in)    :: rt(n1,n2,n3),rs(n1,n2,n3), zt(n1)
+    INTEGER, INTENT(in) :: n1,n2,n3
+    REAL, INTENT(in)    :: rt(n1,n2,n3),rs(n1,n2,n3), zt(n1)
 
-    integer :: k,i,j
-    real    :: cpnt, unit, xaqua
+    INTEGER :: k,i,j
+    REAL    :: cpnt, unit, xaqua
 
     ssclr(18)  = zt(n1)
     ssclr(19)  = 0.
     ssclr(20)  = 0.
     ssclr(28)  = 0.
 
-    unit = 1./real((n2-4)*(n3-4))
-    do j=3,n3-2
-       do i=3,n2-2
+    unit = 1./REAL((n2-4)*(n3-4))
+    DO j=3,n3-2
+       DO i=3,n2-2
           cpnt  = 0.
-          do k=2,n1-2
+          DO k=2,n1-2
              xaqua = rt(k,i,j) - rs(k,i,j)
-             if (xaqua > 1.e-5) then
+             IF (xaqua > 1.e-5) THEN
                 ssclr(17) = max(ssclr(17),zt(k))
                 ssclr(18) = min(ssclr(18),zt(k))
                 cpnt = unit
                 ssclr(20) = max(ssclr(20), xaqua)
                 ssclr(28) = ssclr(28) + 1.
-             end if
-          end do
+             END IF
+          END DO
           ssclr(19) = ssclr(19) + cpnt
-       end do
-    end do
+       END DO
+    END DO
 
-    if (ssclr(18) == zt(n1)) ssclr(18) = -999.
+    IF (ssclr(18) == zt(n1)) ssclr(18) = -999.
 
-  end subroutine ts_lvl2
+  END SUBROUTINE ts_lvl2
  !
   ! -----------------------------------------------------------------------
-  ! subroutine ts_lvl4: computes and writes time sequence stats of Salsa variables --
+  ! Subroutine ts_lvl4: computes and writes time sequence stats of Salsa variables --
   !  Implemented by Zubair Maalick 20/07/2015
   !  Some rewriting and adjusting by Juha Tonttila
   !
   SUBROUTINE ts_lvl4(n1,n2,n3,rc)
-    use mo_submctl, only : nlim
+    USE mo_submctl, ONLY : nlim
     USE grid, ONLY : prtcl, bulkNumc, bulkMixrat,dzt
     USE class_componentIndex, ONLY : IsUsed
 
     IMPLICIT NONE
 
-    integer, intent(in) :: n1,n2,n3
+    INTEGER, INTENT(in) :: n1,n2,n3
     REAL, INTENT(in) :: rc(n1,n2,n3)
 
     REAL :: a0(n1,n2,n3), a1(n1,n2,n3)
-    integer :: ii,ss
+    INTEGER :: ii,ss
     LOGICAL :: cond_ic(n1,n2,n3), cond_oc(n1,n2,n3)
     CHARACTER(len=3), PARAMETER :: zspec(7) = (/'SO4','OC ','BC ','DU ','SS ','NH ','NO '/)
 
@@ -669,28 +1004,28 @@ contains
   END SUBROUTINE ts_lvl4
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_STAT: Accumulates various statistics over an
+  ! Subroutine ACCUM_STAT: Accumulates various statistics over an
   ! averaging period for base (level 0) version of model
   !
-  subroutine accum_stat(n1,n2,n3,u,v,w,t,p,um,vm,th00)
+  SUBROUTINE accum_stat(n1,n2,n3,u,v,w,t,p,um,vm,th00)
 
-    integer, intent (in) :: n1,n2,n3
-    real, dimension (n1,n2,n3), intent (in)    :: u, v, w, t, p
-    real, intent (in)           :: um, vm, th00
+    INTEGER, INTENT (in) :: n1,n2,n3
+    REAL, DIMENSION (n1,n2,n3), INTENT (in)    :: u, v, w, t, p
+    REAL, INTENT (in)           :: um, vm, th00
 
-    integer :: k
-    real    :: a1(n1), b1(n1), c1(n1), d1(n1), a3(n1), b3(n1), tmp(n1)
+    INTEGER :: k
+    REAL    :: a1(n1), b1(n1), c1(n1), d1(n1), a3(n1), b3(n1), tmp(n1)
 
-    call get_avg3(n1,n2,n3, u,a1)
-    call get_avg3(n1,n2,n3, v,b1)
-    call get_avg3(n1,n2,n3, t,c1)
-    call get_avg3(n1,n2,n3, p,d1)
-    call get_var3(n1,n2,n3, t, c1, thvar)
-    call get_3rd3(n1,n2,n3, t, c1, b3) ! Used to be (t-a1)**3
+    CALL get_avg3(n1,n2,n3, u,a1)
+    CALL get_avg3(n1,n2,n3, v,b1)
+    CALL get_avg3(n1,n2,n3, t,c1)
+    CALL get_avg3(n1,n2,n3, p,d1)
+    CALL get_var3(n1,n2,n3, t, c1, thvar)
+    CALL get_3rd3(n1,n2,n3, t, c1, b3) ! Used to be (t-a1)**3
     tmp(:)=0.
-    call get_3rd3(n1,n2,n3, w, tmp, a3) ! Now just w**3
+    CALL get_3rd3(n1,n2,n3, w, tmp, a3) ! Now just w**3
 
-    do k=1,n1
+    DO k=1,n1
        svctr(k,10)=svctr(k,10) + a1(k) + um
        svctr(k,11)=svctr(k,11) + b1(k) + vm
        svctr(k,12)=svctr(k,12) + c1(k) + th00
@@ -698,301 +1033,302 @@ contains
        svctr(k,17)=svctr(k,17) + thvar(k)
        svctr(k,18)=svctr(k,18) + a3(k)
        svctr(k,19)=svctr(k,19) + b3(k)
-    end do
+    END DO
 
-  end subroutine accum_stat
+  END SUBROUTINE accum_stat
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_STAT: Accumulates various statistics over an
+  ! Subroutine ACCUM_STAT: Accumulates various statistics over an
   ! averaging period for radiation variables
   !
-  subroutine accum_rad(n1,n2,n3,rflx,sflx,alb)
+  SUBROUTINE accum_rad(n1,n2,n3,rflx,sflx,alb)
 
-    integer, intent (in) :: n1,n2,n3
-    real, intent (in)    :: rflx(n1,n2,n3)
-    real, optional, intent (in) :: sflx(n1,n2,n3), alb(n2,n3)
+    INTEGER, INTENT (in) :: n1,n2,n3
+    REAL, INTENT (in)    :: rflx(n1,n2,n3)
+    REAL, OPTIONAL, INTENT (in) :: sflx(n1,n2,n3), alb(n2,n3)
 
-    integer :: k
-    real    :: a1(n1),a2(n1)
+    INTEGER :: k
+    REAL    :: a1(n1),a2(n1)
 
-    call get_avg3(n1,n2,n3,rflx,a1)
-    call get_var3(n1,n2,n3,rflx,a1,a2)
-    do k=1,n1
+    CALL get_avg3(n1,n2,n3,rflx,a1)
+    CALL get_var3(n1,n2,n3,rflx,a1,a2)
+    DO k=1,n1
        svctr(k,55)=svctr(k,55) + a1(k)
        svctr(k,56)=svctr(k,56) + a2(k)
-    end do
+    END DO
 
-    if (present(sflx)) then
-       call get_avg3(n1,n2,n3,sflx,a1)
-       call get_var3(n1,n2,n3,sflx,a1,a2)
-       do k=1,n1
+    IF (present(sflx)) THEN
+       CALL get_avg3(n1,n2,n3,sflx,a1)
+       CALL get_var3(n1,n2,n3,sflx,a1,a2)
+       DO k=1,n1
           svctr(k,57)=svctr(k,57) + a1(k)
           svctr(k,58)=svctr(k,58) + a2(k)
-       end do
-       ssclr(21) = get_avg(1,n2,n3,1,alb)
-    end if
+       END DO
+       ssclr(21) = get_avg2dh(n2,n3,alb)
+    END IF
 
-  end subroutine accum_rad
+  END SUBROUTINE accum_rad
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_LVL1: Accumulates various statistics over an
+  ! Subroutine ACCUM_LVL1: Accumulates various statistics over an
   ! averaging period for moisture variable (smoke or total water)
   !
-  subroutine accum_lvl1(n1,n2,n3,rt)
+  SUBROUTINE accum_lvl1(n1,n2,n3,rt)
 
-    integer, intent (in) :: n1,n2,n3
-    real, intent (in)  :: rt(n1,n2,n3)
+    INTEGER, INTENT (in) :: n1,n2,n3
+    REAL, INTENT (in)  :: rt(n1,n2,n3)
 
-    integer :: k
-    real    :: a1(n1),a2(n1),a3(n1)
+    INTEGER :: k
+    REAL    :: a1(n1),a2(n1),a3(n1)
 
-    call get_avg3(n1,n2,n3,rt,a1)
-    call get_var3(n1,n2,n3,rt,a1,a2)
+    CALL get_avg3(n1,n2,n3,rt,a1)
+    CALL get_var3(n1,n2,n3,rt,a1,a2)
     CALL get_3rd3(n1,n2,n3,rt,a1,a3)
 
-    do k=1,n1
-       svctr(k,50)=svctr(k,50) + a1(k)*1000.
+    DO k=1,n1
+       svctr(k,50)=svctr(k,50) + a1(k)
        svctr(k,51)=svctr(k,51) + a2(k)
        svctr(k,52)=svctr(k,52) + a3(k)
-    end do
+    END DO
 
-  end subroutine accum_lvl1
+  END SUBROUTINE accum_lvl1
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_LVL2: Accumulates specialized statistics that depend
+  ! Subroutine ACCUM_LVL2: Accumulates specialized statistics that depend
   ! on level 2 variables.
   !
-  subroutine accum_lvl2(n1, n2, n3, th00, dn0, zm, w, th, tl, &
+  SUBROUTINE accum_lvl2(n1, n2, n3, th00, dn0, zm, w, th, tl, &
        rl, rs, rt)
 
-    use defs, only : ep2
+    USE defs, ONLY : ep2
 
-    integer, intent (in) :: n1,n2,n3
-    real, intent (in)                       :: th00
-    real, intent (in), dimension(n1)        :: zm, dn0
-    real, intent (in), dimension(n1,n2,n3)  :: w, th, tl, rl, rs, rt
+    INTEGER, INTENT (in) :: n1,n2,n3
+    REAL, INTENT (in)                       :: th00
+    REAL, INTENT (in), DIMENSION(n1)        :: zm, dn0
+    REAL, INTENT (in), DIMENSION(n1,n2,n3)  :: w, th, tl, rl, rs, rt
 
-    real, dimension(n1,n2,n3) :: tv    ! Local variable
-    integer                   :: k, i, j, km1
-    logical                   :: aflg
-    real                      :: xy1mx
-    real, dimension(n1)       :: a1, a2, a3, tvbar
-    real, dimension(n2,n3)    :: scr, xy1, xy2
+    REAL, DIMENSION(n1,n2,n3) :: tv    ! Local variable
+    INTEGER                   :: k, i, j, kp1
+    REAL, DIMENSION(n1)       :: a1, a2, a3, tvbar
+    REAL, DIMENSION(n1,n2,n3) :: scr, xy1, xy2, tlw, tvw, rtw
+    LOGICAL :: cond(n1,n2,n3)
 
     !
     ! liquid water statistics
     !
-    call get_avg3(n1,n2,n3,rl,a1)
-    call get_var3(n1,n2,n3,rl,a1,a2)
-    call get_3rd3(n1,n2,n3,rl,a1,a3)
+    CALL get_avg3(n1,n2,n3,rl,a1)
+    CALL get_var3(n1,n2,n3,rl,a1,a2)
+    CALL get_3rd3(n1,n2,n3,rl,a1,a3)
+    svctr(:,59)=svctr(:,59) + a1(:)
+    svctr(:,60)=svctr(:,60) + a2(:)
+    svctr(:,61)=svctr(:,61) + a3(:)
 
-    do k=1,n1
-       svctr(k,59)=svctr(k,59) + a1(k)*1000.
-       svctr(k,60)=svctr(k,60) + a2(k)
-       svctr(k,61)=svctr(k,61) + a3(k)
-    end do
     !
-    ! do some conditional sampling statistics: cloud, cloud-core
+    ! Do some conditional sampling statistics: cloud, cloud-core
     !
-    do j=3,n3-2
-       do i=3,n2-2
-          do k=1,n1
-             tv(k,i,j) = th(k,i,j)*(1.+ep2*rt(k,i,j) - rl(k,i,j))
-          end do
-       end do
-    end do
-    call get_avg3(n1,n2,n3,tv,tvbar)
-
-    xy1mx = 0.
-    do k=1,n1-1 ! Juha: below references to k+1!!
-       aflg = .false.
-       do j=3,n3-2
-          do i=3,n2-2
-             xy1(i,j) = 0.
-             xy2(i,j) = 0.
-             if (rt(k,i,j) > rs(k,i,j) + 0.01e-3) then
-                aflg = .true.
-                xy1(i,j)=1.
-                if (tv(k,i,j) > tvbar(k)) xy2(i,j)=1.
-             end if
-          end do
-       end do
-
-       if (aflg) then
-          svctr(k,64)=svctr(k,64)+get_avg(1,n2,n3,1,xy1)
-          svctr(k,65)=svctr(k,65)+get_csum(1,n2,n3,1,xy1,xy1)
-          svctr(k,66)=svctr(k,66)+get_csum(n1,n2,n3,k,w,xy1)
-          svctr(k,67)=svctr(k,67)+get_csum(n1,n2,n3,k,tl,xy1)
-          svctr(k,68)=svctr(k,68)+get_csum(n1,n2,n3,k,tv,xy1)
-          svctr(k,69)=svctr(k,69)+get_csum(n1,n2,n3,k,rt,xy1)*1000.
-          svctr(k,70)=svctr(k,70)+get_csum(n1,n2,n3,k,rl,xy1)*1000.
-
-          svctr(k,74)=svctr(k,74)+get_avg(1,n2,n3,1,xy2)
-          svctr(k,75)=svctr(k,75)+get_csum(1,n2,n3,1,xy2,xy2)
-          svctr(k,76)=svctr(k,76)+get_csum(n1,n2,n3,k,w,xy2)
-          svctr(k,77)=svctr(k,77)+get_csum(n1,n2,n3,k,tl,xy2)
-          svctr(k,78)=svctr(k,78)+get_csum(n1,n2,n3,k,tv,xy2)
-          svctr(k,79)=svctr(k,79)+get_csum(n1,n2,n3,k,rt,xy2)*1000.
-          svctr(k,80)=svctr(k,80)+get_csum(n1,n2,n3,k,rl,xy2)*1000.
-
-          do j=3,n3-2
-             do i=3,n2-2
-                scr(i,j)=(.5*(tl(k,i,j)+tl(k+1,i,j))+th00)*w(k,i,j)
-             end do
-          end do
-          svctr(k,71)=svctr(k,71)+get_csum(1,n2,n3,1,scr,xy1)
-          svctr(k,81)=svctr(k,81)+get_csum(1,n2,n3,1,scr,xy2)
-
-          do j=3,n3-2
-             do i=3,n2-2
-                scr(i,j)=(.5*(tv(k,i,j)+tv(k+1,i,j)))*w(k,i,j)
-             end do
-          end do
-          svctr(k,72)=svctr(k,72)+get_csum(1,n2,n3,1,scr,xy1)
-          svctr(k,82)=svctr(k,82)+get_csum(1,n2,n3,1,scr,xy2)
-
-          do j=3,n3-2
-             do i=3,n2-2
-                scr(i,j)=(.5*(rt(k,i,j)+rt(k+1,i,j)))*w(k,i,j)
-             end do
-          end do
-          svctr(k,73)=svctr(k,73)+get_csum(1,n2,n3,1,scr,xy1)
-          svctr(k,83)=svctr(k,83)+get_csum(1,n2,n3,1,scr,xy2)
-       end if
-    end do
+    tv(:,:,:) = th(:,:,:)*(1.+ep2*rt(:,:,:) - rl(:,:,:))
+    CALL get_avg3(n1,n2,n3,tv,tvbar)
     !
-    ! water paths
+    xy1=0.
+    xy2=0.
+    tvw=0.
+    DO k=1,n1
+       kp1=k+1
+       IF (k==n1) kp1=k
+       DO j=3,n3-2
+          DO i=3,n2-2
+             IF (rt(k,i,j) > rs(k,i,j) + 0.01e-3) THEN
+                xy1(k,i,j)=1.
+                IF (tv(k,i,j) > tvbar(k)) THEN
+                   xy2(k,i,j)=1.
+                END IF
+                !
+                tlw(k,i,j)=(.5*(tl(k,i,j)+tl(kp1,i,j))+th00)*w(k,i,j)
+                tvw(k,i,j)=(.5*(tv(k,i,j)+tv(kp1,i,j)))*w(k,i,j)
+                rtw(k,i,j)=(.5*(rt(k,i,j)+rt(kp1,i,j)))*w(k,i,j)
+             END IF
+          END DO
+       END DO
+    END DO
+    CALL get_avg3(n1,n2,n3,xy1,a1)
+    svctr(:,64)=svctr(:,64)+a1(:)
+    CALL get_avg3(n1,n2,n3,xy1,a1,normalize=.FALSE.)
+    svctr(:,65)=svctr(:,65)+a1(:)   ! Counts
+    cond(:,:,:)=xy1(:,:,:)>0.5
+    CALL get_avg3(n1,n2,n3,w,a1,cond=cond)
+    svctr(:,66)=svctr(:,66)+a1(:)
+    CALL get_avg3(n1,n2,n3,tl+th00,a1,cond=cond)
+    svctr(:,67)=svctr(:,67)+a1(:)
+    CALL get_avg3(n1,n2,n3,tv,a1,cond=cond)
+    svctr(:,68)=svctr(:,68)+a1(:)
+    CALL get_avg3(n1,n2,n3,rt,a1,cond=cond)
+    svctr(:,69)=svctr(:,69)+a1(:)
+    CALL get_avg3(n1,n2,n3,rl,a1,cond=cond)
+    svctr(:,70)=svctr(:,70)+a1(:)
+    CALL get_avg3(n1,n2,n3,tlw,a1,cond=cond)
+    svctr(:,71)=svctr(:,71)+a1(:)
+    CALL get_avg3(n1,n2,n3,tvw,a1,cond=cond)
+    svctr(:,72)=svctr(:,72)+a1(:)
+    CALL get_avg3(n1,n2,n3,rtw,a1,cond=cond)
+    svctr(:,73)=svctr(:,73)+a1(:)
+
+    CALL get_avg3(n1,n2,n3,xy2,a1)
+    svctr(:,74)=svctr(:,74)+a1(:)
+    CALL get_avg3(n1,n2,n3,xy2,a1,normalize=.FALSE.)
+    svctr(:,75)=svctr(:,75)+a1(:)   ! Counts
+    cond(:,:,:)=xy2(:,:,:)>0.5
+    CALL get_avg3(n1,n2,n3,w,a1,cond=cond)
+    svctr(:,76)=svctr(:,76)+a1(:)
+    CALL get_avg3(n1,n2,n3,tl+th00,a1,cond=cond)
+    svctr(:,77)=svctr(:,77)+a1(:)
+    CALL get_avg3(n1,n2,n3,tv,a1,cond=cond)
+    svctr(:,78)=svctr(:,78)+a1(:)
+    CALL get_avg3(n1,n2,n3,rt,a1,cond=cond)
+    svctr(:,79)=svctr(:,79)+a1(:)
+    CALL get_avg3(n1,n2,n3,rl,a1,cond=cond)
+    svctr(:,80)=svctr(:,80)+a1(:)
+    CALL get_avg3(n1,n2,n3,tlw,a1,cond=cond)
+    svctr(:,81)=svctr(:,81)+a1(:)
+    CALL get_avg3(n1,n2,n3,tvw,a1,cond=cond)
+    svctr(:,82)=svctr(:,82)+a1(:)
+    CALL get_avg3(n1,n2,n3,rtw,a1,cond=cond)
+    svctr(:,83)=svctr(:,83)+a1(:)
+
     !
-    do j=3,n3-2
-       do i=3,n2-2
-          scr(i,j) = 0.
-          do k=1,n1
-             km1=max(1,k-1)
-             scr(i,j)=scr(i,j)+rl(k,i,j)*dn0(k)*(zm(k)-zm(km1))
-          enddo
-       end do
-    end do
-    ssclr(15) = get_avg(1,n2,n3,1,scr)
-    ssclr(16) = get_cor(1,n2,n3,1,scr,scr)
-  end subroutine accum_lvl2
+    ! liquid water path
+    !
+    DO j=3,n3-2
+       DO i=3,n2-2
+          scr(1,i,j) = 0.
+          DO k=2,n1
+             scr(1,i,j)=scr(1,i,j)+rl(k,i,j)*dn0(k)*(zm(k)-zm(k-1))
+          END DO
+       END DO
+    END DO
+    ssclr(15) = get_avg2dh(n2,n3,scr(1,:,:))
+    scr(1,:,:)=(scr(1,:,:)-ssclr(15))**2 ! For LWP variance
+    ssclr(16) = get_avg2dh(n2,n3,scr(1,:,:))
+  END SUBROUTINE accum_lvl2
   !
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_LVL3: Accumulates specialized statistics that depend
+  ! Subroutine ACCUM_LVL3: Accumulates specialized statistics that depend
   ! on level 3 variables.
   !
-  subroutine accum_lvl3(n1, n2, n3, dn0, zm, rc, rr, nr, rrate, CCN)
+  SUBROUTINE accum_lvl3(n1, n2, n3, dn0, zm, rr, nr, rrate, CCN)
 
-    use defs, only : alvl
+    USE defs, ONLY : alvl
 
-    integer, intent (in) :: n1,n2,n3
-    real, intent (in)                      :: CCN
-    real, intent (in), dimension(n1)       :: zm, dn0
-    real, intent (in), dimension(n1,n2,n3) :: rc, rr, nr, rrate
+    INTEGER, INTENT (in) :: n1,n2,n3
+    REAL, INTENT (in)                      :: CCN
+    REAL, INTENT (in), DIMENSION(n1)       :: zm, dn0
+    REAL, INTENT (in), DIMENSION(n1,n2,n3) :: rr, nr, rrate
 
-    integer                :: k, i, j, km1
-    real                   :: nrsum, nrcnt, rrsum, rrcnt, xrain
-    real                   :: rmax, rmin
-    real, dimension(n1)    :: a1
-    real, dimension(n2,n3) :: scr1,scr2
-    logical                :: aflg
-    REAL :: zarg(1,n2,n3)
+    INTEGER                :: k, i, j
+    REAL                   :: nrsum, nrcnt, rrsum, rrcnt
+    REAL                   :: rmax, rmin
+    REAL, DIMENSION(n1)    :: a1
+    REAL, DIMENSION(n2,n3) :: scr2
+    REAL :: mask(n1,n2,n3), tmp(n1,n2,n3)
 
     !
-    ! conditionally average rain numbers, and droplet concentrations
+    ! Average rain water mixing ratio
     !
+    CALL get_avg3(n1,n2,n3,rr,a1)
+    svctr(:,86)=svctr(:,86) + a1(:) ! rr (kg/kg)
+    svctr(:,84)=svctr(:,84) + CCN   ! nc (#/kg)
 
-    call get_avg3(n1,n2,n3,rr,a1)
-    nrsum = 0.
-    nrcnt = 0.
-    do k=1,n1-1
-       aflg = .false.
-       do j=3,n3-2
-          do i=3,n2-2
-             scr1(i,j) = 0.
-             if (rr(k,i,j) > 0.001e-3) then
-                aflg = .true.
-                scr1(i,j) = 1.
-                nrsum = nrsum + nr(k,i,j)
-                nrcnt = nrcnt + 1.
-             end if
-          end do
-       end do
-       svctr(k,84)=svctr(k,84) + CCN*dn0(k)/1000. ! nc (1/litre)
-       svctr(k,86)=svctr(k,86) + a1(k)*1000.
-       if (aflg) then
-          svctr(k,85)=svctr(k,85)+get_csum(n1,n2,n3,k,nr,scr1)
-          svctr(k,91)=svctr(k,91)+get_avg(1,n2,n3,1,scr1)
-       end if
-    end do
+    !
+    ! conditionally average rain droplet concentrations
+    !
+    WHERE (rr > 0.001e-3)
+       mask = 1.
+    ELSEWHERE
+       mask = 0.
+    END WHERE
+
+    CALL get_avg3(n1,n2,n3,nr,a1,cond=(mask>0.5))
+    svctr(:,85)=svctr(:,85)+a1(:)
+    CALL get_avg3(n1,n2,n3,mask,a1)
+    svctr(:,91)=svctr(:,91)+a1(:)
+
     !
     ! conditionally average precip fluxes
     !
-    do k=2,n1-2
+    WHERE (rrate > 3.65e-5)
+       mask = 1.
+    ELSEWHERE
+       mask = 0.
+    END WHERE
+
+    tmp(:,:,:)=mask(:,:,:)*rrate(:,:,:)
+    CALL get_avg3(n1,n2,n3,tmp,a1)
+    svctr(:,90)=svctr(:,90)+a1(:)
+    CALL get_avg3(n1,n2,n3,mask,a1)
+    svctr(:,89)=svctr(:,89)+a1(:)
+
+    !
+    ! Histogram of surface rain rates
+    !
+    mask = 0.
+    DO k=1,n1
+       rmin = max(6.2e-8,(k-1)*3.421e-5)
+       rmax =  k * 3.421e-5
+       DO j=3,n3-2
+          DO i=3,n2-2
+             IF (rrate(2,i,j) > rmin .AND. rrate(2,i,j) <= rmax) mask(k,i,j)=1.
+          END DO
+       END DO
+    END DO
+    CALL get_avg3(n1,n2,n3,mask,a1,normalize=.FALSE.)
+    svctr(:,92)=svctr(:,92)+a1(:)
+
+    !
+    ! Temporal statistics
+    !
+    scr2(:,:) = 0.
+    nrsum = 0.
+    nrcnt = 0.
+    DO k=2,n1
        rrsum = 0.
        rrcnt = 0.
-       aflg = .false.
-       do j=3,n3-2
-          do i=3,n2-2
-             scr1(i,j) = 0.
-             if (rrate(k,i,j) > 3.65e-5) then
-                aflg = .true.
-                scr1(i,j) = 1.
-                rrsum = rrsum + rrate(k,i,j) !* alvl * 0.5*(dn0(1)+dn0(2))
+       DO j=3,n3-2
+          DO i=3,n2-2
+             ! RWP
+             scr2(i,j)=scr2(i,j)+rr(k,i,j)*dn0(k)*(zm(k)-zm(k-1))
+
+             ! Rainy grid cell
+             IF (rr(k,i,j) > 0.001e-3) THEN
+                nrsum = nrsum + nr(k,i,j)
+                nrcnt = nrcnt + 1.
+             END IF
+
+             ! Precipitating grid cell
+             IF (rrate(k,i,j) > 3.65e-5) THEN
+                rrsum = rrsum + rrate(k,i,j)
                 rrcnt = rrcnt + 1.
-             end if
-          end do
-       end do
-       if (aflg) then
-          if (k == 2 ) ssclr(24) = rrcnt
-          svctr(k-1,90)=svctr(k-1,90)+get_csum(n1,n2,n3,k,rrate,scr1)
-          svctr(k-1,89)=svctr(k-1,89)+get_avg(1,n2,n3,1,scr1)
-       end if
-    end do
-    !
-    ! histograms
-    !
-    do k=1,n1
-       rrcnt = 0.
-       do j=3,n3-2
-          do i=3,n2-2
-             rmin = max(6.2e-8,(k-1)*3.421e-5)
-             rmax =  k * 3.421e-5
-             if (rrate(2,i,j) > rmin .and. rrate(2,i,j) <= rmax) rrcnt=rrcnt+1.
-          end do
-       end do
-       if (rrcnt > 0.) svctr(k,92)=svctr(k,92)+rrcnt
-    end do
-    !
-    ! water paths
-    !
-    do j=3,n3-2
-       do i=3,n2-2
-          scr2(i,j) = 0.
-          do k=1,n1
-             km1=max(1,k-1)
-             xrain = max(0.,rr(k,i,j))
-             scr2(i,j)=scr2(i,j)+xrain*dn0(k)*(zm(k)-zm(km1))
-          enddo
-       end do
-    end do
-    ssclr(22) = get_avg(1,n2,n3,1,scr2)
-    zarg(1,:,:) = rrate(2,:,:) 
-    ssclr(23) = get_avg(1,n2,n3,1,zarg)
-    ssclr(25) = CCN*1.e-6 ! per cc
-    ssclr(26) = nrsum
+             END IF
+          END DO
+       END DO
+       IF (k == 2 ) ssclr(24) = rrcnt/REAL( (n3-4)*(n2-4) )
+    END DO
+    ssclr(22) = get_avg2dh(n2,n3,scr2)
+    scr2(:,:) = rrate(2,:,:)
+    ssclr(23) = get_avg2dh(n2,n3,scr2)
+    ssclr(25) = CCN
+    IF (nrcnt>0.) ssclr(26) = nrsum/nrcnt
     ssclr(27) = nrcnt
 
-  end subroutine accum_lvl3
+  END SUBROUTINE accum_lvl3
 
   !---------------------------------------------------------------------
-  ! SUBROUTINE ACCUM_LVL4: Accumulates specialized statistics that depend
+  ! Subroutine ACCUM_LVL4: Accumulates specialized statistics that depend
   ! on level 4 variables.
   !
-  subroutine accum_lvl4(n1,n2,n3)
-    use mo_submctl, only : in1a,in2b,fn2a,fn2b, &
+  SUBROUTINE accum_lvl4(n1,n2,n3)
+    USE mo_submctl, ONLY : in1a,in2b,fn2a,fn2b, &
                                ica,fca,icb,fcb,ira,fra, &
                                nprc,nlim,prlim
-    use grid, ONLY : bulkNumc, bulkMixrat, meanRadius, binSpecMixrat, &
+    USE grid, ONLY : bulkNumc, bulkMixrat, meanRadius, binSpecMixrat, &
                      a_rc, a_srp, a_rp, a_rh, prtcl,    &
                      a_naerop, a_ncloudp, a_nprecpp
     USE class_ComponentIndex, ONLY : IsUsed
@@ -1000,15 +1336,12 @@ contains
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: n1,n2,n3
-    INTEGER :: ii,ss,k,bb
+    INTEGER :: ii,ss,bb
 
-    REAL :: Nctot(n1,n2,n3)
-    REAL :: Nptot(n1,n2,n3)
-    REAL :: cloudmask(n1,n2,n3)
-    REAL :: drizzmask(n1,n2,n3)
-    REAL :: zarg(n2,n3)
+    LOGICAL :: cloudmask(n1,n2,n3)
+    LOGICAL :: drizzmask(n1,n2,n3)
 
-    REAL :: a0
+
     REAL, DIMENSION(n1,n2,n3)           :: a1,a12
     REAL, DIMENSION(n1,5)               :: a2
     REAL, DIMENSION(n1,fn2a)            :: a3_a
@@ -1019,14 +1352,6 @@ contains
 
     CHARACTER(len=3), PARAMETER :: zspec(7) = (/'SO4','OC ','BC ','DU ','SS ','NH ','NO '/)
 
-    Nctot = 0.
-    cloudmask = 0.
-    zarg = 0.
-    Nptot = 0.
-    drizzmask = 0.
-    a0 = 0.; a1 = 0.; a2 = 0.
-    a3_a = 0.; a3_b = 0.; a4_a = 0; a4_b = 0.
-    a5 = 0.
 
     ! *************************
     ! Bulk output for SALSA
@@ -1039,39 +1364,29 @@ contains
 
     CALL bulkNumc('cloud','a',a1)
     CALL get_avg3(n1,n2,n3,a1,a2(:,3))
-    Nctot(:,:,:) = Nctot(:,:,:) + a1(:,:,:)
 
-    CALL bulkNumc('cloud','b',a1)
-    CALL get_avg3(n1,n2,n3,a1,a2(:,4))
-    Nctot(:,:,:) = Nctot(:,:,:) + a1(:,:,:)
+    CALL bulkNumc('cloud','b',a12)
+    CALL get_avg3(n1,n2,n3,a12,a2(:,4))
+
+    ! In cloud mask
+    WHERE (a1+a12 > nlim)
+       cloudmask = .TRUE.
+    ELSEWHERE
+       cloudmask = .FALSE.
+    END WHERE
 
     CALL bulkNumc('precp','a',a1)
     CALL get_avg3(n1,n2,n3,a1,a2(:,5))
-    Nptot(:,:,:) = Nptot(:,:,:) + a1(:,:,:)
 
-    !--- Make cloud masks based on total particle numbers
-    ! In cloud
-    WHERE (Nctot > nlim)
-       cloudmask = 1.
+    ! In drizzle mask
+    WHERE (a1 > prlim)
+       drizzmask = .TRUE.
     ELSEWHERE
-       cloudmask = 0.
+       drizzmask = .FALSE.
     END WHERE
 
-    ! In drizzle
-    WHERE (Nptot > prlim)
-       drizzmask = 1.
-    ELSEWHERE
-       drizzmask = 0.
-    END WHERE
-    ! ---
+    svctr_b(:,6:10) = svctr_b(:,6:10) + a2(:,1:5)
 
-    DO k = 2,n1-2
-       svctr_b(k,6:10) = svctr_b(k,6:10) + a2(k,1:5)
-    END DO
-
-    a1 = 0.
-    a12 = 0.
-    a2 = 0
     ! Particle radius
     CALL meanRadius('aerosol','a',a1)
     CALL get_avg3(n1,n2,n3,a1,a2(:,1))
@@ -1081,22 +1396,16 @@ contains
 
     ! In-cloud
     CALL meanRadius('cloud','a',a1)
-    CALL meanRadius('cloud','b',a12)
-    DO k = 2,n1-2
-       zarg = cloudmask(k,:,:)
-       a2(k,3) = get_cavg(n1,n2,n3,k,a1,zarg)
-       a2(k,4) = get_cavg(n1,n2,n3,k,a12,zarg)
-    END DO
+    CALL get_avg3(n1,n2,n3,a1,a2(:,3),cond=cloudmask)
+
+    CALL meanRadius('cloud','b',a1)
+    CALL get_avg3(n1,n2,n3,a1,a2(:,4),cond=cloudmask)
+
     ! In-drizzle
     CALL meanRadius('precp','a',a1)
-    DO k = 2,n1-2
-       zarg = drizzmask(k,:,:)
-       a2(k,5) = get_cavg(n1,n2,n3,k,a1,zarg)
-    END DO
+    CALL get_avg3(n1,n2,n3,a1,a2(:,5),cond=drizzmask)
 
-    DO k = 2,n1-2
-       svctr_b(k,11:15) = svctr_b(k,11:15) + a2(k,:)
-    END DO
+    svctr_b(:,11:15) = svctr_b(:,11:15) + a2(:,1:5)
 
     ! Bin number concentrations
     ! -------------------------------------------
@@ -1116,13 +1425,11 @@ contains
        CALL get_avg3(n1,n2,n3,a_nprecpp(:,:,:,bb),a5(:,bb))
     END DO
 
-    DO k = 2,n1-2
-       svctr_aa(k,:,1) = svctr_aa(k,:,1) + a3_a(k,:)
-       svctr_ab(k,:,1) = svctr_ab(k,:,1) + a3_b(k,:)
-       svctr_ca(k,:,1) = svctr_ca(k,:,1) + a4_a(k,:)
-       svctr_cb(k,:,1) = svctr_cb(k,:,1) + a4_b(k,:)
-       svctr_p(k,:,1) = svctr_p(k,:,1) + a5(k,:)
-    END DO
+    svctr_aa(:,:,1) = svctr_aa(:,:,1) + a3_a(:,:)
+    svctr_ab(:,:,1) = svctr_ab(:,:,1) + a3_b(:,:)
+    svctr_ca(:,:,1) = svctr_ca(:,:,1) + a4_a(:,:)
+    svctr_cb(:,:,1) = svctr_cb(:,:,1) + a4_b(:,:)
+    svctr_p(:,:,1) = svctr_p(:,:,1) + a5(:,:)
 
 
     IF (.TRUE.) THEN
@@ -1132,24 +1439,17 @@ contains
     ii = 16
     DO ss = 1,7
        IF (IsUsed(prtcl,zspec(ss))) THEN
-          a1 = 0.
-          a12 = 0.
-          a2 = 0.
           ! Total mass mixing ratios
           CALL bulkMixrat(zspec(ss),'aerosol','a',a1)
           CALL bulkMixrat(zspec(ss),'aerosol','b',a12)
           CALL get_avg3(n1,n2,n3,a1+a12,a2(:,1))
 
           ! Binned mixing ratios
-          a3_a = 0.
           DO bb = in1a,fn2a
-             a1 = 0.
              CALL binSpecMixrat('aerosol',zspec(ss),bb,a1) ! z,x,y-field for bin bb
              CALL get_avg3(n1,n2,n3,a1,a3_a(:,bb))         ! average profile for bin bb for species ss
           END DO
-          a3_b = 0.
           DO bb = in2b,fn2b
-             a1 = 0.
              CALL binSpecMixrat('aerosol',zspec(ss),bb,a1) ! z,x,y-field for bin bb
              CALL get_avg3(n1,n2,n3,a1,a3_b(:,bb-fn2a))    ! average profile for bin bb for species ss
           END DO
@@ -1157,48 +1457,34 @@ contains
           ! In-cloud
           CALL bulkMixrat(zspec(ss),'cloud','a',a1)
           CALL bulkMixrat(zspec(ss),'cloud','b',a12)
-          DO k = 2,n1-2
-             zarg = cloudmask(k,:,:)
-             a2(k,2) = get_cavg(n1,n2,n3,k,a1+a12,zarg)
-          END DO
+          CALL get_avg3(n1,n2,n3,a1+a12,a2(:,2),cond=cloudmask)
 
           ! Binned mixing ratios
-          a4_a = 0.
           DO bb = ica%cur,fca%cur
-             a1 = 0.
              CALL binSpecMixrat('cloud',zspec(ss),bb,a1)  ! z,x,y-field for bin bb
-             CaLL get_avg3(n1,n2,n3,a1,a4_a(:,bb))        ! average profile for bin bb for species ss
+             CaLL get_avg3(n1,n2,n3,a1,a4_a(:,bb),cond=cloudmask)        ! average profile for bin bb for species ss
           END DO
-          a4_b = 0.
           DO bb = icb%cur,fcb%cur
-             a1 = 0.
              CALL binSpecMixrat('cloud',zspec(ss),bb,a1)  ! z,x,y-field for bin bb
-             CALL get_avg3(n1,n2,n3,a1,a4_b(:,bb-fca%cur))! average profile for bin bb for species ss
+             CALL get_avg3(n1,n2,n3,a1,a4_b(:,bb-fca%cur),cond=cloudmask)! average profile for bin bb for species ss
           END DO
 
           ! In-drizzle
           CALL bulkMixrat(zspec(ss),'precp','a',a1)
-          DO k = 2,n1-2
-             zarg = drizzmask(k,:,:)
-             a2(k,3) = get_cavg(n1,n2,n3,k,a1,zarg)
-          END DO
+          CALL get_avg3(n1,n2,n3,a1,a2(:,3),cond=drizzmask)
 
           ! Binned mixing ratios
-          a5 = 0.
           DO bb = 1,nprc
-             a1 = 0.
              CALL binSpecMixrat('precp',zspec(ss),bb,a1)  ! z,x,y-field for bin bb
-             CALL get_avg3(n1,n2,n3,a1,a5(:,bb))          ! average profile for bin bb for species ss
+             CALL get_avg3(n1,n2,n3,a1,a5(:,bb),cond=drizzmask)          ! average profile for bin bb for species ss
           END DO
 
-          DO k = 2,n1-2
-             svctr_b(k,ii:ii+2) = svctr_b(k,ii:ii+2) + a2(k,1:3)
-             svctr_aa(k,:,ss+1) = svctr_aa(k,:,ss+1) + a3_a(k,:)
-             svctr_ab(k,:,ss+1) = svctr_ab(k,:,ss+1) + a3_b(k,:)
-             svctr_ca(k,:,ss+1) = svctr_ca(k,:,ss+1) + a4_a(k,:)
-             svctr_cb(k,:,ss+1) = svctr_cb(k,:,ss+1) + a4_b(k,:)
-             svctr_p(k,:,ss+1) = svctr_p(k,:,ss+1) + a5(k,:)
-          END DO
+          svctr_b(:,ii:ii+2) = svctr_b(:,ii:ii+2) + a2(:,1:3)
+          svctr_aa(:,:,ss+1) = svctr_aa(:,:,ss+1) + a3_a(:,:)
+          svctr_ab(:,:,ss+1) = svctr_ab(:,:,ss+1) + a3_b(:,:)
+          svctr_ca(:,:,ss+1) = svctr_ca(:,:,ss+1) + a4_a(:,:)
+          svctr_cb(:,:,ss+1) = svctr_cb(:,:,ss+1) + a4_b(:,:)
+          svctr_p(:,:,ss+1) = svctr_p(:,:,ss+1) + a5(:,:)
 
        END IF ! IsUsed
 
@@ -1208,7 +1494,6 @@ contains
 
     END IF
 
-    a2 = 0.
     ! Liquid water mixing ratio
     CALL get_avg3(n1,n2,n3,a_rc,a2(:,1))
 
@@ -1221,166 +1506,135 @@ contains
     ! Relative humidity
     CALL get_avg3(n1,n2,n3,a_rh,a2(:,4))
 
-    DO k = 2,n1-2
-       svctr_b(k,37:40) = svctr_b(k,37:40) + a2(k,1:4)
-    END DO
+    svctr_b(:,37:40) = svctr_b(:,37:40) + a2(:,1:4)
 
-  end subroutine accum_lvl4
+  END SUBROUTINE accum_lvl4
 
   !
   !
   !
-  subroutine comp_tke(n1,n2,n3,dzm,th00,u,v,w,s,scr)
+  SUBROUTINE comp_tke(n1,n2,n3,dzm,th00,u,v,w,s)
 
-    integer, intent (in) :: n1,n2,n3
-    real, intent (in)    :: dzm(n1),th00,u(n1,n2,n3),v(n1,n2,n3),w(n1,n2,n3)
-    real, intent (inout) :: s(n1,n2,n3)
-    real, intent (out) :: scr(n1,n2,n3)
+    INTEGER, INTENT (in) :: n1,n2,n3
+    REAL, INTENT (in)    :: dzm(n1),th00,u(n1,n2,n3),v(n1,n2,n3),w(n1,n2,n3)
+    REAL, INTENT (inout) :: s(n1,n2,n3)
 
-    integer :: k,kp1,i,j
-    real    :: x1(n1), x2(n1), xx
+    INTEGER :: k,kp1
+    REAL    :: x1(n1), x2(n1)
 
     !
     ! ------
     ! Calculates buoyancy forcing
     !
-    call get_buoyancy(n1,n2,n3,s,w,th00)
+    CALL get_buoyancy(n1,n2,n3,s,w,th00)
     !
     ! ------
     ! Estimates shear component of TKE budget
     !
-    call get_shear(n1,n2,n3,u,v,w,dzm)
+    CALL get_shear(n1,n2,n3,u,v,w,dzm)
     !
     ! ------
     ! Calculates horizontal variances and resolved TKE
     !
-    do j=3,n3-2
-       do i=3,n2-2
-          do k=1,n1
-             scr(k,i,j)=u(k,i,j)**2
-          end do
-       end do
-    end do
-    call get_avg3(n1,n2,n3,scr,x1)
-    call get_avg3(n1,n2,n3,u,x2)
-    do k=1,n1
-       svctr(k,14) = svctr(k,14) + x1(k)
-       xx = x1(k)-x2(k)**2
-       tke_res(k)  = xx
-    end do
+    CALL get_avg3(n1,n2,n3,u**2,x1)
+    CALL get_avg3(n1,n2,n3,u,x2)
+    svctr(:,14) = svctr(:,14) + (x1(:)-x2(:)**2) ! Variance
+    tke_res(:)=(x1(:)-x2(:)**2)
 
-    do j=3,n3-2
-       do i=3,n2-2
-          do k=1,n1
-             scr(k,i,j)=v(k,i,j)**2
-          end do
-       end do
-    end do
-    call get_avg3(n1,n2,n3,scr,x1)
-    call get_avg3(n1,n2,n3,v,x2)
-    do k=1,n1
-       svctr(k,15) = svctr(k,15) + x1(k)
-       xx = x1(k)-x2(k)**2
-       tke_res(k)  = tke_res(k) + xx
-    end do
+    CALL get_avg3(n1,n2,n3,v**2,x1)
+    CALL get_avg3(n1,n2,n3,v,x2)
+    svctr(:,15) = svctr(:,15) + (x1(:)-x2(:)**2)
+    tke_res(:)  = tke_res(:) + (x1(:)-x2(:)**2)
 
-    do j=3,n3-2
-       do i=3,n2-2
-          do k=1,n1
-             scr(k,i,j)=w(k,i,j)**2
-          end do
-       end do
-    end do
-    call get_avg3(n1,n2,n3,scr,x1)
-
-    do k=1,n1
-       svctr(k,16) = svctr(k,16)+x1(k)
+    CALL get_avg3(n1,n2,n3,w**2,x1)
+    svctr(:,16) = svctr(:,16)+x1(:) ! Raw moment
+    DO k=1,n1
        kp1 = min(k+1,n1)
        tke_res(k)  = 0.5*(0.5*(tke_res(k)+tke_res(kp1)) + x1(k))
-       if (nsmp == 0) tke0(k) = tke_res(k)
-    end do
+    END DO
+    IF (nsmp == 0) tke0(:) = tke_res(:)
 
-  end subroutine comp_tke
+  END SUBROUTINE comp_tke
   !
   ! ---------------------------------------------------------------------
   ! get_buoyancy:  estimates buoyancy production term in tke budget
   !
-  subroutine get_buoyancy(n1,n2,n3,b,w,th00)
+  SUBROUTINE get_buoyancy(n1,n2,n3,b,w,th00)
 
-    use defs, only : g
+    USE defs, ONLY : g
 
-    integer, intent(in) :: n1,n2,n3
-    real, intent(in)    :: w(n1,n2,n3),th00
-    real, intent(inout) :: b(n1,n2,n3)
+    INTEGER, INTENT(in) :: n1,n2,n3
+    REAL, INTENT(in)    :: w(n1,n2,n3),th00
+    REAL, INTENT(inout) :: b(n1,n2,n3)
 
-    integer :: i,j,k,kp1
+    INTEGER :: i,j,k,kp1
 
-    do j=3,n3-2
-       do i=3,n2-2
-          do k=1,n1
+    DO j=3,n3-2
+       DO i=3,n2-2
+          DO k=1,n1
              kp1 = min(k+1,n1)
              b(k,i,j) = (b(k,i,j) + b(kp1,i,j))
-          end do
-       end do
-    end do
-    call get_cor3(n1,n2,n3,b,w,wtv_res)
-    do k=1,n1
+          END DO
+       END DO
+    END DO
+    CALL get_cor3(n1,n2,n3,b,w,wtv_res)
+    DO k=1,n1
        svctr(k,35) = svctr(k,35) + wtv_res(k)
        wtv_res(k) = wtv_res(k) * th00/g
-    end do
+    END DO
 
-  end subroutine get_buoyancy
+  END SUBROUTINE get_buoyancy
   !
   ! ---------------------------------------------------------------------
   ! get_shear:  estimates shear production term in tke budget
   !
-  subroutine get_shear(n1,n2,n3,u,v,w,dzm)
+  SUBROUTINE get_shear(n1,n2,n3,u,v,w,dzm)
 
-    integer, intent(in) :: n3,n2,n1
-    real, intent(in)    :: w(n1,n2,n3),dzm(n1),u(n1,n2,n3),v(n1,n2,n3)
+    INTEGER, INTENT(in) :: n3,n2,n1
+    REAL, INTENT(in)    :: w(n1,n2,n3),dzm(n1),u(n1,n2,n3),v(n1,n2,n3)
 
-    real :: ub(n1), vb(n1)
-    integer i,j,k
-    real fact, uw_shear, vw_shear
+    REAL :: ub(n1), vb(n1)
+    INTEGER i,j,k
+    REAL fact, uw_shear, vw_shear
 
     fact = 0.25/float((n2-4)*(n3-4))
 
-    call get_avg3(n1,n2,n3,u,ub)
-    call get_avg3(n1,n2,n3,v,vb)
+    CALL get_avg3(n1,n2,n3,u,ub)
+    CALL get_avg3(n1,n2,n3,v,vb)
 
-    do j=3,n3-2
-       do i=3,n2-2
-          do k=2,n1-1
+    DO j=3,n3-2
+       DO i=3,n2-2
+          DO k=2,n1-1
              uw_shear = -(u(k,i,j)-ub(k))*fact*(                              &
                   (w(k,i,j)  +w(k,i+1,j)  )*(ub(k+1)-ub(k)  )*dzm(k) +        &
                   (w(k-1,i,j)+w(k-1,i+1,j))*(ub(k)  -ub(k-1))*dzm(k-1))
-             if (j > 1) vw_shear = -(v(k,i,j)-vb(k))*fact*(                   &
+             IF (j > 1) vw_shear = -(v(k,i,j)-vb(k))*fact*(                   &
                   (w(k,i,j)  +w(k,i,j+1)  )*(vb(k+1)-vb(k)  )*dzm(k) +        &
                   (w(k-1,i,j)+w(k-1,i,j+1))*(vb(k)  -vb(k-1))*dzm(k-1))
 
              svctr(k,48) = svctr(k,48)+uw_shear
              svctr(k,36) = svctr(k,36)+uw_shear+vw_shear
-          end do
-       end do
-    end do
+          END DO
+       END DO
+    END DO
 
-  end subroutine get_shear
+  END SUBROUTINE get_shear
   !
   ! ----------------------------------------------------------------------
   ! Subroutine write_ts: writes the statistics file
   !
-  subroutine write_ts
+  SUBROUTINE write_ts
 
-    use netcdf
+    USE netcdf
     USE grid, ONLY : level
 
-    integer :: iret, n, VarID
+    INTEGER :: iret, n, VarID
 
-    do n=1,nv1
+    DO n=1,nv1
        iret = nf90_inq_varid(ncid1, s1(n), VarID)
        iret = nf90_put_var(ncid1, VarID, ssclr(n), start=(/nrec1/))
        ssclr(n) = 0.
-    end do
+    END DO
 
     IF (level >= 4) THEN
        DO n = 1,nv1sbulk
@@ -1394,27 +1648,27 @@ contains
     iret = nf90_sync(ncid1)
     nrec1 = nrec1 + 1
 
-  end subroutine write_ts
+  END SUBROUTINE write_ts
   !
   ! ----------------------------------------------------------------------
   ! Subroutine write_ps: writes the time averaged elements of the
   ! statistics file
   !
-  subroutine  write_ps(n1,dn0,u0,v0,zm,zt,time)
+  SUBROUTINE  write_ps(n1,dn0,u0,v0,zm,zt,time)
 
-    use netcdf
-    use defs, only : alvl, cp
+    USE netcdf
+    USE defs, ONLY : alvl, cp
     USE mo_submctl, ONLY : in1a,in2b,fn2a,fn2b,fca,ica,fcb,icb,fra,ira, &
                                aerobins,cloudbins,precpbins
 
-    integer, intent (in) :: n1
-    real, intent (in)    :: time
-    real, intent (in)    :: dn0(n1), u0(n1), v0(n1), zm(n1), zt(n1)
+    INTEGER, INTENT (in) :: n1
+    REAL, INTENT (in)    :: time
+    REAL, INTENT (in)    :: dn0(n1), u0(n1), v0(n1), zm(n1), zt(n1)
 
-    integer :: iret, VarID, k, n, kp1
+    INTEGER :: iret, VarID, k, n, kp1
 
     lsttm = time
-    do k=1,n1
+    DO k=1,n1
        kp1 = min(n1,k+1)
        svctr(k,20) = (svctr(k,20)+svctr(k,21))*cp
        svctr(k,22) = svctr(k,22)+svctr(k,23)
@@ -1428,11 +1682,11 @@ contains
             +svctr(k,45) + svctr(kp1,45) + svctr(k,46) + svctr(kp1,46)    &
             +svctr(k,42) + svctr(kp1,42) + svctr(k,43) + svctr(kp1,43)    &
             -svctr(k,36) - svctr(kp1,36)   )*0.5
-       if (lsttm>fsttm) then
+       IF (lsttm>fsttm) THEN
           svctr(k,49) = (tke_res(k) - tke0(k))/(lsttm-fsttm)
-       else
+       ELSE
           svctr(k,49) = 0.
-       end if
+       END IF
 
        svctr(k,10:nv2) = svctr(k,10:nv2)/nsmp
        IF (level >=4 ) THEN
@@ -1444,11 +1698,11 @@ contains
           svctr_p(k,:,:) = svctr_p(k,:,:)/nsmp
        END IF
 
-    end do
+    END DO
 
     iret = nf90_inq_VarID(ncid2, s2(1), VarID)
     iret = nf90_put_var(ncid2, VarID, time, start=(/nrec2/))
-    if (nrec2 == 1) then
+    IF (nrec2 == 1) THEN
        iret = nf90_inq_varid(ncid2, s2(2), VarID)
        iret = nf90_put_var(ncid2, VarID, zt, start = (/nrec2/))
        iret = nf90_inq_varid(ncid2, s2(3), VarID)
@@ -1473,7 +1727,7 @@ contains
        iret = nf90_put_var(ncid2, VarID, u0, start = (/nrec2/))
        iret = nf90_inq_varid(ncid2, s2(6), VarID)
        iret = nf90_put_var(ncid2, VarID, v0, start = (/nrec2/))
-    end if
+    END IF
 
     iret = nf90_inq_VarID(ncid2, s2(7), VarID)
     iret = nf90_put_var(ncid2, VarID, fsttm, start=(/nrec2/))
@@ -1482,11 +1736,11 @@ contains
     iret = nf90_inq_VarID(ncid2, s2(9), VarID)
     iret = nf90_put_var(ncid2, VarID, nsmp,  start=(/nrec2/))
 
-    do n=10,nvar2
+    DO n=10,nvar2
        iret = nf90_inq_varid(ncid2, s2(n), VarID)
        iret = nf90_put_var(ncid2,VarID,svctr(:,n), start=(/1,nrec2/),    &
             count=(/n1,1/))
-    end do
+    END DO
 
     IF (level >= 4) THEN
        ! Bulk SALSA
@@ -1543,7 +1797,7 @@ contains
     nrec2 = nrec2+1
     nsmp  = 0.
 
-    do k=1,n1
+    DO k=1,n1
        svctr(k,:) = 0.
        IF (level >= 4) THEN
           svctr_b(k,:) = 0.
@@ -1553,271 +1807,271 @@ contains
           svctr_cb(k,:,:) = 0.
           svctr_p(k,:,:) = 0.
        END IF
-    end do
+    END DO
 
-  end subroutine write_ps
+  END SUBROUTINE write_ps
   !
   ! ----------------------------------------------------------------------
-  ! subroutine: sfc_stat:  Updates statistical arrays with surface flux
+  ! Subroutine: sfc_stat:  Updates statistical arrays with surface flux
   ! variables
   !
-  subroutine sfc_stat(n2,n3,tflx,qflx,ustar,sst)
+  SUBROUTINE sfc_stat(n2,n3,tflx,qflx,ustar,sst)
 
-    integer, intent(in) :: n2,n3
-    real, intent(in), dimension(n2,n3) :: tflx, qflx, ustar
-    real, intent(in)    :: sst
+    INTEGER, INTENT(in) :: n2,n3
+    REAL, INTENT(in), DIMENSION(n2,n3) :: tflx, qflx, ustar
+    REAL, INTENT(in)    :: sst
 
     ssclr(10) = sst
-    ssclr(11) = get_avg(1,n2,n3,1,ustar)
+    ssclr(11) = get_avg2dh(n2,n3,ustar)
 
-    ssclr(12) = get_avg(1,n2,n3,1,tflx)
-    if (level >= 1) ssclr(13) = get_avg(1,n2,n3,1,qflx)
+    ssclr(12) = get_avg2dh(n2,n3,tflx)
+    IF (level >= 1) ssclr(13) = get_avg2dh(n2,n3,qflx)
 
-  end subroutine sfc_stat
+  END SUBROUTINE sfc_stat
   !
   ! ----------------------------------------------------------------------
-  ! subroutine: fills scalar array based on index
+  ! Subroutine: fills scalar array based on index
   ! 1: cfl; 2 max divergence
   !
-  subroutine fill_scalar(index,xval)
+  SUBROUTINE fill_scalar(index,xval)
 
-    integer, intent(in) :: index
-    real, intent (in)   :: xval
+    INTEGER, INTENT(in) :: index
+    REAL, INTENT (in)   :: xval
 
-    select case(index)
-    case(1)
+    SELECT CASE(index)
+    CASE(1)
        ssclr(2) = xval
-    case(2)
+    CASE(2)
        ssclr(3) = xval
-    end select
+    END SELECT
 
-  end subroutine fill_scalar
+  END SUBROUTINE fill_scalar
   !
   ! ----------------------------------------------------------------------
-  ! subroutine: calculates the dissipation for output diagnostics, if
+  ! Subroutine: calculates the dissipation for output diagnostics, if
   ! isgstyp equals 2 then le is passed in via diss
   !
-  subroutine sgs_vel(n1,n2,n3,v1,v2,v3)
+  SUBROUTINE sgs_vel(n1,n2,n3,v1,v2,v3)
 
-    integer, intent(in) :: n1,n2,n3
-    real, intent(in)    :: v1(n1),v2(n1),v3(n1)
+    INTEGER, INTENT(in) :: n1,n2,n3
+    REAL, INTENT(in)    :: v1(n1),v2(n1),v3(n1)
 
     svctr(:,23)=svctr(:,23)+v1(:)/float((n2-2)*(n3-2))
     svctr(:,25)=svctr(:,25)+v2(:)/float((n2-2)*(n3-2))
     svctr(:,27)=svctr(:,27)+v3(:)/float((n2-2)*(n3-2))
 
-  end subroutine sgs_vel
+  END SUBROUTINE sgs_vel
   !
   ! --------------------------------------------------------------------------
   ! SGSFLXS: estimates the sgs rl and tv flux from the sgs theta_l and sgs r_t
   ! fluxes
   !
-  subroutine sgsflxs(n1,n2,n3,level,rl,rv,th,flx,type)
+  SUBROUTINE sgsflxs(n1,n2,n3,level,rl,rv,th,flx,type)
 
-    use defs, only : alvl, cp, rm, ep2
+    USE defs, ONLY : alvl, cp, rm, ep2
 
-    integer, intent(in) :: n1,n2,n3,level
-    real, intent(in)    :: rl(n1,n2,n3),rv(n1,n2,n3)
-    real, intent(in)    :: th(n1,n2,n3),flx(n1,n2,n3)
-    character (len=2)   :: type
+    INTEGER, INTENT(in) :: n1,n2,n3,level
+    REAL, INTENT(in)    :: rl(n1,n2,n3),rv(n1,n2,n3)
+    REAL, INTENT(in)    :: th(n1,n2,n3),flx(n1,n2,n3)
+    CHARACTER (len=2)   :: type
 
-    integer :: k,i,j
-    real    :: rnpts      ! reciprical of number of points and
-    real    :: fctl, fctt ! factors for liquid (l) and tv (t) fluxes
+    INTEGER :: k,i,j
+    REAL    :: rnpts      ! reciprical of number of points and
+    REAL    :: fctl, fctt ! factors for liquid (l) and tv (t) fluxes
 
-    if (type == 'tl') then
+    IF (type == 'tl') THEN
        wrl_sgs(:) = 0.
        wtv_sgs(:) = 0.
-    end if
-    rnpts = 1./real((n2-4)*(n3-4))
+    END IF
+    rnpts = 1./REAL((n2-4)*(n3-4))
     !
     ! calculate fluxes assuming the possibility of liquid water.  if liquid
     ! water does not exist sgs_rl = 0.
     !
-    if ( level >= 2 ) then
-       do j = 3,n3-2
-          do i = 3,n2-2
-             do k = 1,n1-1
-                if (rl(k+1,i,j) > 0.) then
+    IF ( level >= 2 ) THEN
+       DO j = 3,n3-2
+          DO i = 3,n2-2
+             DO k = 1,n1-1
+                IF (rl(k+1,i,j) > 0.) THEN
                    fctt = rnpts*(1. + rv(k,i,j)*(1.+ep2 +ep2*rv(k,i,j)*alvl   &
                         /(rm*th(k,i,j))))                                     &
                         /(1.+(rv(k,i,j)*(alvl/th(k,i,j))**2)/(rm*cp))
-                   select case (type)
-                   case ('tl')
+                   SELECT CASE (type)
+                   CASE ('tl')
                       fctl =-rnpts/(rm*th(k,i,j)**2/(rv(k,i,j)*alvl)+alvl/cp)
-                   case ('rt')
+                   CASE ('rt')
                       fctl =rnpts/(1.+(rv(k,i,j)*alvl**2)/(cp*rm*th(k,i,j)**2))
                       fctt = (alvl*fctt/cp - th(k,i,j)*rnpts)
-                   end select
+                   END SELECT
                    wrl_sgs(k) = wrl_sgs(k) + fctl*flx(k,i,j)
                    wtv_sgs(k) = wtv_sgs(k) + fctt*flx(k,i,j)
-                else
-                   select case (type)
-                   case ('tl')
+                ELSE
+                   SELECT CASE (type)
+                   CASE ('tl')
                       fctt = rnpts*(1. + ep2*rv(k,i,j))
-                   case ('rt')
+                   CASE ('rt')
                       fctt = rnpts*(ep2*th(k,i,j))
-                   end select
+                   END SELECT
                    wtv_sgs(k) = wtv_sgs(k) + fctt*flx(k,i,j)
-                end if
-             end do
-          end do
-       end do
+                END IF
+             END DO
+          END DO
+       END DO
        !
        ! calculate fluxes for dry thermodynamics, i.e., wrl_sgs is by def
        ! zero
        !
-    else
-       do k = 1,n1
+    ELSE
+       DO k = 1,n1
           wrl_sgs(k) = 0.
-       end do
-       do j = 3,n3-2
-          do i = 3,n2-2
-             do k = 1,n1-1
-                if ( level >= 1) then
-                   select case (type)
-                   case ('tl')
+       END DO
+       DO j = 3,n3-2
+          DO i = 3,n2-2
+             DO k = 1,n1-1
+                IF ( level >= 1) THEN
+                   SELECT CASE (type)
+                   CASE ('tl')
                       fctt = rnpts * (1. + ep2*rv(k,i,j))
-                   case ('rt')
+                   CASE ('rt')
                       fctt = rnpts * ep2*th(k,i,j)
-                   end select
-                else
+                   END SELECT
+                ELSE
                    fctt = rnpts
-                end if
+                END IF
                 wtv_sgs(k) = wtv_sgs(k) + fctt*flx(k,i,j)
-             end do
-          end do
-       end do
-    end if
+             END DO
+          END DO
+       END DO
+    END IF
 
-  end subroutine sgsflxs
+  END SUBROUTINE sgsflxs
   !
   ! ----------------------------------------------------------------------
-  ! subroutine fill_tend: fills arrays with current value of tendencies
+  ! Subroutine fill_tend: fills arrays with current value of tendencies
   !
-  subroutine acc_tend(n1,n2,n3,f1,f2,f3,t1,t2,t3,v1,v2,v3,ic,routine)
+  SUBROUTINE acc_tend(n1,n2,n3,f1,f2,f3,t1,t2,t3,v1,v2,v3,ic,routine)
 
-    integer, intent(in) :: n1,n2,n3,ic
-    real, intent(in)    :: f1(n1,n2,n3),f2(n1,n2,n3),f3(n1,n2,n3)
-    real, intent(in)    :: t1(n1,n2,n3),t2(n1,n2,n3),t3(n1,n2,n3)
-    real, intent(inout) :: v1(n1),v2(n1),v3(n1)
-    character (len=3)   :: routine
+    INTEGER, INTENT(in) :: n1,n2,n3,ic
+    REAL, INTENT(in)    :: f1(n1,n2,n3),f2(n1,n2,n3),f3(n1,n2,n3)
+    REAL, INTENT(in)    :: t1(n1,n2,n3),t2(n1,n2,n3),t3(n1,n2,n3)
+    REAL, INTENT(inout) :: v1(n1),v2(n1),v3(n1)
+    CHARACTER (len=3)   :: routine
 
-    integer :: k,ii
-    real    :: x1(n1),x2(n1),x3(n1)
+    INTEGER :: k,ii
+    REAL    :: x1(n1),x2(n1),x3(n1)
 
-    call get_cor3(n1,n2,n3,f1,t1,x1)
-    call get_cor3(n1,n2,n3,f2,t2,x2)
-    call get_cor3(n1,n2,n3,f3,t3,x3)
+    CALL get_cor3(n1,n2,n3,f1,t1,x1)
+    CALL get_cor3(n1,n2,n3,f2,t2,x2)
+    CALL get_cor3(n1,n2,n3,f3,t3,x3)
 
-    select case (routine)
-    case ('sgs')
+    SELECT CASE (routine)
+    CASE ('sgs')
        ii = 39
-    case ('adv')
+    CASE ('adv')
        ii = 42
-    end select
+    END SELECT
 
-    select case (ic)
-    case (1)
-       do k=1,n1
+    SELECT CASE (ic)
+    CASE (1)
+       DO k=1,n1
           v1(k) = x1(k)
           v2(k) = x2(k)
           v3(k) = x3(k)
-       end do
-    case (2)
-       do k=1,n1
+       END DO
+    CASE (2)
+       DO k=1,n1
           svctr(k,ii)   = svctr(k,ii)   + (x1(k)-v1(k))
           svctr(k,ii+1) = svctr(k,ii+1) + (x2(k)-v2(k))
           svctr(k,ii+2) = svctr(k,ii+2) + (x3(k)-v3(k))
-       end do
-    end select
+       END DO
+    END SELECT
 
-  end subroutine acc_tend
+  END SUBROUTINE acc_tend
   !
   !---------------------------------------------------------------------
-  ! subroutine updtst: updates appropriate statistical arrays
+  ! Subroutine updtst: updates appropriate statistical arrays
   !
-  subroutine updtst(n1,routine,nfld,values,ic)
+  SUBROUTINE updtst(n1,routine,nfld,values,ic)
 
-    integer, intent(in)            :: n1,nfld,ic
-    real, intent (in)              :: values(n1)
-    character (len=3), intent (in) :: routine
+    INTEGER, INTENT(in)            :: n1,nfld,ic
+    REAL, INTENT (in)              :: values(n1)
+    CHARACTER (len=3), INTENT (in) :: routine
 
-    integer :: nn,k
+    INTEGER :: nn,k
 
-    select case (routine)
-    case("sgs")
-       select case (nfld)
-       case (-6)
+    SELECT CASE (routine)
+    CASE("sgs")
+       SELECT CASE (nfld)
+       CASE (-6)
           nn = 31 ! dissipation length-scale
-       case (-5)
+       CASE (-5)
           nn = 30 ! mixing length
-       case (-4)
+       CASE (-4)
           nn = 29 ! eddy diffusivity
-       case (-3)
+       CASE (-3)
           nn = 28 ! eddy viscosity
-       case (-2)
+       CASE (-2)
           nn = 38 ! dissipation
-       case (-1)
+       CASE (-1)
           nn = 32 ! estimated sgs energy
-       case (1)
+       CASE (1)
           nn = 21 ! sgs tl flux
-       case (2)
+       CASE (2)
           nn = 54 ! sgs rt flux
-       case default
+       CASE DEFAULT
           nn = 0
-       end select
-    case("adv")
-       select case (nfld)
-       case (-3)
+       END SELECT
+    CASE("adv")
+       SELECT CASE (nfld)
+       CASE (-3)
           nn = 26 ! adv w flux
-       case (-2)
+       CASE (-2)
           nn = 24 ! adv v flux
-       case (-1)
+       CASE (-1)
           nn = 22 ! adv u flux
-       case (0)
+       CASE (0)
           nn = 62 ! adv rl flux
-       case (1)
+       CASE (1)
           nn = 20 ! adv tl flux
-       case (2)
+       CASE (2)
           nn = 53 ! adv rt flux
-       case default
+       CASE DEFAULT
           nn = 0
-       end select
-    case("prs")
-       select case (nfld)
-       case (1)
+       END SELECT
+    CASE("prs")
+       SELECT CASE (nfld)
+       CASE (1)
           nn = 45 ! dpdx u corr
-       case (2)
+       CASE (2)
           nn = 46 ! dpdy v corr
-       case (3)
+       CASE (3)
           nn = 47 ! dpdz w corr
-       case default
+       CASE DEFAULT
           nn = 0
-       end select
-    case("prc")
-       select case (nfld)
-       case (1)
+       END SELECT
+    CASE("prc")
+       SELECT CASE (nfld)
+       CASE (1)
           nn = 87
-       case (2)
+       CASE (2)
           nn = 88
-       case (3)
+       CASE (3)
           nn = 63
-       case default
+       CASE DEFAULT
           nn = 0
-       end select
-    case default
+       END SELECT
+    CASE DEFAULT
        nn = 0
-    end select
+    END SELECT
 
-    if (nn > 0) then
-       if (ic == 0) svctr(:,nn)=0.
-       do k=1,n1
+    IF (nn > 0) THEN
+       IF (ic == 0) svctr(:,nn)=0.
+       DO k=1,n1
           svctr(k,nn)=svctr(k,nn)+values(k)
-       enddo
-    end if
+       END DO
+    END IF
 
-  end subroutine updtst
+  END SUBROUTINE updtst
 
   !
   ! -------------------------------------------------------------------------
@@ -1832,12 +2086,7 @@ contains
   !
   SUBROUTINE acc_removal(n2,n3,n4,raer,rcld,rprc,rice,rsnw)
     USE grid, ONLY : prtcl
-    USE mo_submctl, ONLY : nbins, ncld, nprc,     &
-                               nice,  nsnw,           &
-                               rhosu, rhooc, rhobc,   &
-                               rhodu, rhoss, rhonh,   &
-                               rhono,rhowa,           &
-                               rhoic,rhosn
+    USE mo_submctl, ONLY : nbins, ncld, nprc, nice,  nsnw
     USE class_componentIndex, ONLY : IsUsed, GetIndex
     IMPLICIT NONE
 
@@ -1850,7 +2099,6 @@ contains
 
     CHARACTER(len=3), PARAMETER :: zspec(7) = (/'SO4','OC ','BC ','DU ','SS ','NH ','NO '/)
     INTEGER, PARAMETER          :: sstrt(7) = (/28,    33,   38,   43,   48,   53,   58/)
-    REAL, PARAMETER             :: ssrho(7) = (/rhosu,rhooc,rhobc,rhodu,rhoss,rhonh,rhono/)
 
     REAL :: zavg
 
@@ -1864,7 +2112,7 @@ contains
     zavg = 0.
     tt = 25
     str = (si-1)*nbins+1
-    end = si*nbins
+    END = si*nbins
     zavg = get_avg2dh( n2,n3,SUM(raer(:,:,str:end),DIM=3) )
     ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1872,7 +2120,7 @@ contains
     zavg = 0.
     tt = 26
     str = (si-1)*ncld+1
-    end = si*ncld
+    END = si*ncld
     zavg = get_avg2dh( n2,n3,SUM(rcld(:,:,str:end),DIM=3) )
     ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1880,7 +2128,7 @@ contains
     zavg = 0.
     tt = 27
     str = (si-1)*nprc+1
-    end = si*nprc
+    END = si*nprc
     zavg = get_avg2dh( n2,n3,SUM(rprc(:,:,str:end),DIM=3) )
     ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1888,7 +2136,7 @@ contains
     zavg = 0.
     tt = 28
     str = (si-1)*nice+1
-    end = si*nice
+    END = si*nice
     zavg = get_avg2dh( n2,n3,SUM(rice(:,:,str:end),DIM=3) )
     ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1896,7 +2144,7 @@ contains
     zavg = 0.
     tt = 29
     str = (si-1)*nsnw+1
-    end = si*nsnw
+    END = si*nsnw
     zavg = get_avg2dh( n2,n3,SUM(rsnw(:,:,str:end),DIM=3) )
     ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1910,7 +2158,7 @@ contains
           zavg = 0.
           tt = sstrt(ss)
           str = (si-1)*nbins+1
-          end = si*nbins
+          END = si*nbins
           zavg = get_avg2dh( n2,n3,SUM(raer(:,:,str:end),DIM=3) )
           ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1918,7 +2166,7 @@ contains
           zavg = 0.
           tt = sstrt(ss) + 1
           str = (si-1)*ncld+1
-          end = si*ncld
+          END = si*ncld
           zavg = get_avg2dh( n2,n3,SUM(rcld(:,:,str:end),DIM=3) )
           ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1926,7 +2174,7 @@ contains
           zavg = 0.
           tt = sstrt(ss) + 2
           str = (si-1)*nprc+1
-          end = si*nprc
+          END = si*nprc
           zavg = get_avg2dh( n2,n3,SUM(rprc(:,:,str:end),DIM=3) )
           ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1934,10 +2182,10 @@ contains
           zavg = 0.
           tt = sstrt(ss) + 3
           str = (si-1)*ncld+1
-          end = si*ncld
+          END = si*ncld
           zavg = zavg + get_avg2dh( n2,n3,SUM(rcld(:,:,str:end),DIM=3) )
           str = (si-1)*nprc+1
-          end = si*nprc
+          END = si*nprc
           zavg = zavg + get_avg2dh( n2,n3,SUM(rprc(:,:,str:end),DIM=3) )
           ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1945,7 +2193,7 @@ contains
           zavg = 0.
           tt = sstrt(ss) + 4
           str = (si-1)*nice+1
-          end = si*nice
+          END = si*nice
           zavg = get_avg2dh( n2,n3,SUM(rice(:,:,str:end),DIM=3) )
           ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1953,7 +2201,7 @@ contains
           zavg = 0.
           tt = sstrt(ss) + 5
           str = (si-1)*nsnw+1
-          end = si*nsnw
+          END = si*nsnw
           zavg = get_avg2dh( n2,n3,SUM(rsnw(:,:,str:end),DIM=3) )
           ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1961,10 +2209,10 @@ contains
           zavg = 0.
           tt = sstrt(ss) + 6
           str = (si-1)*nice+1
-          end = si*nice
+          END = si*nice
           zavg = zavg + get_avg2dh( n2,n3,SUM(rice(:,:,str:end),DIM=3) )
           str = (si-1)*nsnw+1
-          end = si*nsnw
+          END = si*nsnw
           zavg = zavg + get_avg2dh( n2,n3,SUM(rsnw(:,:,str:end),DIM=3) )
           ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -1972,19 +2220,19 @@ contains
           zavg = 0.
           tt = sstrt(ss) + 7
           str = (si-1)*nbins+1
-          end = si*nbins
+          END = si*nbins
           zavg = zavg + get_avg2dh( n2,n3,SUM(raer(:,:,str:end),DIM=3) )
           str = (si-1)*ncld+1
-          end = si*ncld
+          END = si*ncld
           zavg = zavg + get_avg2dh( n2,n3,SUM(rcld(:,:,str:end),DIM=3) )
           str = (si-1)*nprc+1
-          end = si*nprc
+          END = si*nprc
           zavg = zavg + get_avg2dh( n2,n3,SUM(rprc(:,:,str:end),DIM=3) )
           str = (si-1)*nice+1
-          end = si*nice
+          END = si*nice
           zavg = zavg + get_avg2dh( n2,n3,SUM(rice(:,:,str:end),DIM=3) )
           str = (si-1)*nsnw+1
-          end = si*nsnw
+          END = si*nsnw
           zavg = zavg + get_avg2dh( n2,n3,SUM(rprc(:,:,str:end),DIM=3) )
           ssclr_b(tt) = ssclr_b(tt) + zavg
 
@@ -2025,7 +2273,7 @@ contains
 
     SELECT CASE(type)
        CASE(0)
-          IF ( .NOT. PRESENT(rv) .OR. .NOT. PRESENT(rc) .OR. .NOT. PRESENT(prc) ) &
+          IF ( .NOT. present(rv) .OR. .NOT. present(rc) .OR. .NOT. present(prc) ) &
                STOP 'acc_massbudget (stat): ERROR - for atm water q,rc and prc must be present'
 
           a1 = 0.; a2 = 0.; a3 = 0.
@@ -2035,7 +2283,7 @@ contains
           massbdg(1) = (a1 + a2 + a3)
 
        CASE(1)
-          IF ( .NOT. PRESENT(rv) .OR. .NOT. PRESENT(rc) .OR. .NOT. PRESENT(prc) ) &
+          IF ( .NOT. present(rv) .OR. .NOT. present(rc) .OR. .NOT. present(prc) ) &
                STOP 'acc_massbudget (stat): ERROR - for atm water q,rc and prc must be present'
 
           a1 = 0.; a2 = 0.; a3 = 0.
@@ -2045,7 +2293,7 @@ contains
           massbdg(2) = (a1 + a2 + a3) ! Not accumulated
 
        CASE(2)
-          IF ( .NOT. PRESENT(revap) .OR. .NOT. PRESENT(ApVdom) ) &
+          IF ( .NOT. present(revap) .OR. .NOT. present(ApVdom) ) &
                STOP 'acc_massbudget (stat): ERROR - for evaporation stats revap must be present'
 
           a1 = 0.
@@ -2053,7 +2301,7 @@ contains
           massbdg(3) = massbdg(3) + a1*tstep*ApVdom
 
        CASE(3)
-          IF ( .NOT. PRESENT(rdep) .OR. .NOT. PRESENT(ApVdom) ) &
+          IF ( .NOT. present(rdep) .OR. .NOT. present(ApVdom) ) &
                STOP 'acc_massbudget (stat): ERROR - for deposition stats rdep must be present'
 
           a1 = 0.
@@ -2081,94 +2329,95 @@ contains
   !
   ! -------------------------------------------------------------------------
   !
-  integer function close_stat()
+  INTEGER FUNCTION close_stat()
 
-    use netcdf
+    USE netcdf
 
     close_stat = nf90_close(ncid1) + nf90_close(ncid2)
+    IF (csflg) close_stat = close_stat + nf90_close(ncid3)
 
-  end function close_stat
+  END FUNCTION close_stat
   !
   ! -------------------------------------------------------------------------
   !
-  real function get_zi (n1, n2, n3, itype, sx, xx, z, threshold)
+  REAL FUNCTION get_zi (n1, n2, n3, itype, sx, xx, z, threshold)
 
-    integer, intent (in) :: n1, n2, n3, itype
-    real, intent (in)    :: xx(n1), z(n1), sx(n1,n2,n3), threshold
+    INTEGER, INTENT (in) :: n1, n2, n3, itype
+    REAL, INTENT (in)    :: xx(n1), z(n1), sx(n1,n2,n3), threshold
 
-    integer :: i, j, k, kk
-    real    :: zibar, sval, dmy, scr(n2,n3)
+    INTEGER :: i, j, k, kk
+    REAL    :: zibar, sval, dmy, scr(n2,n3)
 
     get_zi = -999.
-    select case(itype)
-    case (1)
+    SELECT CASE(itype)
+    CASE (1)
        !
        ! find level at which sx=threshold (xx is one over grid spacing)
        !
        zibar = 0.
-       do j=3,n3-2
-          do i=3,n2-2
+       DO j=3,n3-2
+          DO i=3,n2-2
              k = 2
-             do while (k < n1-2 .and. sx(k,i,j) > threshold)
+             DO WHILE (k < n1-2 .AND. sx(k,i,j) > threshold)
                 k = k+1
-             end do
-             if (k == n1-2) zibar = -999.
-             if (zibar /= -999.) zibar = zibar + z(k-1) +  &
+             END DO
+             IF (k == n1-2) zibar = -999.
+             IF (zibar /= -999.) zibar = zibar + z(k-1) +  &
                   (threshold - sx(k-1,i,j))/xx(k-1)     /  &
                   (sx(k,i,j) - sx(k-1,i,j) + epsilon(1.))
-          end do
-       end do
-       if (zibar /= -999.) get_zi = zibar/real((n3-4)*(n2-4))
+          END DO
+       END DO
+       IF (zibar /= -999.) get_zi = zibar/REAL((n3-4)*(n2-4))
 
-    case(2)
+    CASE(2)
        !
        ! find level of maximum gradient (xx is one over grid spacing)
        !
        scr=0.
-       do j=3,n3-2
-          do i=3,n2-2
+       DO j=3,n3-2
+          DO i=3,n2-2
              sval = 0.
-             do k=2,n1-5
+             DO k=2,n1-5
                 dmy = (sx(k+1,i,j)-sx(k,i,j))*xx(k)
-                if (dmy > sval) then
+                IF (dmy > sval) THEN
                    sval = dmy
                    scr(i,j) = z(k)
-                end if
-             end do
-          end do
-       end do
-       get_zi = get_avg(1,n2,n3,1,scr)
+                END IF
+             END DO
+          END DO
+       END DO
+       get_zi = get_avg2dh(n2,n3,scr)
 
-    case(3)
+    CASE(3)
        !
        ! find level where xx is a maximum
        !
        sval = -huge(1.)
        kk = 1
-       do k=2,n1
-          if (xx(k) > sval) then
+       DO k=2,n1
+          IF (xx(k) > sval) THEN
              kk = k
              sval = xx(k)
-          end if
-       end do
+          END IF
+       END DO
        get_zi = z(kk)
 
-    case(4)
+    CASE(4)
        !
-       ! find level where xx is a maximum
+       ! find level where xx is a minimum
        !
        sval = huge(1.)
        kk = 1
-       do k=2,n1-2
-          if (xx(k) < sval) then
+       DO k=2,n1-2
+          IF (xx(k) < sval) THEN
              kk = k
              sval = xx(k)
-          end if
-       end do
+          END IF
+       END DO
        get_zi = z(kk)
-    end select
+    END SELECT
 
-  end function get_zi
+  END FUNCTION get_zi
 
-end module stat
+END MODULE stat
 

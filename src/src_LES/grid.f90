@@ -17,87 +17,87 @@
 ! Copyright 1999, 2001, Bjorn B. Stevens, Dep't Atmos and Ocean Sci, UCLA
 !----------------------------------------------------------------------------
 !
-module grid
+MODULE grid
 
-  use ncio, only : open_nc, define_nc
+  USE ncio, ONLY : open_nc, define_nc
 
   USE class_componentIndex, ONLY : componentIndex
 
-  implicit none
+  IMPLICIT NONE
   !
-  integer           :: nxp = 132           ! number of x points
-  integer           :: nyp = 132           ! number of y points
-  integer           :: nzp = 105           ! number of z points
+  INTEGER           :: nxp = 132           ! number of x points
+  INTEGER           :: nyp = 132           ! number of y points
+  INTEGER           :: nzp = 105           ! number of z points
 
 
-  logical           :: nxpart = .true.     ! number of processors in x
+  LOGICAL           :: nxpart = .TRUE.     ! number of processors in x
 
-  real              :: deltax = 35.        ! dx for basic grid
-  real              :: deltay = 35.        ! dy for basic grid
-  real              :: deltaz = 17.5       ! dz for basic grid
-  real              :: dzrat  = 1.02       ! grid stretching ratio
-  real              :: dzmax  = 1200.      ! height to start grid-stretching
-  real              :: dtlong = 10.0       ! long timestep
-  real              :: th00   = 288.       ! basic state temperature
+  REAL              :: deltax = 35.        ! dx for basic grid
+  REAL              :: deltay = 35.        ! dy for basic grid
+  REAL              :: deltaz = 17.5       ! dz for basic grid
+  REAL              :: dzrat  = 1.02       ! grid stretching ratio
+  REAL              :: dzmax  = 1200.      ! height to start grid-stretching
+  REAL              :: dtlong = 10.0       ! long timestep
+  REAL              :: th00   = 288.       ! basic state temperature
 
-  real              :: CCN = 150.e6
+  REAL              :: CCN = 150.e6
 
   LOGICAL           :: lbinanl = .FALSE.   ! Whether to write binned data to analysis files (takes a lot of space + mainly used for debugging)
-  integer           :: igrdtyp = 1         ! vertical grid type
-  integer           :: isgstyp = 1         ! sgs model type
-  integer           :: iradtyp = 0         ! radiation model type
-  integer           :: level   = 0         ! thermodynamic level
-  integer           :: naddsc  = 0         ! number of additional scalars;
+  INTEGER           :: igrdtyp = 1         ! vertical grid type
+  INTEGER           :: isgstyp = 1         ! sgs model type
+  INTEGER           :: iradtyp = 0         ! radiation model type
+  INTEGER           :: level   = 0         ! thermodynamic level
+  INTEGER           :: naddsc  = 0         ! number of additional scalars;
   INTEGER           :: nsalsa  = 0         ! Number of tracers for SALSA
-  integer           :: nfpt = 10           ! number of rayleigh friction points
-  real              :: distim = 300.0      ! dissipation timescale
+  INTEGER           :: nfpt = 10           ! number of rayleigh friction points
+  REAL              :: distim = 300.0      ! dissipation timescale
 
-  real              :: sst=283.   ! Surface temperature      added by Zubair Maalick
-  real            :: W1 = 0.9   !Water content
-  real            :: W2 = 0.9
-  real            :: W3 = 0.9
+  REAL              :: sst=283.   ! Surface temperature      added by Zubair Maalick
+  REAL            :: W1 = 0.9   !Water content
+  REAL            :: W2 = 0.9
+  REAL            :: W3 = 0.9
 
 
 
-  character (len=7), allocatable, save :: sanal(:)
-  character (len=80):: expnme = 'Default' ! Experiment name
-  character (len=80):: filprf = 'x'       ! File Prefix
-  character (len=7) :: runtype = 'INITIAL'! Run Type Selection
+  CHARACTER (len=7), ALLOCATABLE, SAVE :: sanal(:)
+  CHARACTER (len=80):: expnme = 'Default' ! Experiment name
+  CHARACTER (len=80):: filprf = 'x'       ! File Prefix
+  CHARACTER (len=7) :: runtype = 'INITIAL'! Run Type SELECTion
 
   REAL              :: Tspinup = 7200.    ! Spinup period in seconds (added by Juha)
 
 
-  character (len=7),  private :: v_snm='sxx    '
-  character (len=80), private :: fname
+  CHARACTER (len=7),  PRIVATE :: v_snm='sxx    '
+  CHARACTER (len=80), PRIVATE :: fname
 
-  integer, private, save  ::  nrec0, nvar0, nbase=15
+  INTEGER, PRIVATE, SAVE  ::  nrec0, nvar0, nbase=15
 
-  integer           :: nz, nxyzp, nxyp
-  real              :: dxi, dyi, dtl, dtlv, dtlt, umean, vmean, psrf
-  real, allocatable :: xt(:), xm(:), yt(:), ym(:), zt(:), zm(:), dzt(:), dzm(:)
-  real, allocatable :: u0(:), v0(:), pi0(:), pi1(:), th0(:), dn0(:), rt0(:)
-  real, allocatable :: spng_wfct(:), spng_tfct(:)
+  INTEGER           :: nz, nxyzp, nxyp
+  REAL              :: dxi, dyi, dtl, dtlv, dtlt, umean, vmean, psrf
+  REAL, ALLOCATABLE :: xt(:), xm(:), yt(:), ym(:), zt(:), zm(:), dzt(:), dzm(:)
+  REAL, ALLOCATABLE :: u0(:), v0(:), pi0(:), pi1(:), th0(:), dn0(:), rt0(:)
+  REAL, ALLOCATABLE :: spng_wfct(:), spng_tfct(:)
   !
   ! velocity variables (past, current and tendency)
   !
-  real, allocatable, target :: a_up(:,:,:),a_uc(:,:,:),a_ut(:,:,:)
-  real, allocatable, target :: a_vp(:,:,:),a_vc(:,:,:),a_vt(:,:,:)
-  real, allocatable, target :: a_wp(:,:,:),a_wc(:,:,:),a_wt(:,:,:)
+  REAL, ALLOCATABLE, TARGET :: a_up(:,:,:),a_uc(:,:,:),a_ut(:,:,:)
+  REAL, ALLOCATABLE, TARGET :: a_vp(:,:,:),a_vc(:,:,:),a_vt(:,:,:)
+  REAL, ALLOCATABLE, TARGET :: a_wp(:,:,:),a_wc(:,:,:),a_wt(:,:,:)
   !
   ! wsave variables used in fft in x and y directons
   !
-  real, allocatable :: wsavex(:), wsavey(:)
+  REAL, ALLOCATABLE :: wsavex(:), wsavey(:)
   !
   ! prognostic scalar variables
   !
-  real, pointer :: a_tp(:,:,:),a_tt(:,:,:)
-  real, pointer :: a_rp(:,:,:),a_rt(:,:,:)  !Juha: In standard version this is the TOTAL water content.
+  REAL, POINTER :: a_tp(:,:,:),a_tt(:,:,:)
+  REAL, POINTER :: a_rp(:,:,:),a_rt(:,:,:)  !Juha: In standard version this is the TOTAL water content.
                                             !      With SALSA this is taken as just the water VAPOUR content,
                                             !      in order not to over-specify the problem.
-  real, pointer :: a_rpp(:,:,:),a_rpt(:,:,:)
-  real, pointer :: a_npp(:,:,:),a_npt(:,:,:)
-  real, pointer :: a_qp(:,:,:),a_qt(:,:,:)
-  real, pointer :: a_sp(:,:,:),a_st(:,:,:)
+  REAL, POINTER :: a_rpp(:,:,:),a_rpt(:,:,:)
+  REAL, POINTER :: a_npp(:,:,:),a_npt(:,:,:)
+  REAL, POINTER :: a_qp(:,:,:),a_qt(:,:,:)
+  REAL, POINTER :: a_sp(:,:,:),a_st(:,:,:)
 
   ! Juha: SALSA tracers
   !---------------------------------------------------------------------------
@@ -143,41 +143,41 @@ module grid
 
   !---------------------------------------------------------------------------
 
-  real, allocatable, target :: a_sclrp(:,:,:,:),a_sclrt(:,:,:,:)
+  REAL, ALLOCATABLE, TARGET :: a_sclrp(:,:,:,:),a_sclrt(:,:,:,:)
    !
   ! 3d diagnostic quantities
   !
-  real, allocatable, target :: a_theta(:,:,:)  ! dry potential temp (k)
-  real, allocatable :: a_pexnr(:,:,:)  ! perturbation exner func
-  real, allocatable :: a_press(:,:,:)  ! pressure (hpa)
-  real, allocatable :: a_rc(:,:,:)     ! Total cloud water
-  real, allocatable :: a_ri(:,:,:)     ! Total ice cloud content
-  real, allocatable :: a_rv(:,:,:)     ! water vapor (used only for levels < 4!)
+  REAL, ALLOCATABLE, TARGET :: a_theta(:,:,:)  ! dry potential temp (k)
+  REAL, ALLOCATABLE :: a_pexnr(:,:,:)  ! perturbation exner func
+  REAL, ALLOCATABLE :: a_press(:,:,:)  ! pressure (hpa)
+  REAL, ALLOCATABLE :: a_rc(:,:,:)     ! Total cloud water
+  REAL, ALLOCATABLE :: a_ri(:,:,:)     ! Total ice cloud content
+  REAL, ALLOCATABLE :: a_rv(:,:,:)     ! water vapor (used only for levels < 4!)
   REAL, ALLOCATABLE :: a_srp(:,:,:)    ! Total rain water for use with LEVEL 4 (Diagnostic scalar!!)
   REAL, ALLOCATABLE :: a_snrp(:,:,:)   ! Total number of rain drops for use with LEVEL 4 (Diagnostic scalar!!)
   REAL, ALLOCATABLE :: a_srs(:,:,:)    ! Total snow for use with SALSA
   REAL, ALLOCATABLE :: a_snrs(:,:,:)   ! Total number of snow particles for use with LEVEL 5 (Diagnostic scalar!!)
   REAL, ALLOCATABLE :: a_rh(:,:,:)     ! Relative humidity
+  REAL, ALLOCATABLE :: a_rsl(:,:,:)     ! water saturation vapor mixing ratio
   REAL, ALLOCATABLE :: a_rhi(:,:,:)     ! Relative humidity over ice
-  REAL, ALLOCATABLE :: a_rsi(:,:,:)     ! ice saturation vapor mixing ratio; Juha: lisätään myös a_rsl, nyt menee jonkun a_scr2 kautta....
+  REAL, ALLOCATABLE :: a_rsi(:,:,:)     ! ice saturation vapor mixing ratio
   REAL, ALLOCATABLE :: a_dn(:,:,:)     ! Air density (for normalizing concentrations according to mass, levels < 4!)
   !
   ! scratch arrays
   !
-  real, allocatable, dimension (:,:,:) :: a_rflx, a_sflx, a_scr1, a_scr2, &
-       a_scr3, a_scr4, a_scr5, a_scr6, &
-       a_temp0 ! store temperatures of previous timestep
+  REAL, ALLOCATABLE, DIMENSION (:,:,:) :: a_rflx, a_sflx, &
+       a_temp, a_temp0 ! store temperatures of previous timestep
   !
   !
-  real, allocatable :: a_ustar(:,:)
-  real, allocatable :: a_tstar(:,:)
-  real, allocatable :: a_rstar(:,:)
-  real, allocatable :: uw_sfc(:,:)
-  real, allocatable :: vw_sfc(:,:)
-  real, allocatable :: ww_sfc(:,:)
-  real, allocatable :: wt_sfc(:,:)
-  real, allocatable :: wq_sfc(:,:)
-  real, allocatable :: precip(:,:,:), snowin(:,:,:), albedo(:,:)
+  REAL, ALLOCATABLE :: a_ustar(:,:)
+  REAL, ALLOCATABLE :: a_tstar(:,:)
+  REAL, ALLOCATABLE :: a_rstar(:,:)
+  REAL, ALLOCATABLE :: uw_sfc(:,:)
+  REAL, ALLOCATABLE :: vw_sfc(:,:)
+  REAL, ALLOCATABLE :: ww_sfc(:,:)
+  REAL, ALLOCATABLE :: wt_sfc(:,:)
+  REAL, ALLOCATABLE :: wq_sfc(:,:)
+  REAL, ALLOCATABLE :: precip(:,:,:), snowin(:,:,:), albedo(:,:)
 
   ! Juha:
   ! Diagnostic variables needed to track mass conservation (of water).
@@ -191,20 +191,20 @@ module grid
   REAL :: mc_ApVdom         ! Volume/Area
 
   !
-  integer :: nscl = 1
-  integer, save :: ncid0,ncid_s
+  INTEGER :: nscl = 1
+  INTEGER, SAVE :: ncid0,ncid_s
   !
-contains
+CONTAINS
   !
   !----------------------------------------------------------------------
-  ! SUBROUTINE define_vars
+  ! Subroutine define_vars
   !
   ! Modified for level 4
   ! Juha Tonttila, FMI, 2014.
   !
-  subroutine define_vars
+  SUBROUTINE define_vars
 
-    use mpi_interface, only :myid
+    USE mpi_interface, ONLY :myid
     USE mo_submctl, ONLY : nbins,ncld,nprc,  & ! Number of aerosol and hydrometeor size bins for SALSA
                                nice,nsnw,        & ! number of ice and snow size bins for SALSA
                                nspec, maxspec, listspec
@@ -212,7 +212,7 @@ contains
                                      GetNcomp, IsUsed
 
 
-    integer :: memsize
+    INTEGER :: memsize
     INTEGER :: zz
     INTEGER :: nc
 
@@ -230,98 +230,90 @@ contains
 
     ! Juha: Stuff that's allocated for all configurations
     !----------------------------------------------------------
-    allocate (u0(nzp),v0(nzp),pi0(nzp),pi1(nzp),th0(nzp),dn0(nzp),rt0(nzp))
+    ALLOCATE (u0(nzp),v0(nzp),pi0(nzp),pi1(nzp),th0(nzp),dn0(nzp),rt0(nzp))
 
-    memsize = 2*nxyzp ! complex array in pressure solver
+    memsize = 2*nxyzp ! complexarray in pressure solver
 
-    allocate (a_up(nzp,nxp,nyp),a_vp(nzp,nxp,nyp),a_wp(nzp,nxp,nyp))
+    ALLOCATE (a_up(nzp,nxp,nyp),a_vp(nzp,nxp,nyp),a_wp(nzp,nxp,nyp))
     a_up(:,:,:) = 0.
     a_vp(:,:,:) = 0.
     a_wp(:,:,:) = 0.
 
-    allocate (a_uc(nzp,nxp,nyp),a_vc(nzp,nxp,nyp),a_wc(nzp,nxp,nyp))
+    ALLOCATE (a_uc(nzp,nxp,nyp),a_vc(nzp,nxp,nyp),a_wc(nzp,nxp,nyp))
     a_uc(:,:,:) = 0.
     a_vc(:,:,:) = 0.
     a_wc(:,:,:) = 0.
 
-    allocate (a_ut(nzp,nxp,nyp),a_vt(nzp,nxp,nyp),a_wt(nzp,nxp,nyp))
+    ALLOCATE (a_ut(nzp,nxp,nyp),a_vt(nzp,nxp,nyp),a_wt(nzp,nxp,nyp))
     a_ut(:,:,:) = 0.
     a_vt(:,:,:) = 0.
     a_wt(:,:,:) = 0.
 
-    allocate (a_theta(nzp,nxp,nyp),a_pexnr(nzp,nxp,nyp),a_press(nzp,nxp,nyp))
+    ALLOCATE (a_theta(nzp,nxp,nyp),a_pexnr(nzp,nxp,nyp),a_press(nzp,nxp,nyp))
     a_theta(:,:,:) = 0.
     a_pexnr(:,:,:) = 0.
     a_press(:,:,:) = 0.
 
     memsize = memsize + nxyzp*13 !
 
-    if (iradtyp > 0 ) then
-       allocate (a_rflx(nzp,nxp,nyp))
+    IF (iradtyp > 0 ) THEN
+       ALLOCATE (a_rflx(nzp,nxp,nyp))
        a_rflx(:,:,:) = 0.
        memsize = memsize + nxyzp
-    end if
-    if (iradtyp >= 3) then
-       allocate (a_sflx(nzp,nxp,nyp),albedo(nxp,nyp))
+    END IF
+    IF (iradtyp >= 3) THEN
+       ALLOCATE (a_sflx(nzp,nxp,nyp),albedo(nxp,nyp))
        a_sflx(:,:,:) = 0.
        albedo(:,:) = 0.
        memsize = memsize + nxyzp + nxyp
-    end if
+    END IF
 
-    allocate (a_scr1(nzp,nxp,nyp),a_scr2(nzp,nxp,nyp),a_scr3(nzp,nxp,nyp))
-    allocate (a_scr4(nzp,nxp,nyp),a_scr5(nzp,nxp,nyp),a_scr6(nzp,nxp,nyp))
-    a_scr1(:,:,:) = 0.
-    a_scr2(:,:,:) = 0.
-    a_scr3(:,:,:) = 0.
-    a_scr4(:,:,:) = 0.
-    a_scr5(:,:,:) = 0.
-    a_scr6(:,:,:) = 0.
-    memsize = memsize + 6*nxyzp
+    ALLOCATE (a_temp(nzp,nxp,nyp),a_temp0(nzp,nxp,nyp),a_rsl(nzp,nxp,nyp))
+    a_temp(:,:,:) = 0.
+    a_temp0(:,:,:) = 0.
+    a_rsl(:,:,:) = 0.
+    memsize = memsize + nxyzp*3
 
-    allocate (a_temp0(nzp,nxp,nyp))
-    a_temp0(nzp,nxp,nyp) = 0.
-    memsize = memsize + nxyzp
-
-    ! Juha: Stuff that's allocated if SALSA is NOT used
+    ! Juha: Stuff that's allocated if SALSA is not used
     !-----------------------------------------------------
     IF (level < 4) THEN
 
-       if (level >= 0) then
-          allocate (a_rv(nzp,nxp,nyp))
+       IF (level >= 0) THEN
+          ALLOCATE (a_rv(nzp,nxp,nyp))
           a_rv(:,:,:) = 0.
           memsize = memsize + nxyzp
-          if (level > 1) then
-             allocate (a_rc(nzp,nxp,nyp))
+          IF (level > 1) THEN
+             ALLOCATE (a_rc(nzp,nxp,nyp))
              a_rc(:,:,:) = 0.
              memsize = memsize + nxyzp
-          end if
-       end if
+          END IF
+       END IF
 
        nscl = nscl+naddsc
-       if (level   > 0) nscl = nscl+1
-       if (level   > 2) nscl = nscl+2
-       if (isgstyp > 1) nscl = nscl+1
+       IF (level   > 0) nscl = nscl+1
+       IF (level   > 2) nscl = nscl+2
+       IF (isgstyp > 1) nscl = nscl+1
 
-       allocate (a_sclrp(nzp,nxp,nyp,nscl), a_sclrt(nzp,nxp,nyp,nscl))
+       ALLOCATE (a_sclrp(nzp,nxp,nyp,nscl), a_sclrt(nzp,nxp,nyp,nscl))
        a_sclrp(:,:,:,:) = 0.
        a_sclrt(:,:,:,:) = 0.
 
        a_tp=>a_sclrp(:,:,:,1)
        a_tt=>a_sclrt(:,:,:,1)
-       if (level >= 0) then
+       IF (level >= 0) THEN
           a_rp=>a_sclrp(:,:,:,2)
           a_rt=>a_sclrt(:,:,:,2)
-       end if
-       if (level >= 3) then
+       END IF
+       IF (level >= 3) THEN
           a_rpp=>a_sclrp(:,:,:,3)
           a_rpt=>a_sclrt(:,:,:,3)
           a_npp=>a_sclrp(:,:,:,4)
           a_npt=>a_sclrt(:,:,:,4)
-       end if
-       if (isgstyp > 1) then
+       END IF
+       IF (isgstyp > 1) THEN
           a_qp=>a_sclrp(:,:,:,nscl - naddsc)
           a_qt=>a_sclrt(:,:,:,nscl - naddsc)
-       end if
+       END IF
 
     !Juha: Stuff that's allocated when SALSA is used
     !---------------------------------------------------
@@ -329,7 +321,7 @@ contains
 
        nc = GetNcomp(prtcl) ! number of aerosol components used. For allocations + 1 for water.
 
-       allocate (a_rc(nzp,nxp,nyp), a_srp(nzp,nxp,nyp), a_snrp(nzp,nxp,nyp),     &
+       ALLOCATE (a_rc(nzp,nxp,nyp), a_srp(nzp,nxp,nyp), a_snrp(nzp,nxp,nyp),     &
                  a_Rawet(nzp,nxp,nyp,nbins),a_Radry(nzp,nxp,nyp,nbins),          &
                  a_Rcwet(nzp,nxp,nyp,ncld), a_Rcdry(nzp,nxp,nyp,ncld),           &
                  a_Rpwet(nzp,nxp,nyp,nprc), a_Rpdry(nzp,nxp,nyp,nprc),           &
@@ -351,7 +343,7 @@ contains
        a_vactd(:,:,:,:) = 0.
        memsize = memsize + 4*nxyzp + 3*nbins*nxyzp + 3*ncld*nxyzp + nxyzp*(nc+1)*ncld + 2*nprc*nxyzp
 
-       allocate ( a_Riwet(nzp,nxp,nyp,nice), a_Ridry(nzp,nxp,nyp,nice),           &
+       ALLOCATE ( a_Riwet(nzp,nxp,nyp,nice), a_Ridry(nzp,nxp,nyp,nice),           &
                   a_Rswet(nzp,nxp,nyp,nsnw), a_Rsdry(nzp,nxp,nyp,nsnw),           &
                   a_ri(nzp,nxp,nyp), a_rsi(nzp,nxp,nyp), a_rhi(nzp,nxp,nyp),      &
                   a_srs(nzp,nxp,nyp), a_snrs(nzp,nxp,nyp)  )  ! ice'n'snow
@@ -368,9 +360,9 @@ contains
 
        ! Total number of prognostic scalars: temp + total water + SALSA + tke(?)
        nscl = 2 + nsalsa
-       if (isgstyp > 1) nscl = nscl+1
+       IF (isgstyp > 1) nscl = nscl+1
 
-       allocate (a_sclrp(nzp,nxp,nyp,nscl), a_sclrt(nzp,nxp,nyp,nscl))
+       ALLOCATE (a_sclrp(nzp,nxp,nyp,nscl), a_sclrt(nzp,nxp,nyp,nscl))
        a_sclrp(:,:,:,:) = 0.
        a_sclrt(:,:,:,:) = 0.
 
@@ -379,10 +371,10 @@ contains
        a_rp=>a_sclrp(:,:,:,2)
        a_rt=>a_sclrt(:,:,:,2)
 
-       if (isgstyp > 1) then
+       IF (isgstyp > 1) THEN
           a_qp=>a_sclrp(:,:,:,nscl - nsalsa)
           a_qt=>a_sclrt(:,:,:,nscl - nsalsa)
-       end if
+       END IF
 
        !JT: Set the pointers for prognostic SALSA variables (levels 4 & 5)
        zz = nscl-nsalsa
@@ -439,17 +431,17 @@ contains
 
     !----------------------------------------------------
 
-    allocate (a_ustar(nxp,nyp),a_tstar(nxp,nyp),a_rstar(nxp,nyp))
-    allocate (uw_sfc(nxp,nyp),vw_sfc(nxp,nyp),ww_sfc(nxp,nyp))
-    allocate (wt_sfc(nxp,nyp),wq_sfc(nxp,nyp))
-    !allocate (ra(nxp,nyp))
-    if (level >= 3) then
-       allocate(precip(nzp,nxp,nyp))
+    ALLOCATE (a_ustar(nxp,nyp),a_tstar(nxp,nyp),a_rstar(nxp,nyp))
+    ALLOCATE (uw_sfc(nxp,nyp),vw_sfc(nxp,nyp),ww_sfc(nxp,nyp))
+    ALLOCATE (wt_sfc(nxp,nyp),wq_sfc(nxp,nyp))
+    !ALLOCATE (ra(nxp,nyp))
+    IF (level >= 3) THEN
+       ALLOCATE(precip(nzp,nxp,nyp))
        precip = 0.
        memsize = memsize + nxyzp
-    end if
+    END IF
 
-    allocate(snowin(nzp,nxp,nyp))
+    ALLOCATE(snowin(nzp,nxp,nyp))
     memsize = memsize + nxyzp
 
     a_ustar(:,:) = 0.
@@ -465,26 +457,26 @@ contains
 
     memsize = memsize +  nxyzp*nscl*2 + 3*nxyp + nxyp*10
 
-    if(myid == 0) then
-       print "(//' ',49('-')/,' ',/3x,i3.3,' prognostic scalars')", nscl
-       print "('   memory to be allocated  -  ',f8.3,' mbytes')", &
+    IF(myid == 0) THEN
+       PRINT "(//' ',49('-')/,' ',/3x,i3.3,' prognostic scalars')", nscl
+       PRINT "('   memory to be allocated  -  ',f8.3,' mbytes')", &
             memsize*1.e-6*kind(0.0)
-    end if
+    END IF
 
-  end subroutine define_vars
+  END SUBROUTINE define_vars
   !
   !----------------------------------------------------------------------
   !
-  subroutine define_grid
+  SUBROUTINE define_grid
 
-    use mpi_interface, only: xoffset, yoffset, wrxid, wryid, nxpg, nypg,   &
+    USE mpi_interface, ONLY: xoffset, yoffset, wrxid, wryid, nxpg, nypg,   &
          appl_abort, myid
 
-    integer :: i,j,k,kmax,nchby
-    real    :: dzrfm,dz,zb,dzmin
-    real    :: zmnvc(-1:nzp+1)
-    character (len=51) :: &
-         fm1 = '(//" ",49("-")/,"   grid dimensions:"/)            ',      &
+    INTEGER :: i,j,k,kmax,nchby
+    REAL    :: dzrfm,dz,zb,dzmin
+    REAL    :: zmnvc(-1:nzp+1)
+    CHARACTER (len=51) :: &
+         fm1 = '(//" ",49("-")/,"   grid DIMENSIONs:"/)            ',      &
          fm2 = '("   nxp-4 = ",i3,", dx, dx = ",f8.1,",",f8.1," m")',      &
          fm3 = '("   nyp-4 = ",i3,", dy, dy = ",f8.1,",",f8.1," m")',      &
          fm4 = '("   nzp   = ",i3,", dz, dz = ",f8.1,",",f8.1," m")',      &
@@ -498,152 +490,152 @@ contains
 
     dxi=1./deltax
     dyi=1./deltay
-    allocate(wsavex(4*nxpg+100),wsavey(4*nypg+100))
+    ALLOCATE(wsavex(4*nxpg+100),wsavey(4*nypg+100))
     wsavex=0.0
     wsavey=0.0
 
     !
     ! define xm array for grid 1 from deltax
     !
-    allocate (xm(nxp))
+    ALLOCATE (xm(nxp))
     xm(1)=-float(max(nxpg-2,1))*.5*deltax+xoffset(wrxid)*deltax
-    do i=2,nxp-1
+    DO i=2,nxp-1
        xm(i)=xm(i-1)+deltax
-    end do
+    END DO
     xm(nxp)=2*xm(nxp-1)-xm(nxp-2)
     !
     ! define ym array for grid 1 from deltay
     !
-    allocate (ym(nyp))
+    ALLOCATE (ym(nyp))
     ym(1)=-float(max(nypg-2,1))*.5*deltay+yoffset(wryid)*deltay
-    do j=2,nyp-1
+    DO j=2,nyp-1
        ym(j)=ym(j-1)+deltay
-    end do
+    END DO
     ym(nyp)=2*ym(nyp-1)-ym(nyp-2)
 
     !
     !      define where the momentum points will lie in vertical
     !
-  allocate (zm(nzp))
-  select case (abs(igrdtyp))
+  ALLOCATE (zm(nzp))
+  SELECT CASE (abs(igrdtyp))
      !
      ! Read in grid spacings from a file
      !
-  case(3)
-     open (1,file='zm_grid_in',status='old',form='formatted')
-     do k=1,nzp
-        read (1,*) zm(k)
-     end do
-     close (1)
-     if (zm(1) /= 0.) then
-       if (myid == 0) print *, 'ABORTING:  Error in input grid'
-       call appl_abort(0)
-    end if
+  CASE(3)
+     OPEN(1,file='zm_grid_in',status='old',form='formatted')
+     DO k=1,nzp
+        READ(1,*) zm(k)
+     END DO
+     CLOSE(1)
+     IF (zm(1) /= 0.) THEN
+       IF (myid == 0) PRINT *, 'ABORTING:  Error in input grid'
+       CALL appl_abort(0)
+    END IF
      !
      ! Tschebyschev Grid with vertical size given by dzmax
      !
-  case(2)
+  CASE(2)
      zm(1) = 0.
      nchby = nzp-3
-     do k=1,nzp-1
+     DO k=1,nzp-1
         zm(k+1) = cos( ((2.*nchby - 1. - 2.*(k-1))*2.*asin(1.))/(2.*nchby))
         zm(k+1) = (zm(k+1)+1.)*dzmax/2.
-     end do
+     END DO
      zm(nzp-1) = dzmax
      zm(nzp)   = dzmax + zm(2)*zm(2)/(zm(3)-zm(2))
      !
      ! define zm array for grid 1 from deltaz and dzrat, if dzrat is
      ! negative compress grid so that dzmin is the grid spacing in a 100m
-     ! interval below dzmax.  In both cases stretcvh grid uniformly by the
+     ! interval below dzmax.  In both CASEs stretcvh grid uniformly by the
      ! ration |dzrat| above dzmax
      !
-  case(1)
+  CASE(1)
      zm(1)=0.
      zm(2)=deltaz
      zb=dzmax+100.
-     if (dzrat.lt.0.) then
+     IF (dzrat.LT.0.) THEN
         dzmin = -float(int(dzrat))
         dzrat =  dzrat+dzmin-1
         kmax = int(log(deltaz/dzmin)/log(abs(dzrat)))
         zb=dzmax-100.
-        do k=1,kmax
+        DO k=1,kmax
            zb=zb-dzmin*abs(dzrat)**k
-        end do
-     end if
+        END DO
+     END IF
 
      dz=deltaz
-     do k=3,nzp
-        if(zm(k-1) > zb .and. zm(k-1) < dzmax)then
+     DO k=3,nzp
+        IF(zm(k-1) > zb .AND. zm(k-1) < dzmax)then
            dz=max(dzmin,dz/abs(dzrat))
-        else if (zm(k-1) >= dzmax) then
+        ELSE IF (zm(k-1) >= dzmax) THEN
            dz=dz*abs(dzrat)
-        end if
+        END IF
         zm(k)=zm(k-1)+dz
-     end do
-  case default
+     END DO
+  CASE DEFAULT
      zm(1)=0.
-     do k=2,nzp ! Fixed: used to start from 1
+     DO k=2,nzp ! Fixed: used to start from 1
         zm(k)=zm(k-1)+deltaz
-     end do
-  end select
+     END DO
+  END SELECT
   !
   ! Grid Points for Thermal Points (T-Grid):
   !
-  allocate (xt(nxp))
-  do i=2,nxp
+  ALLOCATE (xt(nxp))
+  DO i=2,nxp
      xt(i)=.5*(xm(i)+xm(i-1))
-  end do
+  END DO
   xt(1)=1.5*xm(1)-.5*xm(2)
   !
-  allocate (yt(nyp))
-  do j=2,nyp
+  ALLOCATE (yt(nyp))
+  DO j=2,nyp
      yt(j)=.5*(ym(j)+ym(j-1))
-  end do
+  END DO
   yt(1)=1.5*ym(1)-.5*ym(2)
   !
-  allocate (zt(nzp))
-  if (igrdtyp .lt. 0) then
+  ALLOCATE (zt(nzp))
+  IF (igrdtyp .LT. 0) THEN
      !
      ! Read in grid spacings from a file
      !
-     open (2,file='zt_grid_in',status='old',form='formatted')
-     do k=1,nzp
-        read (2,*) zt(k)
-     end do
-     close (2)
-   else
+     OPEN(2,file='zt_grid_in',status='old',form='formatted')
+     DO k=1,nzp
+        READ(2,*) zt(k)
+     END DO
+     CLOSE(2)
+   ELSE
      !
      ! calculate where the thermo points will lie based on geometric
      ! interpolation from the momentum points
      !
-     do k=1,nzp
+     DO k=1,nzp
         zmnvc(k)=zm(k)
-     end do
+     END DO
      zmnvc(0)=-(zmnvc(2)-zmnvc(1))**2 /(zmnvc(3)-zmnvc(2))
      zmnvc(-1)=zmnvc(0)-(zmnvc(1)-zmnvc(0))**2 /(zmnvc(2)-zmnvc(1))
      zmnvc(nzp+1)=zmnvc(nzp)+(zmnvc(nzp)-zmnvc(nzp-1))**2              &
                   /(zmnvc(nzp-1)-zmnvc(nzp-2))
 
-     do k=1,nzp
+     DO k=1,nzp
        dzrfm=sqrt(sqrt((zmnvc(k+1)-zmnvc(k)) /(zmnvc(k-1)-zmnvc(k-2))))
        zt(k)=zmnvc(k-1)+(zmnvc(k)-zmnvc(k-1))/(1.+dzrfm)
-     end do
-  end if
+     END DO
+  END IF
   !
   ! compute other arrays based on the vertical grid.
   !   dzm: inverse of distance between thermal points k+1 and k
   !   dzt: inverse of distance between momentum points k and k-1
   !
-  allocate (dzm(nzp))
-  do k=1,nzp-1
+  ALLOCATE (dzm(nzp))
+  DO k=1,nzp-1
      dzm(k)=1./(zt(k+1)-zt(k))
-  end do
+  END DO
   dzm(nzp)=dzm(nzp-1)*dzm(nzp-1)/dzm(nzp-2)
 
-  allocate (dzt(nzp))
-  do k=2,nzp
+  ALLOCATE (dzt(nzp))
+  DO k=2,nzp
      dzt(k)=1./(zm(k)-zm(k-1))
-  end do
+  END DO
   dzt(1)=dzt(2)*dzt(2)/dzt(3)
   !
   ! set timesteps
@@ -652,41 +644,41 @@ contains
   dtlv=2.*dtl
   dtlt=dtl
   !
-  if(myid == 0) then
-     write(6,fm1)
-     write(6,fm2) nxpg-4, deltax, 2.*xt(nxp-2)
-     write(6,fm3) nypg-4, deltay, 2.*yt(nyp-2)
+  IF(myid == 0) THEN
+     WRITE(6,fm1)
+     WRITE(6,fm2) nxpg-4, deltax, 2.*xt(nxp-2)
+     WRITE(6,fm3) nypg-4, deltay, 2.*yt(nyp-2)
 
-     write(6,fm4) nzp,zm(2)-zm(1),zm(nzp)
-     write(6,fm5) dtl
-     write(6,fm6) level
-  endif
+     WRITE(6,fm4) nzp,zm(2)-zm(1),zm(nzp)
+     WRITE(6,fm5) dtl
+     WRITE(6,fm6) level
+  END IF
 
-  end subroutine define_grid
+  END SUBROUTINE define_grid
   !
   ! ----------------------------------------------------------------------
-  ! subroutine init_anal:  Defines the netcdf Analysis file
+  ! Subroutine init_anal:  Defines the netcdf Analysis file
   !
   ! Modified for level 4.
   ! Juha Tonttila, FMI, 2014
   !
   !
-  subroutine init_anal(time)
+  SUBROUTINE init_anal(time)
 
-    use mpi_interface, only :myid, ver, author
+    USE mpi_interface, ONLY :myid, ver, author, info
     USE mo_submctl, ONLY : fn2a,fn2b,fca,fcb,fra, &
                                fia,fib,fsa
     USE class_ComponentIndex, ONLY : IsUsed
-    integer, parameter :: nnames = 24
-    integer, parameter :: salsa_nn = 104
-    character (len=7), save :: sbase(nnames) =  (/ &
+    INTEGER, PARAMETER :: nnames = 24
+    INTEGER, PARAMETER :: salsa_nn = 104
+    CHARACTER (len=7), SAVE :: sbase(nnames) =  (/ &
          'time   ','zt     ','zm     ','xt     ','xm     ','yt     '   ,& ! 1
          'ym     ','u0     ','v0     ','dn0    ','u      ','v      '   ,& ! 7
          'w      ','t      ','p      ','q      ','l      ','r      '   ,& ! 13
          'f      ','i      ','s      '                                 ,& ! 19 ice'n'snow
          'n      ','stke   ','rflx   '/)                                  ! 22 total 24
     ! Added for SALSA
-    character(len=7), save :: salsa_sbase(salsa_nn) = (/ &
+    CHARACTER(len=7), SAVE :: salsa_sbase(salsa_nn) = (/ &
          'time   ','zt     ','zm     ','xt     ','xm     ','yt     ',  &  ! 1 
          'ym     ','aea    ','aeb    ','cla    ','clb    ','prc    ',  &  ! 7
          'ica    ','icb    ','snw    ','u0     ','v0     ','dn0    ',  &  ! 13
@@ -709,61 +701,61 @@ contains
 
     LOGICAL, SAVE :: salsabool(salsa_nn)
 
-    real, intent (in) :: time
-    integer           :: nbeg, nend
+    REAL, INTENT (in) :: time
+    INTEGER           :: nbeg, nend
 
     IF (level < 4) THEN  ! Standard operation for levels 1-3
 
        nvar0 = nbase + naddsc
-       if (level >= 1) nvar0 = nvar0+1
-       if (level >= 2) nvar0 = nvar0+1
-       if (level == 3) nvar0 = nvar0+2
-       if (isgstyp > 1) nvar0 = nvar0+1
-       if (iradtyp > 1) nvar0 = nvar0+1
+       IF (level >= 1) nvar0 = nvar0+1
+       IF (level >= 2) nvar0 = nvar0+1
+       IF (level == 3) nvar0 = nvar0+2
+       IF (isgstyp > 1) nvar0 = nvar0+1
+       IF (iradtyp > 1) nvar0 = nvar0+1
 
-       allocate (sanal(nvar0))
+       ALLOCATE (sanal(nvar0))
        sanal(1:nbase) = sbase(1:nbase)
 
        nvar0 = nbase
        !
        ! add liquid water, which is a diagnostic variable, first
        !
-       if (level >= 2) then
+       IF (level >= 2) THEN
           nvar0 = nvar0+1
           sanal(nvar0) = sbase(nbase+2)
-       end if
+       END IF
        !
        ! add additional scalars, in the order in which they appear in scalar
        ! table
        !
-       if (level >= 1) then
+       IF (level >= 1) THEN
           nvar0 = nvar0+1
           sanal(nvar0) = sbase(nbase+1)
-       end if
+       END IF
 
-       if (level == 3) then
+       IF (level == 3) THEN
           nvar0 = nvar0+1
           sanal(nvar0) = sbase(nbase+3)
           nvar0 = nvar0+1
           sanal(nvar0) = sbase(nbase+4+3)
-       end if
+       END IF
 
-       if (isgstyp > 1) then
+       IF (isgstyp > 1) THEN
           nvar0 = nvar0+1
           sanal(nvar0) = sbase(nbase+5+3)
-       end if
+       END IF
 
-       if (iradtyp > 2) then
+       IF (iradtyp > 2) THEN
           nvar0 = nvar0+1
           sanal(nvar0) = sbase(nbase+6+3)
-       end if
+       END IF
 
        nbeg = nvar0+1
-       nend = nvar0+naddsc
-       do nvar0 = nbeg, nend
-          write(v_snm(2:3),'(i2.2)') nvar0-nbeg
+       nEND = nvar0+naddsc
+       DO nvar0 = nbeg, nend
+          WRITE(v_snm(2:3),'(i2.2)') nvar0-nbeg
           sanal(nvar0) = v_snm
-       end do
+       END DO
        nvar0=nend
 
     ELSE IF (level >= 4) THEN ! Operation with SALSA
@@ -813,38 +805,38 @@ contains
     END IF
 
     fname =  trim(filprf)
-    if(myid == 0) print                                                  &
+    IF(myid == 0) PRINT                                                  &
             "(//' ',49('-')/,' ',/,'   Initializing: ',A20)",trim(fname)
-    call open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid0, nrec0, ver, author)
+    CALL open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid0, nrec0, ver, author, info)
 
     IF (level < 4 .OR. .NOT. lbinanl) THEN
-       call define_nc( ncid0, nrec0, nvar0, sanal, n1=nzp, n2=nxp-4, n3=nyp-4)
+       CALL define_nc( ncid0, nrec0, nvar0, sanal, n1=nzp, n2=nxp-4, n3=nyp-4)
 
     ELSE IF (level == 4 .AND. lbinanl) THEN
-       call define_nc( ncid0, nrec0, nvar0, sanal, n1=nzp, n2=nxp-4, n3=nyp-4,  &
+       CALL define_nc( ncid0, nrec0, nvar0, sanal, n1=nzp, n2=nxp-4, n3=nyp-4,  &
                        inae_a=fn2a, inae_b=fn2b-fn2a, incld_a=fca%cur,          &
                        incld_b=fcb%cur-fca%cur, inprc=fra )
     ELSE IF (level == 5 .AND. lbinanl) THEN
-        call define_nc( ncid0, nrec0, nvar0, sanal, n1=nzp, n2=nxp-4, n3=nyp-4,  &
+        CALL define_nc( ncid0, nrec0, nvar0, sanal, n1=nzp, n2=nxp-4, n3=nyp-4,  &
                         inae_a=fn2a,  inae_b =fn2b-fn2a, incld_a=fca%cur,        &
                         incld_b=fcb%cur-fca%cur, inprc=fra, inice_a=fia%cur,     &
                         inice_b=fib%cur-fia%cur, insnw=fsa )
     END IF
-    if (myid == 0) print *,'   ...starting record: ', nrec0
+    IF (myid == 0) PRINT *,'   ...starting record: ', nrec0
 
 
-  end subroutine init_anal
+  END SUBROUTINE init_anal
   !
   ! ----------------------------------------------------------------------
-  ! subroutine close_anal:  Closes netcdf anal file
+  ! Subroutine close_anal:  Closes netcdf anal file
   !
-  integer function close_anal()
+  INTEGER FUNCTION close_anal()
 
-    use netcdf
+    USE netcdf
 
     close_anal = nf90_close(ncid0)
 
-  end function close_anal
+  END FUNCTION close_anal
   !
   ! ----------------------------------------------------------------------
   ! Subroutine Write_anal:  Writes the netcdf Analysis file
@@ -853,9 +845,9 @@ contains
   ! Juha Tonttila, FMI, 2014
   !
   !
-  subroutine write_anal(time)
-    use netcdf
-    use mpi_interface, only : myid, appl_abort
+  SUBROUTINE write_anal(time)
+    USE netcdf
+    USE mpi_interface, ONLY : myid, appl_abort
     USE class_ComponentIndex, ONLY : IsUsed
     USE mo_submctl, ONLY : in1a,fn2a,in2b,fn2b, &
                                ica,fca,icb,fcb,ira,fra,       &
@@ -863,10 +855,10 @@ contains
                                aerobins, cloudbins, precpbins, &
                                icebins, snowbins
 
-    real, intent (in) :: time
+    REAL, INTENT (in) :: time
 
-    integer :: iret, VarID, nn, n
-    integer :: ibeg(4), icnt(4), i1, i2, j1, j2
+    INTEGER :: iret, VarID, nn, n
+    INTEGER :: ibeg(4), icnt(4), i1, i2, j1, j2
     INTEGER :: ibegsd(5), icntaea(5), icntaeb(5), icntcla(5), icntclb(5), icntpra(5), & ! Juha: For sizedistribution variables
            icntica(5), icnticb(5), icntsna(5)
     REAL :: zsum(nzp,nxp,nyp) ! Juha: Helper for computing bulk output diagnostics
@@ -892,7 +884,7 @@ contains
     iret = nf90_inq_varid(ncid0, sanal(1), VarID)
     iret = nf90_put_var(ncid0, VarID, time, start=(/nrec0/))
 
-    if (nrec0 == 1) then
+    IF (nrec0 == 1) THEN
        iret = nf90_inq_varid(ncid0, sanal(2), VarID)
        iret = nf90_put_var(ncid0, VarID, zt, start = (/nrec0/))
        iret = nf90_inq_varid(ncid0, sanal(3), VarID)
@@ -935,7 +927,7 @@ contains
           END IF
 
        END IF
-    end if
+    END IF
 
     IF (level < 4) THEN
        iret = nf90_inq_varid(ncid0, sanal(8), VarID)
@@ -991,39 +983,39 @@ contains
     IF (level < 4) THEN ! Normal operation for levels 1-3
 
        nn = nbase
-       if (level >= 2)  then
+       IF (level >= 2)  THEN
           nn = nn+1
           iret = nf90_inq_varid(ncid0, 'l', VarID)
           iret = nf90_put_var(ncid0, VarID, a_rc(:,i1:i2,j1:j2), start=ibeg, &
                count=icnt)
-       end if
+       END IF
 
-       do n = 2, nscl
+       DO n = 2, nscl
           nn = nn+1
-          call newsclr(n)
+          CALL newsclr(n)
           iret = nf90_inq_varid(ncid0, sanal(nn), VarID)
           iret = nf90_put_var(ncid0,VarID,a_sp(:,i1:i2,j1:j2), start=ibeg,   &
                count=icnt)
-       end do
+       END DO
 
-       if (isgstyp > 1)  then
+       IF (isgstyp > 1)  THEN
           nn = nn+1
           iret = nf90_inq_varid(ncid0, 'stke', VarID)
           iret = nf90_put_var(ncid0, VarID, a_qp(:,i1:i2,j1:j2), start=ibeg, &
                count=icnt)
-       end if
+       END IF
 
-       if (iradtyp > 1)  then
+       IF (iradtyp > 1)  THEN
           nn = nn+1
           iret = nf90_inq_varid(ncid0, 'rflx', VarID)
           iret = nf90_put_var(ncid0, VarID, a_rflx(:,i1:i2,j1:j2), start=ibeg, &
                count=icnt)
-       end if
+       END IF
 
-       if (nn /= nvar0) then
-          if (myid == 0) print *, 'ABORTING:  Anal write error'
-          call appl_abort(0)
-       end if
+       IF (nn /= nvar0) THEN
+          IF (myid == 0) PRINT *, 'ABORTING:  Anal write error'
+          CALL appl_abort(0)
+       END IF
 
     ELSE IF (level >= 4) THEN ! Operation with SALSA
 
@@ -1577,85 +1569,85 @@ contains
        
     END IF
 
-    if (myid==0) print "(//' ',12('-'),'   Record ',I3,' to: ',A60)",    &
+    IF (myid==0) PRINT "(//' ',12('-'),'   Record ',I3,' to: ',A60)",    &
          nrec0,fname
 
     iret  = nf90_sync(ncid0)
     nrec0 = nrec0+1
 
-  end subroutine write_anal
+  END SUBROUTINE write_anal
   !
   ! ----------------------------------------------------------------------
   ! Subroutine write_hist:  This subroutine writes a binary history file
   !
-  subroutine write_hist(htype, time)
+  SUBROUTINE write_hist(htype, time)
 
-    use mpi_interface, only : appl_abort, myid, wrxid, wryid
-    integer :: errcode=-17
+    USE mpi_interface, ONLY : appl_abort, myid, wrxid, wryid
+    INTEGER :: errcode=-17
 
-    integer, intent (in) :: htype
-    real, intent (in)    :: time
+    INTEGER, INTENT (in) :: htype
+    REAL, INTENT (in)    :: time
 
-    character (len=80) :: hname
+    CHARACTER (len=80) :: hname
 
-    integer :: n, iblank
+    INTEGER :: n, iblank
     !
     ! create and open a new output file.
     !
-    write(hname,'(i4.4,a1,i4.4)') wrxid,'_',wryid
+    WRITE(hname,'(i4.4,a1,i4.4)') wrxid,'_',wryid
     hname = trim(hname)//'.'//trim(filprf)
 
-    select case(htype)
-    case default
+    SELECT CASE(htype)
+    CASE DEFAULT
        hname = trim(hname)//'.iflg'
-    case(0)
+    CASE(0)
        hname = trim(hname)//'.R'
-    case(1)
+    CASE(1)
        hname = trim(hname)//'.rst'
-    case(2)
+    CASE(2)
        iblank=index(hname,' ')
-       write (hname(iblank:iblank+7),'(a1,i6.6,a1)') '.', int(time), 's'
-    end select
+       WRITE(hname(iblank:iblank+7),'(a1,i6.6,a1)') '.', int(time), 's'
+    END SELECT
     !
     ! Write fields
     !
-    if (myid == 0) print "(//' ',49('-')/,' ',/,'   History write to: ',A30)" &
+    IF (myid == 0) PRINT "(//' ',49('-')/,' ',/,'   History write to: ',A30)" &
          ,hname
-    open(10,file=trim(hname), form='unformatted')
+    OPEN(10,file=trim(hname), form='unformatted')
 
-    write(10) time,th00,umean,vmean,dtl,level,isgstyp,iradtyp,nzp,nxp,nyp,nscl
-    write(10) xt, xm, yt, ym, zt, zm, dn0, th0, u0, v0, pi0, pi1, rt0, psrf,sst,W1,W2,W3 ! added by Zubair
+    WRITE(10) time,th00,umean,vmean,dtl,level,isgstyp,iradtyp,nzp,nxp,nyp,nscl
+    WRITE(10) xt, xm, yt, ym, zt, zm, dn0, th0, u0, v0, pi0, pi1, rt0, psrf,sst,W1,W2,W3 ! added by Zubair
 
-    write(10) a_ustar, a_tstar, a_rstar
+    WRITE(10) a_ustar, a_tstar, a_rstar
 
-    write(10) a_pexnr
-    write(10) a_press
-    write(10) a_theta
+    WRITE(10) a_pexnr
+    WRITE(10) a_press
+    WRITE(10) a_theta
 
-    write(10) a_up
-    write(10) a_vp
-    write(10) a_wp
-    write(10) a_uc
-    write(10) a_vc
-    write(10) a_wc
+    WRITE(10) a_up
+    WRITE(10) a_vp
+    WRITE(10) a_wp
+    WRITE(10) a_uc
+    WRITE(10) a_vc
+    WRITE(10) a_wc
 
-    do n=1,nscl
-       call newsclr(n)
-       write(10) a_sp
-    end do
+    DO n=1,nscl
+       CALL newsclr(n)
+       WRITE(10) a_sp
+    END DO
 
-    if ( allocated(a_rv)   ) write(10) a_rv
-    if ( allocated(a_rc)   ) write(10) a_rc
-    if ( allocated(a_rflx) ) write(10) a_rflx
-    close(10)
+    IF ( allocated(a_rv)   ) WRITE(10) a_rv
+    IF ( allocated(a_rc)   ) WRITE(10) a_rc
+    IF ( allocated(a_rflx) ) WRITE(10) a_rflx
+    CLOSE(10)
 
-    if (myid == 0 .and. htype < 0) then
-       print *, 'CFL Violation'
-       call appl_abort(errcode)
-    end if
+    IF (myid == 0 .AND. htype < 0) THEN
+       PRINT *, 'CFL Violation'
+       CALL appl_abort(errcode)
+    END IF
 
-    return
-  end subroutine write_hist
+    RETURN
+  END SUBROUTINE write_hist
   !
   ! ----------------------------------------------------------------------
   ! Subroutine read_hist:  This subroutine reads a binary history file
@@ -1664,118 +1656,118 @@ contains
   !                Juha Tonttila, FMI, 20140828
   !
 
-  subroutine read_hist(time, hfilin)
+  SUBROUTINE read_hist(time, hfilin)
 
-    use mpi_interface, only : appl_abort, myid, wrxid, wryid
+    USE mpi_interface, ONLY : appl_abort, myid, wrxid, wryid
 
-    character(len=80), intent(in) :: hfilin
-    real, intent(out)             :: time
+    CHARACTER(len=80), INTENT(in) :: hfilin
+    REAL, INTENT(out)             :: time
 
-    character (len=80) :: hname
-    integer :: n, nxpx, nypx, nzpx, nsclx, iradx, isgsx, lvlx
-    logical :: exans
-    real :: umx, vmx, thx
+    CHARACTER (len=80) :: hname
+    INTEGER :: n, nxpx, nypx, nzpx, nsclx, iradx, isgsx, lvlx
+    LOGICAL :: exans
+    REAL :: umx, vmx, thx
     !
     ! open input file.
     !
 
-    write(hname,'(i4.4,a1,i4.4)') wrxid,'_',wryid
+    WRITE(hname,'(i4.4,a1,i4.4)') wrxid,'_',wryid
     hname = trim(hname)//'.'//trim(hfilin)
 
     inquire(file=trim(hname),exist=exans)
-    if (.not.exans) then
-       print *,'ABORTING: History file', trim(hname),' not found'
-       call appl_abort(0)
-    else
-       open (10,file=trim(hname),status='old',form='unformatted')
-       read (10) time,thx,umx,vmx,dtl,lvlx,isgsx,iradx,nzpx,nxpx,nypx,nsclx
+    IF (.NOT.exans) THEN
+       PRINT *,'ABORTING: History file', trim(hname),' not found'
+       CALL appl_abort(0)
+    ELSE
+       OPEN(10,file=trim(hname),status='old',form='unformatted')
+       READ(10) time,thx,umx,vmx,dtl,lvlx,isgsx,iradx,nzpx,nxpx,nypx,nsclx
 
-       if (nxpx /= nxp .or. nypx /= nyp .or. nzpx /= nzp)  then
-          if (myid == 0) print *, nxp, nyp, nzp, nxpx, nypx, nzpx
-          call appl_abort(-1)
-       end if
+       IF (nxpx /= nxp .OR. nypx /= nyp .OR. nzpx /= nzp)  THEN
+          IF (myid == 0) PRINT *, nxp, nyp, nzp, nxpx, nypx, nzpx
+          CALL appl_abort(-1)
+       END IF
 
-       read (10) xt, xm, yt, ym, zt, zm, dn0, th0, u0, v0, pi0, pi1, rt0, psrf,sst,W1,W2,W3
+       READ(10) xt, xm, yt, ym, zt, zm, dn0, th0, u0, v0, pi0, pi1, rt0, psrf,sst,W1,W2,W3
 
-       read (10) a_ustar, a_tstar, a_rstar
+       READ(10) a_ustar, a_tstar, a_rstar
 
-       read (10) a_pexnr
-       read (10) a_press
-       read (10) a_theta
+       READ(10) a_pexnr
+       READ(10) a_press
+       READ(10) a_theta
 
-       read (10) a_up
-       read (10) a_vp
-       read (10) a_wp
-       read (10) a_uc
-       read (10) a_vc
-       read (10) a_wc
+       READ(10) a_up
+       READ(10) a_vp
+       READ(10) a_wp
+       READ(10) a_uc
+       READ(10) a_vc
+       READ(10) a_wc
 
-       do n=1,nscl
-          call newsclr(n)
-          if (n <= nsclx) read (10) a_sp
-       end do
-       do n=nscl+1,nsclx
-          read (10)
-       end do
+       DO n=1,nscl
+          CALL newsclr(n)
+          IF (n <= nsclx) READ(10) a_sp
+       END DO
+       DO n=nscl+1,nsclx
+          READ(10)
+       END DO
 
-       if (lvlx > 0 .AND. lvlx < 4) then
-          if (level > 0 .AND. lvlx < 4) then
-             read (10) a_rv
-          else
-             read (10)
-          end if
-       end if
-       if (lvlx > 1) then
-          if (level > 1) then
-             read (10) a_rc
-          else
-             read (10)
-          end if
-       end if
-       if (iradx > 0) then
-          if (iradtyp > 0) then
-             read (10) a_rflx
-          else
-             read (10)
-          end if
-       end if
+       IF (lvlx > 0 .AND. lvlx < 4) THEN
+          IF (level > 0 .AND. lvlx < 4) THEN
+             READ(10) a_rv
+          ELSE
+             READ(10)
+          END IF
+       END IF
+       IF (lvlx > 1) THEN
+          IF (level > 1) THEN
+             READ(10) a_rc
+          ELSE
+             READ(10)
+          END IF
+       END IF
+       IF (iradx > 0) THEN
+          IF (iradtyp > 0) THEN
+             READ(10) a_rflx
+          ELSE
+             READ(10)
+          END IF
+       END IF
 
-       close(10)
+       CLOSE(10)
        !
        ! adjust namelist and basic state appropriately
        !
-       if (thx /= th00) then
-          if (myid == 0) print "('  th00 changed  -  ',2f8.2)",th00,thx
+       IF (thx /= th00) THEN
+          IF (myid == 0) PRINT "('  th00 changed  -  ',2f8.2)",th00,thx
           a_tp(:,:,:) = a_tp(:,:,:) + thx - th00
-       end if
-       if (umx /= umean) then
-          if (myid == 0) print "('  umean changed  -  ',2f8.2)",umean,umx
+       END IF
+       IF (umx /= umean) THEN
+          IF (myid == 0) PRINT "('  umean changed  -  ',2f8.2)",umean,umx
           a_up = a_up + umx - umean
-       end if
-       if (vmx /= vmean) then
-          if (myid == 0) print "('  vmean changed  -  ',2f8.2)",vmean,vmx
+       END IF
+       IF (vmx /= vmean) THEN
+          IF (myid == 0) PRINT "('  vmean changed  -  ',2f8.2)",vmean,vmx
           a_vp = a_vp + vmx - vmean
-       end if
+       END IF
        dtlv=2.*dtl
        dtlt=dtl
 
-    end if
+    END IF
 
-  end subroutine read_hist
+  END SUBROUTINE read_hist
   !
   ! ----------------------------------------------------------------------
   ! Subroutine newsclr:  This routine updates the scalar pointer to the
   ! value corresponding to the next scalar in the scalar table
   !
-  subroutine newsclr(iscnum)
+  SUBROUTINE newsclr(iscnum)
 
-    integer, intent(in) :: iscnum
+    INTEGER, INTENT(in) :: iscnum
 
     a_sp=>a_sclrp(:,:,:,iscnum)
     a_st=>a_sclrt(:,:,:,iscnum)
 
-    return
-  end subroutine newsclr
+    RETURN
+  END SUBROUTINE newsclr
   !
   ! -----------------------------------
   ! Subroutine bulkMixrat: Find and calculate
@@ -1817,43 +1809,43 @@ contains
        CASE('aerosol')
           IF (itype == 'a') THEN
              istr = (mm-1)*nbins + in1a
-             iend = (mm-1)*nbins + fn2a
+             iEND = (mm-1)*nbins + fn2a
           ELSE IF (itype == 'b') THEN
              istr = (mm-1)*nbins + in2b
-             iend = (mm-1)*nbins + fn2b
+             iEND = (mm-1)*nbins + fn2b
           ELSE
-             STOP 'bulkMixrat: Invalid aerosol bin regime selection'
+             STOP 'bulkMixrat: Invalid aerosol bin regime SELECTion'
           END IF
           mixrat(:,:,:) = SUM(a_maerop(:,:,:,istr:iend),DIM=4)
        CASE('cloud')
           IF (itype == 'a') THEN
              istr = (mm-1)*ncld + ica%cur
-             iend = (mm-1)*ncld + fca%cur
+             iEND = (mm-1)*ncld + fca%cur
           ELSE IF (itype == 'b') THEN
              istr = (mm-1)*ncld + icb%cur
-             iend = (mm-1)*ncld + fcb%cur
+             iEND = (mm-1)*ncld + fcb%cur
           ELSE
-             STOP 'bulkMixrat: Invalid cloud bin regime selection'
+             STOP 'bulkMixrat: Invalid cloud bin regime SELECTion'
           END IF
           mixrat(:,:,:) = SUM(a_mcloudp(:,:,:,istr:iend),DIM=4)
        CASE('precp')
           istr = (mm-1)*nprc + ira
-          iend = (mm-1)*nprc + fra
+          iEND = (mm-1)*nprc + fra
           mixrat(:,:,:) = SUM(a_mprecpp(:,:,:,istr:iend),DIM=4)
        CASE('ice')
           IF (itype == 'a') THEN
              istr = (mm-1)*nice + iia%cur
-             iend = (mm-1)*nice + fia%cur
+             iEND = (mm-1)*nice + fia%cur
           ELSE IF (itype == 'b') THEN
              istr = (mm-1)*nice + iib%cur
-             iend = (mm-1)*nice + fib%cur
+             iEND = (mm-1)*nice + fib%cur
           ELSE
-             STOP 'bulkMixrat: Invalid ice bin regime selection'
+             STOP 'bulkMixrat: Invalid ice bin regime SELECTion'
           END IF
           mixrat(:,:,:) = SUM(a_micep(:,:,:,istr:iend),DIM=4)
        CASE('snow')
           istr = (mm-1)*nsnw + isa
-          iend = (mm-1)*nsnw + fsa
+          iEND = (mm-1)*nsnw + fsa
           mixrat(:,:,:) = SUM(a_msnowp(:,:,:,istr:iend),DIM=4)
     END SELECT
 
@@ -1919,12 +1911,12 @@ contains
 
     ! Number of components-1
     IF (itype == 'dry') THEN
-        iend=GetNcomp(prtcl)-1 ! dry case
-    ELSEIF (itype == 'wet') THEN
-        iend=GetNcomp(prtcl) ! wet case
+        iend=GetNcomp(prtcl)-1 ! dry CASE
+    ELSE IF (itype == 'wet') THEN
+        iend=GetNcomp(prtcl) ! wet CASE
     ELSE
         STOP 'Error in binMixrat!'
-    ENDIF
+    END IF
 
     SELECT CASE(ipart)
        CASE('aerosol')
@@ -1961,7 +1953,7 @@ contains
     INTEGER :: istr,iend
 
     istr = 0
-    iend = 0
+    iEND = 0
 
     ! Outputs #/kg
     ! No concentration limits (nlim or prlim) for number
@@ -1970,37 +1962,37 @@ contains
        CASE('aerosol')
           IF (itype == 'a') THEN ! Note: 1a and 2a combined
              istr = in1a
-             iend = fn2a
+             iEND = fn2a
           ELSE IF (itype == 'b') THEN ! 2b
              istr = in2b
-             iend = fn2b
+             iEND = fn2b
           END IF
           numc(:,:,:) = SUM(a_naerop(:,:,:,istr:iend),DIM=4)
        CASE('cloud')
           IF (itype == 'a') THEN
              istr = ica%cur
-             iend = fca%cur
+             iEND = fca%cur
           ELSE IF (itype == 'b') THEN
              istr = icb%cur
-             iend = fcb%cur
+             iEND = fcb%cur
           END IF
           numc(:,:,:) = SUM(a_ncloudp(:,:,:,istr:iend),DIM=4)
        CASE('precp')
           istr = ira
-          iend = fra
+          iEND = fra
           numc(:,:,:) = SUM(a_nprecpp(:,:,:,istr:iend),DIM=4)
         CASE('ice')
           IF (itype == 'a') THEN
              istr = iia%cur
-             iend = fia%cur
+             iEND = fia%cur
           ELSE IF (itype == 'b') THEN
              istr = iib%cur
-             iend = fib%cur
+             iEND = fib%cur
           END IF
           numc(:,:,:) = SUM(a_nicep(:,:,:,istr:iend),DIM=4)
        CASE('snow')
           istr = isa
-          iend = fsa
+          iEND = fsa
           numc(:,:,:) = SUM(a_nsnowp(:,:,:,istr:iend),DIM=4)
     END SELECT
 
@@ -2009,7 +2001,7 @@ contains
 
   !
   ! -------------------------------------------------
-  ! SUBROUTINE meanRadius
+  ! Subroutine meanRadius
   ! Gets the mean wet radius for particles.
   !
   SUBROUTINE meanRadius(ipart,itype,rad)
@@ -2039,12 +2031,12 @@ contains
 
        IF (itype == 'a') THEN ! Note: 1a and 2a combined
           istr = in1a
-          iend = fn2a
+          iEND = fn2a
        ELSE IF (itype == 'b') THEN
           istr = in2b
-          iend = fn2b
+          iEND = fn2b
        ELSE
-          STOP 'meanRadius: Invalid bin regime selection (aerosol)'
+          STOP 'meanRadius: Invalid bin regime SELECTion (aerosol)'
        END IF
 
        CALL getRadius(istr,iend,nbins,a_naerop,zvar1,nlim,a_Rawet,rad)
@@ -2053,12 +2045,12 @@ contains
 
        IF (itype == 'a') THEN
           istr = ica%cur
-          iend = fca%cur
+          iEND = fca%cur
        ELSE IF (itype == 'b') THEN
           istr = icb%cur
-          iend = fcb%cur
+          iEND = fcb%cur
        ELSE
-          STOP 'meanRadius: Invalid bin regime selection (cloud)'
+          STOP 'meanRadius: Invalid bin regime SELECTion (cloud)'
        END IF
 
        CALL getRadius(istr,iend,ncld,a_ncloudp,zvar1,nlim,a_Rcwet,rad)
@@ -2066,7 +2058,7 @@ contains
     CASE('precp')
 
        istr = ira
-       iend = fra
+       iEND = fra
 
        CALL getRadius(istr,iend,nprc,a_nprecpp,zvar1,prlim,a_Rpwet,rad)
 
@@ -2074,12 +2066,12 @@ contains
 
        IF (itype == 'a') THEN
           istr = iia%cur
-          iend = fia%cur
+          iEND = fia%cur
        ELSE IF (itype == 'b') THEN
           istr = iib%cur
-          iend = fib%cur
+          iEND = fib%cur
        ELSE
-          STOP 'meanRadius: Invalid bin regime selection (ice)'
+          STOP 'meanRadius: Invalid bin regime SELECTion (ice)'
        END IF
 
        CALL getRadius(istr,iend,nice,a_nicep,zvar1,prlim,a_Riwet,rad)
@@ -2087,7 +2079,7 @@ contains
     CASE('snow')
 
        istr = isa
-       iend = fsa
+       iEND = fsa
 
        CALL getRadius(istr,iend,nsnw,a_nsnowp,zvar1,prlim,a_Rswet,rad)
 
@@ -2096,13 +2088,13 @@ contains
   END SUBROUTINE meanRadius
   !
   ! ---------------------------------------------------
-  ! SUBROUTINE getRadius
+  ! Subroutine getRadius
   !
   SUBROUTINE getRadius(zstr,zend,nb,numc,ntot,numlim,rpart,zrad)
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: nb ! Number of bins for current particle distribution
-    INTEGER, INTENT(in) :: zstr,zend  ! Start and end index for averaging
+    INTEGER, INTENT(in) :: zstr,zEND  ! Start and end index for averaging
     REAL, INTENT(in) :: numc(nzp,nxp,nyp,nb)
     REAL, INTENT(in) :: ntot(nzp,nxp,nyp)
     REAL, INTENT(in) :: numlim
@@ -2134,5 +2126,5 @@ contains
 
   END SUBROUTINE getRadius
 
-end module grid
+END MODULE grid
 
