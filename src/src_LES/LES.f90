@@ -17,103 +17,107 @@
 ! Copyright 1999-2007, Bjorn B. Stevens, Dep't Atmos and Ocean Sci, UCLA
 !----------------------------------------------------------------------------
 !
-program ucla_les
+PROGRAM ucla_les
 
-  use mpi_interface, ONLY : myid
+  USE mpi_interface, ONLY : myid
 
-  implicit none
+  IMPLICIT NONE
 
-  real :: t1, t2
+  REAL :: t1, t2
 
-  call cpu_time(t1)
-  call driver
-  call cpu_time(t2)
+  CALL cpu_time(t1)
+  CALL driver
+  CALL cpu_time(t2)
 
-  if (myid == 0) THEN
-    print "(/,' ',49('-')/,' ',A16,F10.1,' s')", '  Execution time: ', t2-t1
-    stop ' ..... Normal termination'
-  ENDIF
+  IF (myid == 0) THEN
+    PRINT "(/,' ',49('-')/,' ',A16,F10.1,' s')", '  Execution time: ', t2-t1
+    STOP ' ..... Normal termination'
+  END IF
 
-contains
+CONTAINS
 
   !----------------------------------------------------------------------
   ! Subroutine Driver:  This is the main program driver.  It calls routines
   ! to read the model initialization file, and configure memory and pointes.
   ! It also calls the routines which initialize the model and timestep it.
   !
-  subroutine driver
+  SUBROUTINE driver
 
-    use grid, only          : define_grid, define_vars, level, nxp, nyp, nzp, nxpart
-    use init, only          : initialize
-    use step, only          : stepper
-    use mpi_interface, only : init_mpi, define_decomp,                    &
+    USE grid, ONLY          : define_grid, define_vars, level, nxp, nyp, nzp, nxpart
+    USE init, ONLY          : initialize
+    USE step, ONLY          : stepper
+    USE mpi_interface, ONLY : init_mpi, define_decomp,                    &
          init_alltoall_reorder, appl_finalize
 
     ! Added for SALSA
     USE mo_salsa_init, ONLY : define_salsa, salsa_initialize
 
-    implicit none
+    IMPLICIT NONE
 
-    integer ierror
+    INTEGER ierror
 
-    call init_mpi
+    CALL init_mpi
 
-    call define_parm
+    CALL define_parm
 
     IF (level >= 4) CALL define_salsa ! Read SALSA namelist etc.
 
     IF (level >= 4) CALL salsa_initialize ! All salsa variables are now initialized
 
-    call define_decomp(nxp, nyp, nxpart)
+    CALL define_decomp(nxp, nyp, nxpart)
 
-    call define_grid
+    CALL define_grid
 
-    call init_alltoall_reorder(nxp, nyp, nzp)
+    CALL init_alltoall_reorder(nxp, nyp, nzp)
 
-    call define_vars
+    CALL define_vars
 
-    call initialize ! Added initialization of aerosol size distributions here + a single call
+    CALL initialize ! Added initialization of aerosol size distributions here + a single call
                     ! for SALSA to set up cloud microphysics
-    call stepper
+    CALL stepper
 
-    call appl_finalize(ierror)
+    CALL appl_finalize(ierror)
 
-    return
-  end subroutine driver
+    RETURN
+  END SUBROUTINE driver
 
   !
   ! ----------------------------------------------------------------------
   ! Subroutine Read_nl: Driver for reading model namelist
   !
-  subroutine define_parm
+  SUBROUTINE define_parm
 
-    use util, only : fftinix,fftiniy
-    use sgsm, only : csx, prndtl
-    use srfc, only : isfctyp, zrough, ubmin, dthcon, drtcon
-    use step, only : timmax, istpfl, corflg, outflg, frqanl, frqhis,          &
-         strtim, radfrq, cntlat
-    use grid, only : deltaz, deltay, deltax, nzp, nyp, nxp, nxpart, &
+    USE util, ONLY : fftinix,fftiniy
+    USE sgsm, ONLY : csx, prndtl
+    USE srfc, ONLY : isfctyp, zrough, ubmin, dthcon, drtcon
+    USE step, ONLY : timmax, istpfl, corflg, outflg, frqanl, frqhis,          &
+         strtim, radfrq, cntlat, nudge_time, nudge_zmin, nudge_zmax, &
+         nudge_theta, tau_theta, nudge_rv, tau_rv, nudge_u, tau_u, &
+         nudge_v, tau_v, nudge_ccn, tau_ccn
+    USE grid, ONLY : deltaz, deltay, deltax, nzp, nyp, nxp, nxpart, &
          dtlong, dzrat,dzmax, th00, umean, vmean, isgstyp, naddsc, level,     &
          filprf, expnme, iradtyp, igrdtyp, nfpt, distim, runtype, CCN,        &
          Tspinup,sst, lbinanl
-    use init, only : us, vs, ts, rts, ps, hs, ipsflg, itsflg,iseed, hfilin,   &
+    USE init, ONLY : us, vs, ts, rts, ps, hs, ipsflg, itsflg,iseed, hfilin,   &
          zrand
-    use stat, only : ssam_intvl, savg_intvl, mcflg
+    USE stat, ONLY : ssam_intvl, savg_intvl, mcflg, csflg
     USE forc, ONLY : radsounding, &        ! Juha: added for radiation background profile
                      div, case_name, &     ! Divergence, forcing case name
-                     sfc_albedo            ! Surface albedo
+                     sfc_albedo, &         ! Surface albedo
+                     useMcICA,RadConstPress,RadPrecipBins
     USE mcrp, ONLY : sed_aero, sed_cloud, sed_precp, sed_ice, sed_snow
-    use mpi_interface, only : myid, appl_abort, ver, author
+    USE mpi_interface, ONLY : myid, appl_abort, ver, author
 
-    implicit none
+    IMPLICIT NONE
 
-    namelist /model/  &
+    NAMELIST /model/  &
          expnme    ,       & ! experiment name
          nxpart    ,       & ! whether partition in x direction?
          naddsc    ,       & ! Number of additional scalars
          savg_intvl,       & ! output statistics frequency
          ssam_intvl,       & ! integral accumulate/ts print frequency
          mcflg,            & ! Mass conservation stats flag
+         csflg,            & ! Column statistics flag
          corflg , cntlat , & ! coriolis flag
          nfpt   , distim , & ! rayleigh friction points, dissipation time
          level  , CCN    , & ! Microphysical model Number of CCN per kg of air
@@ -133,11 +137,20 @@ contains
          us     , vs     , rts   ,  & ! sounding E/W winds, water vapor
          umean  , vmean  , th00,    & ! gallilean E/W wind, basic state
          Tspinup, lbinanl,          & ! Length of spinup period in seconds
+         nudge_time,                & ! Total nudging time (independent of spin-up)
+         nudge_zmin, nudge_zmax, & ! Altitude (m) range for nudging
+         nudge_theta, tau_theta,   & ! Temperature nudging
+         nudge_rv, tau_rv,   & ! Water vapor mixing ratio nudging
+         nudge_u, tau_u, nudge_v, tau_v,  & ! Horozontal wind nudging
+         nudge_ccn, tau_ccn,   & ! Aerosol number concentration nudging
          radsounding, div, case_name, & ! Name of the radiation sounding file, divergence for LEVEL 4
          sfc_albedo,                  & ! Surface albedo
+         useMcICA,           & ! use the Monte Carlo Independent Column Approximation method (T/F)
+         RadConstPress,      & ! keep constant pressure levels (T/F),
+         RadPrecipBins,      & ! add precipitation bins cloud water (0, 1, 2, 3,...)
          sed_aero, sed_cloud, sed_precp, sed_ice, sed_snow ! Sedimentation (T/F)
 
-    namelist /version/  &
+    NAMELIST /version/  &
          ver, author        ! Information about UCLALES-SALSA version and author
 
     ps       = 0.
@@ -151,53 +164,53 @@ contains
     !
     ! read namelist from specified file
     !
-    open  (1,status='old',file='NAMELIST')
-    read  (1, nml=version)
-    read  (1, nml=model)
-    close (1)
+    OPEN  (1,status='old',file='NAMELIST')
+    READ  (1, nml=version)
+    READ  (1, nml=model)
+    CLOSE(1)
 
     !
     ! write file variable control to standard output
     !
-    if (myid == 0) then
-       if (runtype == 'HISTORY') then
-          write (*,601) expnme, hfilin, timmax
-       else
-          write (*,600) expnme, timmax
-       end if
-       if (outflg) write (*,602) filprf, frqhis, frqanl, Tspinup
+    IF (myid == 0) THEN
+       IF (runtype == 'HISTORY') THEN
+          WRITE(*,601) expnme, hfilin, timmax
+       ELSE
+          WRITE(*,600) expnme, timmax
+       END IF
+       IF (outflg) WRITE(*,602) filprf, frqhis, frqanl, Tspinup
        !
-       ! do some cursory error checking in namelist variables
+       ! Do some cursory error checking in namelist variables
        !
 
-       if (min(nxp,nyp) < 5) then
-          if (myid == 0) print *, '  ABORTING: min(nxp,nyp) must be > 4.'
-          call appl_abort(0)
-       endif
+       IF (min(nxp,nyp) < 5) THEN
+          IF (myid == 0) PRINT *, '  ABORTING: min(nxp,nyp) must be > 4.'
+          CALL appl_abort(0)
+       END IF
 
-       if (nzp < 3 ) then
-          if (myid == 0) print *, '  ABORTING: nzp must be > 2 '
-          call appl_abort(0)
-       endif
+       IF (nzp < 3 ) THEN
+          IF (myid == 0) PRINT *, '  ABORTING: nzp must be > 2 '
+          CALL appl_abort(0)
+       END IF
 
-       if (cntlat < -90. .or. cntlat > 90.) then
-          if (myid == 0) print *, '  ABORTING: central latitude out of bounds.'
-          call appl_abort(0)
-       endif
-    end if
+       IF (cntlat < -90. .OR. cntlat > 90.) THEN
+          IF (myid == 0) PRINT *, '  ABORTING: central latitude out of bounds.'
+          CALL appl_abort(0)
+       END IF
+    END IF
 
-600 format(//' ',49('-')/,' ',/,'  Initial Experiment: ',A50 &
+600 FORMAT(//' ',49('-')/,' ',/,'  Initial Experiment: ',A50 &
          /,'  Final Time:         ',F8.1,' s'              )
-601 format(//' ',49('-')/,' ',/,'  Restart Experiment: ',A50 &
+601 FORMAT(//' ',49('-')/,' ',/,'  Restart Experiment: ',A50 &
          /,'  Restart File: ',A30,                           &
          /,'  Final Time: ',F10.1,' s'              )
-602 format('  Output File Stem:   ',A50                      &
+602 FORMAT('  Output File Stem:   ',A50                      &
          /,'  History Frequency:  ',F7.1,                    &
          /,'  Analysis Frequency: ',F7.1,                    &
          /,'  Model spinup period: ',F7.1)
 
-    return
-  end subroutine define_parm
+    RETURN
+  END SUBROUTINE define_parm
 
-end program ucla_les
+END PROGRAM ucla_les
 

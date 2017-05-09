@@ -973,6 +973,7 @@ CONTAINS
             cdice(nzp,nxp,nyp,nice),cdsnw(nzp,nxp,nyp,nsnw)   ! Critical diameter for cloud droplets and precipitation
         LOGICAL :: zclosest(fn2a)
         REAL :: vsum
+        LOGICAL :: used(5)
 
         ! Remove negative values
         a_naerop = MAX(0.,a_naerop)
@@ -988,6 +989,15 @@ CONTAINS
         a_msnowp = MAX(0.,a_msnowp)
 
         nn = GetNcomp(prtcl)+1 ! total number of species
+        used(:) = .FALSE.
+
+        IF (IsUsed(prtcl,'SO4')) used(1) = .TRUE.
+        IF (IsUsed(prtcl,'OC')) used(2) = .TRUE.
+        IF (IsUsed(prtcl,'NO')) used(3) = .TRUE.
+        IF (IsUsed(prtcl,'NH')) used(4) = .TRUE.
+        IF (IsUsed(prtcl,'SS')) used(5) = .TRUE.
+
+        write(*,*) used
 
         ! Critical radius for cloud droplets and precipitation
         DO j = 3,nyp-2
@@ -1008,7 +1018,7 @@ CONTAINS
                     END DO
 
                     ! Clouds
-                    DO c = 1,ncld
+                    DO c=1,ncld
                         vsum = 0.
                         DO s = 1,nn
                             vsum = vsum + a_mcloudp(k,i,j,(s-1)*ncld+c)
@@ -1062,7 +1072,7 @@ CONTAINS
                     END DO ! ncld
 
                     ! Precipitation
-                    DO c = 1,nprc
+                    DO c=1,nprc
                         IF (a_nprecpp(k,i,j,c) > 0. .AND. a_mprecpp(k,i,j,(nn-1)*nprc+c) == 0.) THEN
                             a_nprecpp(k,i,j,c) = 0.
                             DO s = 1,nn
@@ -1112,7 +1122,7 @@ CONTAINS
                     END DO ! nprc
 
                     ! Ice
-                    DO c = 1,nice
+                    DO c=1,nice
                         vsum = 0.
                         DO s = 1,nn
                             vsum = vsum + a_micep(k,i,j,(s-1)*nice+c)

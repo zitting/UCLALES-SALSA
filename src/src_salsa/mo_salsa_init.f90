@@ -1,6 +1,6 @@
 !****************************************************************
 !*                                                              *
-!*   module MO_SALSA_INIT                                       *
+!*   MODULE MO_SALSA_INIT                                       *
 !*                                                              *
 !*   Contains subroutines and functions that are used           *
 !*   to initialize the particle size grid and aerosol           *
@@ -18,7 +18,7 @@ CONTAINS
   ! e.g. for sea salt particles?
   !********************************************************************
   !
-  ! subroutine SET_SIZEBINS()
+  ! Subroutine SET_SIZEBINS()
   !
   !********************************************************************
   !
@@ -98,8 +98,8 @@ CONTAINS
           ratio = reglim(2)/reglim(1)   ! section spacing
 
           DO cc = in1a,fn1a
-             aero(ii,jj,cc)%vlolim = pi6*(reglim(1)*ratio**(real(cc-1)/nbin(1)))**3
-             aero(ii,jj,cc)%vhilim = pi6*(reglim(1)*ratio**(real(cc)/nbin(1)))**3
+             aero(ii,jj,cc)%vlolim = pi6*(reglim(1)*ratio**(REAL(cc-1)/nbin(1)))**3
+             aero(ii,jj,cc)%vhilim = pi6*(reglim(1)*ratio**(REAL(cc)/nbin(1)))**3
              aero(ii,jj,cc)%dmid = ( (aero(ii,jj,cc)%vhilim + aero(ii,jj,cc)%vlolim) /  &
                                      (2.*pi6) )**(1./3.)
              aero(ii,jj,cc)%vratiohi = aero(ii,jj,cc)%vhilim/(pi6*aero(ii,jj,cc)%dmid**3)
@@ -115,8 +115,8 @@ CONTAINS
 
           DO dd = in2a,in2a+nbin2-1
              cc = dd - in2a
-             aero(ii,jj,dd)%vlolim = pi6*(reglim(2)*ratio**(real(cc)/nbin2))**3
-             aero(ii,jj,dd)%vhilim = pi6*(reglim(2)*ratio**(real(cc+1)/nbin2))**3
+             aero(ii,jj,dd)%vlolim = pi6*(reglim(2)*ratio**(REAL(cc)/nbin2))**3
+             aero(ii,jj,dd)%vhilim = pi6*(reglim(2)*ratio**(REAL(cc+1)/nbin2))**3
              aero(ii,jj,dd)%dmid = ( (aero(ii,jj,dd)%vhilim + aero(ii,jj,dd)%vlolim) /  &
                                      (2.*pi6) )**(1./3.)
              aero(ii,jj,dd)%vratiohi = aero(ii,jj,dd)%vhilim/(pi6*aero(ii,jj,dd)%dmid**3)
@@ -130,8 +130,8 @@ CONTAINS
           DO dd = in2a+nbin2,fn2a
              cc = dd - (fn2a-(nbin3-1))
 
-             aero(ii,jj,dd)%vlolim = pi6*(reglim(3)*ratio**(real(cc)/nbin3))**3
-             aero(ii,jj,dd)%vhilim = pi6*(reglim(3)*ratio**(real(cc+1)/nbin3))**3
+             aero(ii,jj,dd)%vlolim = pi6*(reglim(3)*ratio**(REAL(cc)/nbin3))**3
+             aero(ii,jj,dd)%vhilim = pi6*(reglim(3)*ratio**(REAL(cc+1)/nbin3))**3
              aero(ii,jj,dd)%dmid = ( (aero(ii,jj,dd)%vhilim + aero(ii,jj,dd)%vlolim) /  &
                                      (2.*pi6) )**(1./3.)
              aero(ii,jj,dd)%vratiohi = aero(ii,jj,dd)%vhilim/(pi6*aero(ii,jj,dd)%dmid**3)
@@ -170,7 +170,7 @@ CONTAINS
   !--------------------------------------------------------------------------
   !
   ! *******************************
-  ! SUBROUTINE set_cloudbins
+  ! Subroutine set_cloudbins
   ! *******************************
   !
   ! Setup of hydrometeor size bins similar to the subroutine *set_sizebins*
@@ -336,7 +336,7 @@ CONTAINS
   !--------------------------------------------------------------------------
   !
   ! *******************************
-  ! SUBROUTINE set_icebins
+  ! Subroutine set_icebins
   ! *******************************
   !
   ! Setup of ice size bins similar to the subroutines *set_sizebins* & *set_cloudbins*
@@ -392,7 +392,7 @@ CONTAINS
 
     ! Number of ice bins in regime a (soluble nuclei)
     nba = fn2a-imin+1
-    ! Number of cloud bins in regime b (insoluble nuclei) !!huomhuom insoluble
+    ! Number of cloud bins in regime b (insoluble nuclei) !! insoluble
     IF (aero(1,1,imin)%dmid > aero(1,1,in2b)%dmid) THEN
        ! All cloud bins are within regime 2
        nbb = nba
@@ -426,7 +426,7 @@ CONTAINS
        DO ii = 1,kbdim
 
           ! -------------------------------------------------
-          ! Set iceproperties (parallel to aerosol bins) !!!huomhuom tehdäänkö jäälle myös näin?
+          ! Set iceproperties (parallel to aerosol bins) !!!
           ! -------------------------------------------------
           ice(ii,jj,iia%cur:fia%cur)%vhilim = aero(ii,jj,iia%par:fia%par)%vhilim
 
@@ -445,12 +445,12 @@ CONTAINS
           ice(ii,jj,iib%cur:fib%cur)%dmid = aero(ii,jj,iib%par:fib%par)%dmid
 
           ! Initialize the droplet diameter ("wet diameter") as the dry
-          ! mid diameter of the nucleus to avoid problems later. !!huomhuom mitä tehdään jäälle
+          ! mid diameter of the nucleus to avoid problems later. !!
           ice(ii,jj,iia%cur:fib%cur)%dwet = ice(ii,jj,iia%cur:fib%cur)%dmid
 
           ! Initialize the volume and number concentrations for ice.
           ! First "real" values are only obtained upon the first calculation
-          ! of the cloud droplet activation. !! huomhuom
+          ! of the cloud droplet activation. !!
 
           DO cc = 1,8
              ice(ii,jj,iia%cur:fib%cur)%volc(cc) = 0.
@@ -461,7 +461,7 @@ CONTAINS
 
           ! ---------------------------------------------------------------------------------------
           ! Set the snow properties; unlike aerosol and cloud bins, the size distribution
-          ! goes according to the *wet* radius !!huomhuom minkä säteen mukaan menee?
+          ! goes according to the *wet* radius !!
           ! ---------------------------------------------------------------------------------------
 
           DO bb = isa,fsa
@@ -507,10 +507,10 @@ CONTAINS
   !----------------------------------------------------------------------
   !
   ! *************************
-  ! SUBROUTINE define_salsa
+  ! Subroutine define_salsa
   ! *************************
   !
-  ! Reads logical switches and aerosol/hydrometeor size bin definitions
+  ! Reads LOGICAL switches and aerosol/hydrometeor size bin definitions
   ! from a namelist.
   !
   ! Juha Tonttila (FMI) 2014
@@ -628,7 +628,7 @@ CONTAINS
   !-------------------------------------------------------------------------------
   !
   ! *****************************
-  ! SUBROUTINE salsa_initialize
+  ! Subroutine salsa_initialize
   ! *****************************
   !
   ! SALSA initializations. Modified and rewritten for more dynamic control

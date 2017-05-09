@@ -1,6 +1,6 @@
 !****************************************************************
 !*                                                              *
-!*   module MO_SALSA_UPDATE                                 *
+!*   MODULE MO_SALSA_UPDATE                                 *
 !*                                                              *
 !*   Contains subroutines and functions that are used           *
 !*   to calculate aerosol dynamics                              *
@@ -12,10 +12,11 @@
 !****************************************************************
 
 MODULE mo_salsa_update
+    IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE distr_update(kproma, kbdim, klev, &
+  SUBROUTINE distr_update(kbdim, klev, &
                           paero, pcloud, pprecp, &
                           pice, psnow, level )
 
@@ -26,8 +27,7 @@ CONTAINS
 
     !-- Input and output variables ----------
     INTEGER, INTENT(IN) ::          &
-         kproma,                    & ! number of horiz. grid points 
-         kbdim,                     & ! dimension for arrays 
+         kbdim,                     & ! dimension for arrays
          klev                         ! number of vertical levels
 
     TYPE(t_section), INTENT(inout) :: pcloud(kbdim,klev,ncld), & ! Cloud size distribution and properties
@@ -86,7 +86,7 @@ CONTAINS
                       CYCLE
                    END IF
 
-                   !-- If size bin has not grown, cycle
+                   !-- If size bin has not grown, CYCLE
                    IF(zvpart <= pi6*paero(ii,jj,kk)%dmid**3) CYCLE
 
                    !-- volume ratio of the size bin
@@ -234,7 +234,7 @@ CONTAINS
 
           ! ------------------------------------------------------------------------
           ! ************* RAIN DROPS **************
-          ! Everything else the same as with cloud 
+          ! Everything else the same as with cloud
           ! droplets & aerosols, except that the rain 
           ! bins are organized according to the wet 
           ! diameter.
@@ -427,7 +427,7 @@ CONTAINS
           ! Everything else the same as with cloud
           ! droplets & aerosols, except that the snow
           ! bins are organized according to the wet
-          ! diameter. !!huomhuom onko näin?
+          ! diameter. !!is this really so?
           ! ------------------------------------------------------------------------
 
           within_bins = .FALSE.

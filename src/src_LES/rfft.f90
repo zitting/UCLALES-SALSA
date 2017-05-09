@@ -1,7 +1,7 @@
 !c test
 !c---------------------------------------------------------------------
-!c SUBROUTINE FFT2DC: This routine computes the two dimensional 
-!c transform of a complex cubic array of square N and length NZ.
+!c SUBROUTINE FFT2DC: This routine computes the two dimensional
+!c transform of a complexcubic array of square N and length NZ.
 !c FFT's are done for each square level for k=2->NZ inclusive.  The 
 !c first level is used as a scratch array for storing the transpose
 !c matrix for the second half of the transform.  The code uses
@@ -18,54 +18,54 @@
       REAL WSAVE(4*N+15),FACT
       COMPLEX A(N,N,NZ)
 
-      IF(ISGN.NE.1)THEN
+      IF(ISGN/=1)THEN
          CALL CFFTI(N,WSAVE)
          DO K=2,NZ
             DO J=1,N
                CALL CFFTF(N,A(1,J,K),WSAVE)
-            ENDDO
+            END DO
 
             DO I=1,N-1
                DO J=I+1,N
                   A(I,J,1)=A(J,I,K) !transpose
                   A(J,I,K)=A(I,J,K)
                   A(I,J,K)=A(I,J,1)
-               ENDDO
-            ENDDO
+               END DO
+            END DO
             DO I=1,N
                CALL CFFTF(N,A(1,I,K),WSAVE)
-            ENDDO
-         ENDDO
+            END DO
+         END DO
       ELSE
          FACT=1./FLOAT(N)
          FACT=FACT*FACT
          DO K=2,NZ
             DO J=1,N
                CALL CFFTB(N,A(1,J,K),WSAVE)
-            ENDDO
+            END DO
             DO I=1,N
                DO J=1,N
                   A(I,J,1)=A(J,I,K)
-               ENDDO
-            ENDDO
+               END DO
+            END DO
             DO J=1,N
                CALL CFFTB(N,A(1,J,1),WSAVE)
-            ENDDO
+            END DO
             
             DO I=1,N
                DO J=1,N
                   A(I,J,K)=A(I,J,1)*FACT
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDIF
+               END DO
+            END DO
+         END DO
+      END IF
 
       RETURN
       END 
 !c
 !c---------------------------------------------------------------------
-!c SUBROUTINE FFT2DC: This routine computes the two dimensional 
-!c transform of a complex cubic array of square N and length NZ.
+!c SUBROUTINE FFT2DC: This routine computes the two dimensional
+!c transform of a complexcubic array of square N and length NZ.
 !c FFT's are done for each square level for k=2->NZ inclusive.  The 
 !c first level is used as a scratch array for storing the transpose
 !c matrix for the second half of the transform.  The code uses
@@ -80,49 +80,49 @@
       REAL WSAVE(4*N+15),FACT
       COMPLEX A(N,N,NZ)
 
-      IF(ISGN.NE.1)THEN
+      IF(ISGN/=1)THEN
          CALL CFFTI(N,WSAVE)
          DO K=2,NZ
             DO J=1,N
                CALL CFFTF(N,A(1,J,K),WSAVE)
-            ENDDO
+            END DO
          
             DO I=1,N
                DO J=1,N
                   A(I,J,1)=A(J,I,K) !transpose
-               ENDDO
-            ENDDO
+               END DO
+            END DO
             DO J=1,N
                CALL CFFTF(N,A(1,J,1),WSAVE)
-            ENDDO
+            END DO
             DO I=1,N
                DO J=1,N
                   A(I,J,K)=A(J,I,1)
-               ENDDO
-            ENDDO
-         ENDDO
+               END DO
+            END DO
+         END DO
       ELSE
          FACT=1./FLOAT(N)
          FACT=FACT*FACT
          DO K=2,NZ
             DO J=1,N
                CALL CFFTB(N,A(1,J,K),WSAVE)
-            ENDDO
+            END DO
             DO I=1,N
                DO J=1,N
                   A(I,J,1)=A(J,I,K)
-               ENDDO
-            ENDDO
+               END DO
+            END DO
             DO J=1,N
                CALL CFFTB(N,A(1,J,1),WSAVE)
-            ENDDO
+            END DO
             DO I=1,N
                DO J=1,N
                   A(I,J,K)=A(J,I,1)*FACT
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDIF
+               END DO
+            END DO
+         END DO
+      END IF
 
       RETURN
       END 
@@ -142,24 +142,24 @@
       REAL WSAVE(4*N+100),FACT
       COMPLEX A(N,NZ)
 
-      IF(FFTINI .EQ. 1) THEN
+      IF(FFTINI == 1) THEN
          CALL CFFTI(N,WSAVE)
          FFTINI = 0
-      ENDIF
+      END IF
 
-      IF(ISGN.NE.1)THEN
+      IF(ISGN/=1)THEN
          DO K=1,NZ
             CALL CFFTF(N,A(1,K),WSAVE)
-         ENDDO
+         END DO
       ELSE
          FACT=1./FLOAT(N)
          DO K=1,NZ
             CALL CFFTB(N,A(1,K),WSAVE)
             DO I=1,N
                A(I,K)=A(I,K)*FACT
-            ENDDO
-         ENDDO
-      ENDIF
+            END DO
+         END DO
+      END IF
 
       RETURN
       END
@@ -168,7 +168,7 @@
 !c
       SUBROUTINE CFFTB (N,C,WSAVE)
       DIMENSION       C(*), WSAVE(*)
-      IF (N .EQ. 1) RETURN
+      IF (N == 1) RETURN
       IW1 = N+N+1
       IW2 = IW1+N+N
       CALL CFFTB1 (N,C,WSAVE,WSAVE(IW1),WSAVE(IW2))
@@ -187,49 +187,49 @@
          IDO = N/L2
          IDOT = IDO+IDO
          IDL1 = IDOT*L1
-         IF (IP .NE. 4) GO TO 103
+         IF (IP /= 4) GO TO 103
          IX2 = IW+IDOT
          IX3 = IX2+IDOT
-         IF (NA .NE. 0) GO TO 101
+         IF (NA /= 0) GO TO 101
          CALL PASSB4 (IDOT,L1,C,CH,WA(IW),WA(IX2),WA(IX3))
          GO TO 102
   101    CALL PASSB4 (IDOT,L1,CH,C,WA(IW),WA(IX2),WA(IX3))
   102    NA = 1-NA
          GO TO 115
-  103    IF (IP .NE. 2) GO TO 106
-         IF (NA .NE. 0) GO TO 104
+  103    IF (IP /= 2) GO TO 106
+         IF (NA /= 0) GO TO 104
          CALL PASSB2 (IDOT,L1,C,CH,WA(IW))
          GO TO 105
   104    CALL PASSB2 (IDOT,L1,CH,C,WA(IW))
   105    NA = 1-NA
          GO TO 115
-  106    IF (IP .NE. 3) GO TO 109
+  106    IF (IP /= 3) GO TO 109
          IX2 = IW+IDOT
-         IF (NA .NE. 0) GO TO 107
+         IF (NA /= 0) GO TO 107
          CALL PASSB3 (IDOT,L1,C,CH,WA(IW),WA(IX2))
          GO TO 108
   107    CALL PASSB3 (IDOT,L1,CH,C,WA(IW),WA(IX2))
   108    NA = 1-NA
          GO TO 115
-  109    IF (IP .NE. 5) GO TO 112
+  109    IF (IP /= 5) GO TO 112
          IX2 = IW+IDOT
          IX3 = IX2+IDOT
          IX4 = IX3+IDOT
-         IF (NA .NE. 0) GO TO 110
+         IF (NA /= 0) GO TO 110
          CALL PASSB5 (IDOT,L1,C,CH,WA(IW),WA(IX2),WA(IX3),WA(IX4))
          GO TO 111
   110    CALL PASSB5 (IDOT,L1,CH,C,WA(IW),WA(IX2),WA(IX3),WA(IX4))
   111    NA = 1-NA
          GO TO 115
-  112    IF (NA .NE. 0) GO TO 113
+  112    IF (NA /= 0) GO TO 113
          CALL PASSB (NAC,IDOT,IP,L1,IDL1,C,C,C,CH,CH,WA(IW))
          GO TO 114
   113    CALL PASSB (NAC,IDOT,IP,L1,IDL1,CH,CH,CH,C,C,WA(IW))
-  114    IF (NAC .NE. 0) NA = 1-NA
+  114    IF (NAC /= 0) NA = 1-NA
   115    L1 = L2
          IW = IW+(IP-1)*IDOT
   116 CONTINUE
-      IF (NA .EQ. 0) RETURN
+      IF (NA == 0) RETURN
       N2 = N+N
       DO 117 I=1,N2
          C(I) = CH(I)
@@ -239,7 +239,7 @@
 
       SUBROUTINE CFFTF (N,C,WSAVE)
       DIMENSION       C(*)       ,WSAVE(*)
-      IF (N .EQ. 1) RETURN
+      IF (N == 1) RETURN
       IW1 = N+N+1
       IW2 = IW1+N+N
       CALL CFFTF1 (N,C,WSAVE,WSAVE(IW1),WSAVE(IW2))
@@ -258,49 +258,49 @@
          IDO = N/L2
          IDOT = IDO+IDO
          IDL1 = IDOT*L1
-         IF (IP .NE. 4) GO TO 103
+         IF (IP /= 4) GO TO 103
          IX2 = IW+IDOT
          IX3 = IX2+IDOT
-         IF (NA .NE. 0) GO TO 101
+         IF (NA /= 0) GO TO 101
          CALL PASSF4 (IDOT,L1,C,CH,WA(IW),WA(IX2),WA(IX3))
          GO TO 102
   101    CALL PASSF4 (IDOT,L1,CH,C,WA(IW),WA(IX2),WA(IX3))
   102    NA = 1-NA
          GO TO 115
-  103    IF (IP .NE. 2) GO TO 106
-         IF (NA .NE. 0) GO TO 104
+  103    IF (IP /= 2) GO TO 106
+         IF (NA /= 0) GO TO 104
          CALL PASSF2 (IDOT,L1,C,CH,WA(IW))
          GO TO 105
   104    CALL PASSF2 (IDOT,L1,CH,C,WA(IW))
   105    NA = 1-NA
          GO TO 115
-  106    IF (IP .NE. 3) GO TO 109
+  106    IF (IP /= 3) GO TO 109
          IX2 = IW+IDOT
-         IF (NA .NE. 0) GO TO 107
+         IF (NA /= 0) GO TO 107
          CALL PASSF3 (IDOT,L1,C,CH,WA(IW),WA(IX2))
          GO TO 108
   107    CALL PASSF3 (IDOT,L1,CH,C,WA(IW),WA(IX2))
   108    NA = 1-NA
          GO TO 115
-  109    IF (IP .NE. 5) GO TO 112
+  109    IF (IP /= 5) GO TO 112
          IX2 = IW+IDOT
          IX3 = IX2+IDOT
          IX4 = IX3+IDOT
-         IF (NA .NE. 0) GO TO 110
+         IF (NA /= 0) GO TO 110
          CALL PASSF5 (IDOT,L1,C,CH,WA(IW),WA(IX2),WA(IX3),WA(IX4))
          GO TO 111
   110    CALL PASSF5 (IDOT,L1,CH,C,WA(IW),WA(IX2),WA(IX3),WA(IX4))
   111    NA = 1-NA
          GO TO 115
-  112    IF (NA .NE. 0) GO TO 113
+  112    IF (NA /= 0) GO TO 113
          CALL PASSF (NAC,IDOT,IP,L1,IDL1,C,C,C,CH,CH,WA(IW))
          GO TO 114
   113    CALL PASSF (NAC,IDOT,IP,L1,IDL1,CH,CH,CH,C,C,WA(IW))
-  114    IF (NAC .NE. 0) NA = 1-NA
+  114    IF (NAC /= 0) NA = 1-NA
   115    L1 = L2
          IW = IW+(IP-1)*IDOT
   116 CONTINUE
-      IF (NA .EQ. 0) RETURN
+      IF (NA == 0) RETURN
       N2 = N+N
       DO 117 I=1,N2
          C(I) = CH(I)
@@ -309,7 +309,7 @@
       END
       SUBROUTINE CFFTI (N,WSAVE)
       DIMENSION       WSAVE(*)
-      IF (N .EQ. 1) RETURN
+      IF (N == 1) RETURN
       IW1 = N+N+1
       IW2 = IW1+N+N
       CALL CFFTI1 (N,WSAVE(IW1),WSAVE(IW2))
@@ -332,14 +332,14 @@
   105 NF = NF+1
       IFAC(NF+2) = NTRY
       NL = NQ
-      IF (NTRY .NE. 2) GO TO 107
-      IF (NF .EQ. 1) GO TO 107
+      IF (NTRY /= 2) GO TO 107
+      IF (NF == 1) GO TO 107
       DO 106 I=2,NF
          IB = NF-I+2
          IFAC(IB+2) = IFAC(IB+1)
   106 CONTINUE
       IFAC(3) = 2
-  107 IF (NL .NE. 1) GO TO 104
+  107 IF (NL /= 1) GO TO 104
       IFAC(1) = N
       IFAC(2) = NF
       TPI = 6.28318530717959
@@ -367,7 +367,7 @@
                WA(I-1) = COS(ARG)
                WA(I) = SIN(ARG)
   108       CONTINUE
-            IF (IP .LE. 5) GO TO 109
+            IF (IP <= 5) GO TO 109
             WA(I1-1) = WA(I-1)
             WA(I1) = WA(I)
   109    CONTINUE
@@ -385,7 +385,7 @@
       IPPH = (IP+1)/2
       IDP = IP*IDO
 !C
-      IF (IDO .LT. L1) GO TO 106
+      IF (IDO < L1) GO TO 106
       DO 103 J=2,IPPH
          JC = IPP2-J
          DO 102 K=1,L1
@@ -429,7 +429,7 @@
          DO 115 J=3,IPPH
             JC = IPP2-J
             IDLJ = IDLJ+INC
-            IF (IDLJ .GT. IDP) IDLJ = IDLJ-IDP
+            IF (IDLJ > IDP) IDLJ = IDLJ-IDP
             WAR = WA(IDLJ-1)
             WAI = WA(IDLJ)
             DO 114 IK=1,IDL1
@@ -453,7 +453,7 @@
   119    CONTINUE
   120 CONTINUE
       NAC = 1
-      IF (IDO .EQ. 2) RETURN
+      IF (IDO == 2) RETURN
       NAC = 0
       DO 121 IK=1,IDL1
          C2(IK,1) = CH2(IK,1)
@@ -464,7 +464,7 @@
             C1(2,K,J) = CH(2,K,J)
   122    CONTINUE
   123 CONTINUE
-      IF (IDOT .GT. L1) GO TO 127
+      IF (IDOT > L1) GO TO 127
       IDIJ = 0
       DO 126 J=2,IP
          IDIJ = IDIJ+2
@@ -494,7 +494,7 @@
       SUBROUTINE PASSB2 (IDO,L1,CC,CH,WA1)
       DIMENSION       CC(IDO,2,L1)           ,CH(IDO,L1,2)           , &
                       WA1(*)
-      IF (IDO .GT. 2) GO TO 102
+      IF (IDO > 2) GO TO 102
       DO 101 K=1,L1
          CH(1,K,1) = CC(1,1,K)+CC(1,2,K)
          CH(1,K,2) = CC(1,1,K)-CC(1,2,K)
@@ -518,7 +518,7 @@
       DIMENSION       CC(IDO,3,L1)           ,CH(IDO,L1,3)           , &
                       WA1(*)     ,WA2(*)
       DATA TAUR,TAUI /-.5,.866025403784439/
-      IF (IDO .NE. 2) GO TO 102
+      IF (IDO /= 2) GO TO 102
       DO 101 K=1,L1
          TR2 = CC(1,2,K)+CC(1,3,K)
          CR2 = CC(1,1,K)+TAUR*TR2
@@ -559,7 +559,7 @@
       SUBROUTINE PASSB4 (IDO,L1,CC,CH,WA1,WA2,WA3)
       DIMENSION       CC(IDO,4,L1)           ,CH(IDO,L1,4)           , &
                       WA1(*)     ,WA2(*)     ,WA3(*)
-      IF (IDO .NE. 2) GO TO 102
+      IF (IDO /= 2) GO TO 102
       DO 101 K=1,L1
          TI1 = CC(2,1,K)-CC(2,3,K)
          TI2 = CC(2,1,K)+CC(2,3,K)
@@ -612,7 +612,7 @@
                       WA1(*)     ,WA2(*)     ,WA3(*)     ,WA4(*)
       DATA TR11,TI11,TR12,TI12 /.309016994374947,.951056516295154, &
       -.809016994374947,.587785252292473/
-      IF (IDO .NE. 2) GO TO 102
+      IF (IDO /= 2) GO TO 102
       DO 101 K=1,L1
          TI5 = CC(2,2,K)-CC(2,5,K)
          TI2 = CC(2,2,K)+CC(2,5,K)
@@ -692,7 +692,7 @@
       IPPH = (IP+1)/2
       IDP = IP*IDO
 !C
-      IF (IDO .LT. L1) GO TO 106
+      IF (IDO < L1) GO TO 106
       DO 103 J=2,IPPH
          JC = IPP2-J
          DO 102 K=1,L1
@@ -736,7 +736,7 @@
          DO 115 J=3,IPPH
             JC = IPP2-J
             IDLJ = IDLJ+INC
-            IF (IDLJ .GT. IDP) IDLJ = IDLJ-IDP
+            IF (IDLJ > IDP) IDLJ = IDLJ-IDP
             WAR = WA(IDLJ-1)
             WAI = WA(IDLJ)
             DO 114 IK=1,IDL1
@@ -760,7 +760,7 @@
   119    CONTINUE
   120 CONTINUE
       NAC = 1
-      IF (IDO .EQ. 2) RETURN
+      IF (IDO == 2) RETURN
       NAC = 0
       DO 121 IK=1,IDL1
          C2(IK,1) = CH2(IK,1)
@@ -771,7 +771,7 @@
             C1(2,K,J) = CH(2,K,J)
   122    CONTINUE
   123 CONTINUE
-      IF (IDOT .GT. L1) GO TO 127
+      IF (IDOT > L1) GO TO 127
       IDIJ = 0
       DO 126 J=2,IP
          IDIJ = IDIJ+2
@@ -801,7 +801,7 @@
       SUBROUTINE PASSF2 (IDO,L1,CC,CH,WA1)
       DIMENSION       CC(IDO,2,L1)           ,CH(IDO,L1,2)           , &
                       WA1(*)
-      IF (IDO .GT. 2) GO TO 102
+      IF (IDO > 2) GO TO 102
       DO 101 K=1,L1
          CH(1,K,1) = CC(1,1,K)+CC(1,2,K)
          CH(1,K,2) = CC(1,1,K)-CC(1,2,K)
@@ -825,7 +825,7 @@
       DIMENSION       CC(IDO,3,L1)           ,CH(IDO,L1,3)           , &
                       WA1(*)     ,WA2(*)
       DATA TAUR,TAUI /-.5,-.866025403784439/
-      IF (IDO .NE. 2) GO TO 102
+      IF (IDO /= 2) GO TO 102
       DO 101 K=1,L1
          TR2 = CC(1,2,K)+CC(1,3,K)
          CR2 = CC(1,1,K)+TAUR*TR2
@@ -866,7 +866,7 @@
       SUBROUTINE PASSF4 (IDO,L1,CC,CH,WA1,WA2,WA3)
       DIMENSION       CC(IDO,4,L1)           ,CH(IDO,L1,4)           , &
                       WA1(*)     ,WA2(*)     ,WA3(*)
-      IF (IDO .NE. 2) GO TO 102
+      IF (IDO /= 2) GO TO 102
       DO 101 K=1,L1
          TI1 = CC(2,1,K)-CC(2,3,K)
          TI2 = CC(2,1,K)+CC(2,3,K)
@@ -919,7 +919,7 @@
                       WA1(*)     ,WA2(*)     ,WA3(*)     ,WA4(*)
       DATA TR11,TI11,TR12,TI12 /.309016994374947,-.951056516295154, &
       -.809016994374947,-.587785252292473/
-      IF (IDO .NE. 2) GO TO 102
+      IF (IDO /= 2) GO TO 102
       DO 101 K=1,L1
          TI5 = CC(2,2,K)-CC(2,5,K)
          TI2 = CC(2,2,K)+CC(2,5,K)

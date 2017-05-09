@@ -30,6 +30,8 @@ MODULE mo_submctl
 
   PUBLIC :: liqFracA, iceFracA, liqFracB, iceFracB
 
+  PUBLIC :: rd,rv,alv,als,alf
+
 
   PUBLIC :: nlcoag,                &
             nlcgaa,nlcgcc,nlcgpp,  &
@@ -165,9 +167,9 @@ MODULE mo_submctl
                lsautosnow
     LOGICAL :: nlactiv     = .TRUE.,   & ! Cloud droplet activation
                lsactiv
-    LOGICAL :: nlactintst  = .TRUE.,   & ! Switch for interstitial activation: Use particle wet size determined by
+    LOGICAL :: nlactintst  = .TRUE.,   & ! Switch for interstitial activation: use particle wet size determined by
                lsactintst                ! codensation equations and supersaturation directly from the host model
-    LOGICAL :: nlactbase   = .TRUE.,   & ! Switch for cloud base activation: Use the regular parameterized method
+    LOGICAL :: nlactbase   = .TRUE.,   & ! Switch for cloud base activation: use the regular parameterized method
                lsactbase                 ! for maximum supersaturation and cloud activation.
 
 
@@ -208,7 +210,7 @@ MODULE mo_submctl
   REAL :: act_coeff=1.e-7  ! activation coefficient
 
   ! RH Limit: used for initialization and spinup within SALSA to limit the water vapour mixing ratio.
-  ! Prevents unrealistically high RH in cloud activation and condensation procedures that is often assigned 
+  ! Prevents unrealistically high RH in cloud activation and condensation procedures that is often assigned
   ! in the LES input files to immediately generate cloud. Given in %/100. 
   REAL :: rhlim = 1.20 
   
@@ -358,6 +360,15 @@ MODULE mo_submctl
                                !
    n3 = 158.79               ! number of H2SO4 molecules in 3 nm cluster 
                                !  assuming d_sa = 5.54 ???     
+
+  ! Dry air and water vapour thermodynamic constants
+  REAL, PARAMETER ::     &
+      rd    = 287.05,    &        ! gas constant for dry air in J/K/kg
+      rv    = 461.51,    &        ! gas constant for water vapour in J/K/kg
+      alv    = 2.5008e6, &        ! latent heat for vaporisation in J/kg
+      als    = 2.8345e6, &        ! latent heat for sublimation in J/kg
+      alf    = als-alv            ! latent heat for fusion in J/kg
+
   !-- 4.3) Properties of condensing vapours
 
   REAL, PARAMETER :: & ! diameter of condensing molecule [m]
@@ -370,6 +381,7 @@ MODULE mo_submctl
        surfw0 = 0.073, & ! surface tension of pure water @ ~ 293 K [J/m2]
        surfi0 = 0.105, & ! surface tension of ice
        epsoc = 0.15     ! water uptake of organic material
+
 
   !-- 7) Parameters for cloud activation
 
