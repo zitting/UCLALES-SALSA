@@ -22,7 +22,7 @@ module mcrp
   use defs, only : alvl, alvi, rowt, pi, Rm, cp, kb, g, vonk
   use grid, only : dtlt, dzt, nxp, nyp, nzp,a_pexnr, a_rp, a_tp, th00, CCN,     &
        dn0, pi0, a_rt, a_tt, a_rpp, a_rpt, a_npp, a_npt, a_rv, a_rc, a_theta,   &
-       a_press, a_scr1, a_scr2, precip, a_dn, a_ustar,                  &
+       a_press, a_temp, a_rsl, precip, a_dn, a_ustar,                  &
        a_Radry, a_Rawet, a_Rcdry, a_Rcwet, a_Rpdry, a_Rpwet,                    &
        a_Riwet, a_Rswet,                                                        &
        a_naerop,  a_naerot,  a_maerop,  a_maerot,                               &
@@ -32,7 +32,7 @@ module mcrp
        a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,                               &
        snowin,    prtcl
   use thrm, only : thermo
-  use stat, only : sflg, updtst, acc_removal, mcflg, acc_massbudged
+  use stat, only : sflg, updtst, acc_removal, mcflg, acc_massbudged, cs_rem_set
   implicit none
 
   logical, parameter :: droplet_sedim = .False., khairoutdinov = .False.
@@ -75,16 +75,16 @@ contains
     select case (level)
     case(2)
        if (droplet_sedim)  &
-            call sedim_cd(nzp,nxp,nyp,a_theta,a_scr1,a_rc,precip,a_rt,a_tt)
+            call sedim_cd(nzp,nxp,nyp,a_theta,a_temp,a_rc,precip,a_rt,a_tt)
     case(3)
-       call mcrph(nzp,nxp,nyp,dn0,a_theta,a_scr1,a_rv,a_scr2,a_rc,a_rpp,   &
+       call mcrph(nzp,nxp,nyp,dn0,a_theta,a_temp,a_rv,a_rsl,a_rc,a_rpp,   &
                   a_npp,precip,a_rt,a_tt,a_rpt,a_npt)
     case(4,5)
        IF (level < 5) THEN
             sed_ice = .FALSE.; sed_snow = .FALSE.
        ENDIF
        nn = GetNcomp(prtcl)+1
-       CALL sedim_SALSA(nzp,nxp,nyp,nn, level,dtlt, a_scr1, a_theta,               &
+       CALL sedim_SALSA(nzp,nxp,nyp,nn, dtlt, a_temp, a_theta,               &
                         a_Rawet,   a_Rcwet,   a_Rpwet,                       &
                         a_Riwet,   a_Rswet,                                  &
                         a_naerop,  a_naerot,  a_maerop,  a_maerot,           &
@@ -448,7 +448,7 @@ contains
 
               npt(k,i,j) = npt(k,i,j)-(nfl(kp1)-nfl(k))*dzt(k)/dn0(k)
 
-              rrate(k,i,j)    = -rfl(k) * alvl*0.5*(dn0(k)+dn0(kp1))
+              rrate(k,i,j)    = -rfl(k)/dn0(k) * alvl*0.5*(dn0(k)+dn0(kp1))
               if (sflg) v1(k) = v1(k) + rrate(k,i,j)*xnpts
 
            end do
@@ -512,7 +512,7 @@ contains
   !
   ! Jaakko: Modified for the use of ice and snow bins
 
-  SUBROUTINE sedim_SALSA(n1,n2,n3,n4,level,tstep,tk,th,          &
+  SUBROUTINE sedim_SALSA(n1,n2,n3,n4,tstep,tk,th,          &
                          Rawet, Rcwet, Rpwet,              &
                          Riwet, Rswet,                     &
                          naerop, naerot, maerop, maerot,   &
@@ -530,7 +530,6 @@ contains
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: n1,n2,n3,n4
-    INTEGER, INTENT(in) :: level 
     REAL, INTENT(in) :: tstep,                    &
                         tk(n1,n2,n3),             &
                         th(n1,n2,n3),             &
@@ -568,7 +567,7 @@ contains
                            rrate(n1,n2,n3),           &
                            srate(n1,n2,n3)              ! snowing rate
 
-    INTEGER :: ss, kp1
+    INTEGER :: ss
     INTEGER :: i,j,k,nc,istr,iend
     REAL :: xnpts
     REAL :: v1(n1)
@@ -708,50 +707,48 @@ contains
     ! ---------------------------------------------------------
     ! SEDIMENTATION/DEPOSITION OF FAST PRECIPITATING PARTICLES
     IF (sed_precp) THEN
-       CALL DepositionFast(n1,n2,n3,n4,nprc,tk,a_dn,rowt,Rpwet,nprecpp,mprecpp,tstep,dzt,prnt,prvt,remprc,prlim)
-       
+       CALL DepositionFast(n1,n2,n3,n4,nprc,tk,a_dn,rowt,Rpwet,nprecpp,mprecpp,tstep,dzt,prnt,prvt,remprc,prlim,rrate)
+
+       nprecpt(:,:,:,:) = nprecpt(:,:,:,:) + prnt(:,:,:,:)/tstep
+       mprecpt(:,:,:,:) = mprecpt(:,:,:,:) + prvt(:,:,:,:)/tstep
+
+       ! Convert mass flux to heat flux (W/m^2)
+       rrate(:,:,:)=rrate(:,:,:)*alvl
+
+       IF (sflg) v1(:) = v1(:) + SUM(SUM(rrate(:,:,:),DIM=3),DIM=2)*xnpts
+
        ! Rain rate
        nc = GetIndex(prtcl,'H2O')
        istr = (nc-1)*nprc + 1
        iend = nc*nprc
        DO j = 3,n3-2
           DO i = 3,n2-2
-             DO k = n1-2,2,-1
-
-                nprecpt(k,i,j,:) = nprecpt(k,i,j,:) + prnt(k,i,j,:)/tstep
-                mprecpt(k,i,j,:) = mprecpt(k,i,j,:) + prvt(k,i,j,:)/tstep
-
-                kp1 = k + 1
-                rrate(k,i,j) = -SUM(prvt(k,i,j,istr:iend)*2.) * alvl*0.5*(a_dn(k,i,j)+a_dn(kp1,i,j))
-
-                tlt(k,i,j) = tlt(k,i,j) - SUM(prvt(k,i,j,istr:iend)/tstep)*(alvl/cp)*th(k,i,j)/tk(k,i,j)
-                
-                IF (sflg) v1(k) = v1(k) + rrate(k,i,j)*xnpts
+             DO k = 1,n1-1
+                tlt(k,i,j) = tlt(k,i,j) - SUM(prvt(k,i,j,istr:iend))/tstep*(alvl/cp)*th(k,i,j)/tk(k,i,j)
              END DO
           END DO
        END DO
     END IF
     
     IF (sed_snow) THEN
-       CALL DepositionFast(n1,n2,n3,n4,nsnw,tk,a_dn,rowt,Rswet,nsnowp,msnowp,tstep,dzt,srnt,srvt,remsnw,prlim)
-           
+       CALL DepositionFast(n1,n2,n3,n4,nsnw,tk,a_dn,rowt,Rswet,nsnowp,msnowp,tstep,dzt,srnt,srvt,remsnw,prlim,srate)
+
+       nsnowt(:,:,:,:) = nsnowt(:,:,:,:) + srnt(:,:,:,:)/tstep
+       msnowt(:,:,:,:) = msnowt(:,:,:,:) + srvt(:,:,:,:)/tstep
+
+       ! Convert mass flux to heat flux (W/m^2)
+       rrate(:,:,:)=rrate(:,:,:)*alvi
+
+       IF (sflg) v1(:) = v1(:) + SUM(SUM(srate(:,:,:),DIM=3),DIM=2)*xnpts
+
        ! Snow rate
        nc = GetIndex(prtcl,'H2O')
        istr = (nc-1)*nsnw + 1
        iend = nc*nsnw
        DO j = 3,n3-2
           DO i = 3,n2-2
-             DO k = n1-2,2,-1
-
-                nsnowt(k,i,j,:) = nsnowt(k,i,j,:) + srnt(k,i,j,:)/tstep
-                msnowt(k,i,j,:) = msnowt(k,i,j,:) + srvt(k,i,j,:)/tstep
-
-                kp1 = k + 1
-                srate(k,i,j) = -SUM(srvt(k,i,j,istr:iend)*1.) * alvi*0.5*(a_dn(k,i,j)+a_dn(kp1,i,j)) 
-
-                tlt(k,i,j) = tlt(k,i,j) - SUM(srvt(k,i,j,istr:iend)/tstep)*(alvi/cp)*th(k,i,j)/tk(k,i,j)
-                
-                IF (sflg) v1(k) = v1(k) + srate(k,i,j)*xnpts
+             DO k = 1,n1-1
+                tlt(k,i,j) = tlt(k,i,j) - SUM(srvt(k,i,j,istr:iend))/tstep*(alvi/cp)*th(k,i,j)/tk(k,i,j)
              END DO
           END DO
        END DO
@@ -776,6 +773,7 @@ contains
     if (sflg) call updtst(n1,'prc',1,v1,1)
     ! Aerosol removal statistics
     IF (sflg) CALL acc_removal(n2,n3,n4,remaer,remcld,remprc,remice,remsnw)
+    IF (sflg) CALL cs_rem_set(n2,n3,n4,remaer,remcld,remprc,remice,remsnw)
 
   END SUBROUTINE !sedim_SALSA
 
@@ -1147,7 +1145,7 @@ contains
   END FUNCTION MassDepositionSlow
   
   !------------------------------------------------------------------
-  SUBROUTINE DepositionFast(n1,n2,n3,n4,nn,tk,adn,pdn,rwet,numc,mass,tstep,dzt,prnt,prvt,remprc,clim)
+  SUBROUTINE DepositionFast(n1,n2,n3,n4,nn,tk,adn,pdn,rwet,numc,mass,tstep,dzt,prnt,prvt,remprc,clim,rate)
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: n1,n2,n3,n4,nn
@@ -1163,6 +1161,7 @@ contains
 
     REAL, INTENT(out) :: prnt(n1,n2,n3,nn), prvt(n1,n2,n3,nn*n4)     ! Number and mass tendencies due to fallout
     REAL, INTENT(out) :: remprc(n2,n3,nn*n4)
+    REAL, INTENT(out) :: rate(n1,n2,n3) ! Rain rate (kg/s/m^2)
 
     INTEGER :: k,i,j,bin
     INTEGER :: istr,iend
@@ -1186,11 +1185,11 @@ contains
     REAL :: prnchg(n1,nn), prvchg(n1,nn,n4) ! Instantaneous changes in precipitation number and mass (volume)
  
     REAL :: prnumc, prvolc(n4)  ! Instantaneous source number and volume
-    REAL :: prdepn(nn), prdepv(nn,n4)
     INTEGER :: kf, ni,fi
     LOGICAL :: prcdep  ! Deposition flag
 
     remprc(:,:,:) = 0.
+    rate(:,:,:) = 0.
     prnt(:,:,:,:) = 0.
     prvt(:,:,:,:) = 0.
 
@@ -1200,8 +1199,6 @@ contains
        
        DO i = 3,n2-2
 
-          prdepn = 0.
-          prdepv = 0.
           prnchg = 0.
           prvchg = 0.
           
@@ -1212,9 +1209,6 @@ contains
              kvis = avis/adn(k,i,j) !actual density ???
              va = sqrt(8.*kb*tk(k,i,j)/(pi*M)) ! thermal speed of air molecule
              lambda = 2.*avis/(adn(k,i,j)*va) !mean free path
-          
-             prnumc = 0.
-             prvolc = 0.
 
              ! Precipitation bin loop
              DO bin = 1,nn
@@ -1229,6 +1223,10 @@ contains
                    vc = 2.e3*(2.*rwet(k,i,j,bin))*(rhoref/adn(k,i,j))**2
                 END IF
                 vc = MIN(vc,10.)
+
+                ! Rain rate statistics: removal of water from the current bin is accounted for
+                ! Water is the last (n4) species and rain rate is given here kg/s/m^2
+                rate(k,i,j)=rate(k,i,j)+mass(k,i,j,(n4-1)*nn+bin)*adn(k,i,j)*vc
 
                 ! Determine output flux for current level: Find the closest level to which the
                 ! current drop parcel can fall within 1 timestep. If the lowest atmospheric level
@@ -1267,8 +1265,6 @@ contains
              
                 ! Put the drops to new positions (may be partially the original grid cell as well!)
                 IF (prcdep) THEN
-                   prdepn(bin) = prdepn(bin) + prnumc
-                   prdepv(bin,:) = prdepv(bin,:) + prvolc(:)
                    DO ni=1,n4
                       remprc(i,j,(ni-1)*nn+bin) = remprc(i,j,(ni-1)*nn+bin) +    &
                            prvolc(ni)*adn(k,i,j)*vc

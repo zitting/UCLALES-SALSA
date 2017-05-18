@@ -158,15 +158,15 @@ module grid
   REAL, ALLOCATABLE :: a_srs(:,:,:)    ! Total snow for use with SALSA
   REAL, ALLOCATABLE :: a_snrs(:,:,:)   ! Total number of snow particles for use with LEVEL 5 (Diagnostic scalar!!)
   REAL, ALLOCATABLE :: a_rh(:,:,:)     ! Relative humidity
+  REAL, ALLOCATABLE :: a_rsl(:,:,:)     ! water saturation vapor mixing ratio
   REAL, ALLOCATABLE :: a_rhi(:,:,:)     ! Relative humidity over ice
-  REAL, ALLOCATABLE :: a_rsi(:,:,:)     ! ice saturation vapor mixing ratio; Juha: lisätään myös a_rsl, nyt menee jonkun a_scr2 kautta....
+  REAL, ALLOCATABLE :: a_rsi(:,:,:)     ! ice saturation vapor mixing ratio
   REAL, ALLOCATABLE :: a_dn(:,:,:)     ! Air density (for normalizing concentrations according to mass, levels < 4!)
   !
   ! scratch arrays
   !
-  real, allocatable, dimension (:,:,:) :: a_rflx, a_sflx, a_scr1, a_scr2, &
-       a_scr3, a_scr4, a_scr5, a_scr6, &
-       a_temp0 ! store temperatures of previous timestep
+  real, allocatable, dimension (:,:,:) :: a_rflx, a_sflx, &
+       a_temp, a_temp0 ! store temperatures of previous timestep
   !
   !
   real, allocatable :: a_ustar(:,:)
@@ -268,19 +268,11 @@ contains
        memsize = memsize + nxyzp + nxyp
     end if
 
-    allocate (a_scr1(nzp,nxp,nyp),a_scr2(nzp,nxp,nyp),a_scr3(nzp,nxp,nyp))
-    allocate (a_scr4(nzp,nxp,nyp),a_scr5(nzp,nxp,nyp),a_scr6(nzp,nxp,nyp))
-    a_scr1(:,:,:) = 0.
-    a_scr2(:,:,:) = 0.
-    a_scr3(:,:,:) = 0.
-    a_scr4(:,:,:) = 0.
-    a_scr5(:,:,:) = 0.
-    a_scr6(:,:,:) = 0.
-    memsize = memsize + 6*nxyzp
-
-    allocate (a_temp0(nzp,nxp,nyp))
-    a_temp0(nzp,nxp,nyp) = 0.
-    memsize = memsize + nxyzp
+    allocate (a_temp(nzp,nxp,nyp),a_temp0(nzp,nxp,nyp),a_rsl(nzp,nxp,nyp))
+    a_temp(:,:,:) = 0.
+    a_temp0(:,:,:) = 0.
+    a_rsl(:,:,:) = 0.
+    memsize = memsize + nxyzp*3
 
     ! Juha: Stuff that's allocated if SALSA is NOT used
     !-----------------------------------------------------
@@ -673,7 +665,7 @@ contains
   !
   subroutine init_anal(time)
 
-    use mpi_interface, only :myid, ver, author
+    use mpi_interface, only :myid, ver, author, info
     USE mo_submctl, ONLY : fn2a,fn2b,fca,fcb,fra, &
                                fia,fib,fsa
     USE class_ComponentIndex, ONLY : IsUsed
@@ -815,7 +807,7 @@ contains
     fname =  trim(filprf)
     if(myid == 0) print                                                  &
             "(//' ',49('-')/,' ',/,'   Initializing: ',A20)",trim(fname)
-    call open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid0, nrec0, ver, author)
+    call open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid0, nrec0, ver, author, info)
 
     IF (level < 4 .OR. .NOT. lbinanl) THEN
        call define_nc( ncid0, nrec0, nvar0, sanal, n1=nzp, n2=nxp-4, n3=nyp-4)
@@ -2025,14 +2017,9 @@ contains
     CHARACTER(len=*), INTENT(in) :: itype
     REAL, INTENT(out) :: rad(nzp,nxp,nyp)
 
-    REAL :: zvar1(nzp,nxp,nyp)
-
     INTEGER :: istr,iend
 
     rad = 0.
-
-    ! Get the total number concentration for selected particle type
-    CALL bulkNumc(ipart,itype,zvar1)
 
     SELECT CASE(ipart)
     CASE('aerosol')
@@ -2047,7 +2034,7 @@ contains
           STOP 'meanRadius: Invalid bin regime selection (aerosol)'
        END IF
 
-       CALL getRadius(istr,iend,nbins,a_naerop,zvar1,nlim,a_Rawet,rad)
+       CALL getRadius(istr,iend,nbins,a_naerop,nlim,a_Rawet,rad)
 
     CASE('cloud')
 
@@ -2061,14 +2048,14 @@ contains
           STOP 'meanRadius: Invalid bin regime selection (cloud)'
        END IF
 
-       CALL getRadius(istr,iend,ncld,a_ncloudp,zvar1,nlim,a_Rcwet,rad)
+       CALL getRadius(istr,iend,ncld,a_ncloudp,nlim,a_Rcwet,rad)
 
     CASE('precp')
 
        istr = ira
        iend = fra
 
-       CALL getRadius(istr,iend,nprc,a_nprecpp,zvar1,prlim,a_Rpwet,rad)
+       CALL getRadius(istr,iend,nprc,a_nprecpp,prlim,a_Rpwet,rad)
 
     CASE('ice')
 
@@ -2082,14 +2069,14 @@ contains
           STOP 'meanRadius: Invalid bin regime selection (ice)'
        END IF
 
-       CALL getRadius(istr,iend,nice,a_nicep,zvar1,prlim,a_Riwet,rad)
+       CALL getRadius(istr,iend,nice,a_nicep,prlim,a_Riwet,rad)
 
     CASE('snow')
 
        istr = isa
        iend = fsa
 
-       CALL getRadius(istr,iend,nsnw,a_nsnowp,zvar1,prlim,a_Rswet,rad)
+       CALL getRadius(istr,iend,nsnw,a_nsnowp,prlim,a_Rswet,rad)
 
     END SELECT
 
@@ -2098,13 +2085,12 @@ contains
   ! ---------------------------------------------------
   ! SUBROUTINE getRadius
   !
-  SUBROUTINE getRadius(zstr,zend,nb,numc,ntot,numlim,rpart,zrad)
+  SUBROUTINE getRadius(zstr,zend,nb,numc,numlim,rpart,zrad)
     IMPLICIT NONE
 
     INTEGER, INTENT(in) :: nb ! Number of bins for current particle distribution
     INTEGER, INTENT(in) :: zstr,zend  ! Start and end index for averaging
     REAL, INTENT(in) :: numc(nzp,nxp,nyp,nb)
-    REAL, INTENT(in) :: ntot(nzp,nxp,nyp)
     REAL, INTENT(in) :: numlim
     REAL, INTENT(in) :: rpart(nzp,nxp,nyp,nb)
 
@@ -2112,21 +2098,21 @@ contains
 
     LOGICAL :: nlmask(nb)
     INTEGER :: k,i,j
+    REAL :: ntot
 
+    zrad(:,:,:)=0.
     DO j = 3,nyp-2
        DO i = 3,nxp-2
-          DO k = 3,nzp-2
-             nlmask = .FALSE.
+          DO k = 1,nzp
              nlmask(zstr:zend) = ( numc(k,i,j,zstr:zend) > numlim )
+             ntot = 0.
+             ntot = SUM( numc(k,i,j,zstr:zend), MASK=nlmask(zstr:zend) )
 
-             IF (ntot(k,i,j) > numlim) THEN
+             IF (ntot > numlim) &
                 zrad(k,i,j) = SUM( rpart(k,i,j,zstr:zend) * &
                                    numc(k,i,j,zstr:zend),   &
                                    MASK=nlmask(zstr:zend)   ) / &
-                                   ntot(k,i,j)
-             ELSE
-                zrad(k,i,j) = 0.
-             END IF
+                                   ntot
 
           END DO
        END DO
