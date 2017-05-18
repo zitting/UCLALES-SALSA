@@ -1,6 +1,6 @@
 !****************************************************************
 !*                                                              *
-!*   module MO_SALSA_NUCLEATION                             *
+!*   MODULE MO_SALSA_NUCLEATION                             *
 !*                                                              *
 !*   Contains subroutines and functions that are used           *
 !*   to new particle formation by nucleation                    *
@@ -8,6 +8,7 @@
 !****************************************************************
 
 MODULE mo_salsa_nucleation
+    IMPLICIT NONE
 
 CONTAINS
 
@@ -16,7 +17,7 @@ CONTAINS
   !   nonvolatile OC should be added???)
   !********************************************************************
   !
-  ! subroutine NUCLEATION(kproma,kbdim,klev, &
+  ! Subroutine NUCLEATION(kbdim,klev, &
   !       )
   !
   !********************************************************************
@@ -68,7 +69,7 @@ CONTAINS
   !
   !---------------------------------------------------------------------
 
-  SUBROUTINE nucleation(kproma, kbdim,  klev,   krow,   &
+  SUBROUTINE nucleation(kbdim,  klev,      &
                         paero,  ptemp,  prh,    ppres,  &
                         pcsa,   pcocnv, ptstep, pj3n3,  &
                         pxsa,   pxocnv, ppbl            )
@@ -97,10 +98,8 @@ CONTAINS
 
     !-- Input and output variables -------------
     INTEGER, INTENT(IN) ::        &
-         kproma,                  & ! number of horiz. grid kproma
          kbdim,                   & ! dimension for arrays
-         klev,                    & ! number of vertical klev
-         krow                       ! local latitude index
+         klev                       ! number of vertical klev
 
 
     REAL, INTENT(IN) ::       &
@@ -158,18 +157,14 @@ CONTAINS
          zKeff,                   & ! "effective" coagulation coefficient between fresly-nucleated particles
          zGRtot,                  & ! Total growth rate
          zCoagStot,               & ! Total losses due to coagulation, includes condensation and self-coagulation
-         zcv,                     & ! gas-phase velocity of clusters
 
         !variables determined for the m-parameter
-         zRc, &
-         zRx, &
-         zR2(fn2b), &
          zRc2(fn2b), &
          zRx2(fn2b), &
          zm_c, &
          zm_x, &
          zm_2(fn2b), &
-         zcv_c, &
+         zcv_c, &       ! zcv = gas-phase velocity of clusters
          zcv_x, &
          zcv_2(fn2b), &
          zcv_c2(fn2b), &
@@ -212,7 +207,7 @@ CONTAINS
 
        ppbl_bin = klev
 
-       CALL binnucl(kproma,  kbdim, klev, &
+       CALL binnucl(kbdim, klev, &
                     zc_h2so4, ptemp,  prh,     &
                     zjnuc,    znsa, znoc, zdcrit, &
                     ppbl_bin, zksa, zkocnv)
@@ -221,12 +216,12 @@ CONTAINS
 
        zc_h2so4 = pcsa*1.e-6           ! [#/cm3]
 
-       CALL binnucl(kproma,  kbdim, klev,     &
+       CALL binnucl(kbdim, klev,     &
                     zc_h2so4, ptemp,  prh,         &
                     zjnuc,    znsa,   znoc, zdcrit, &
                     ppbl, zksa, zkocnv)
 
-       CALL actnucl(kproma, kbdim, klev, &
+       CALL actnucl(kbdim, klev, &
                     pcsa,    zjnuc,  zdcrit, ppbl ,&
                     znsa,    znoc,   zksa,  zkocnv,act_coeff)
 
@@ -234,12 +229,12 @@ CONTAINS
 
        zc_h2so4 = pcsa*1.e-6           ! [#/cm3]
 
-       CALL binnucl(kproma,  kbdim, klev,      &
+       CALL binnucl( kbdim, klev,      &
                     zc_h2so4, ptemp,  prh,          &
                     zjnuc,    znsa,  znoc, zdcrit,   &
                     ppbl, zksa, zkocnv)
 
-       CALL kinnucl(kproma, kbdim, klev, &
+       CALL kinnucl(kbdim, klev, &
                     zc_h2so4,ptemp,          &
                     zjnuc,   zdcrit, ppbl,   &
                     znsa,    znoc,   zksa, zkocnv)
@@ -252,7 +247,7 @@ CONTAINS
 
        zc_h2so4 = pcsa*1.e-6           ! [#/cm3]
 
-       CALL ternucl(kproma,  kbdim,  klev,         &
+       CALL ternucl(kbdim,  klev,         &
                     zc_h2so4, zmixnh3, ptemp,   prh,     &
                     zjnuc,    znsa,    znoc,    zdcrit,  &
                     zksa,    zkocnv)
@@ -262,12 +257,12 @@ CONTAINS
        zc_org = pcocnv*1.e-6           ! [#/cm3]
        zc_h2so4 = pcsa*1.e-6           ! [#/cm3]
 
-       CALL binnucl(kproma,  kbdim, klev, &
+       CALL binnucl(kbdim, klev, &
                     zc_h2so4, ptemp,  prh,     &
                     zjnuc,    znsa,   znoc, zdcrit, &
                     ppbl, zksa, zkocnv)
 
-       CALL orgnucl(kproma, kbdim, klev, &
+       CALL orgnucl(kbdim, klev, &
                     pcocnv,  zjnuc,  zdcrit, ppbl, &
                     znsa, znoc, zksa, zkocnv)
 
@@ -276,12 +271,12 @@ CONTAINS
 
        zc_h2so4 = pcsa*1.e-6
 
-       CALL binnucl(kproma,  kbdim, klev, &
+       CALL binnucl(kbdim, klev, &
                     zc_h2so4, ptemp,  prh,     &
                     zjnuc,    znsa,   znoc, zdcrit, &
                     ppbl, zksa, zkocnv)
 
-       CALL sumnucl(kproma, kbdim, klev,  &
+       CALL sumnucl(kbdim, klev,  &
                     pcsa, pcocnv, zjnuc,&
                     zdcrit, ppbl, &
                     znsa, znoc, zksa, zkocnv)
@@ -291,12 +286,12 @@ CONTAINS
        zc_h2so4 = pcsa*1.e-6
        zc_org = pcocnv*1.e-6
 
-       CALL binnucl(kproma,  kbdim, klev, &
+       CALL binnucl(kbdim, klev, &
                     zc_h2so4, ptemp,  prh,     &
                     zjnuc,    znsa,   znoc, zdcrit, &
                     ppbl, zksa, zkocnv)
 
-       CALL hetnucl(kproma, kbdim, klev,  &
+       CALL hetnucl(kbdim, klev,  &
                     zc_h2so4, zc_org, zjnuc,   &
                     zdcrit, ppbl, &
                     znsa, znoc, zksa, zkocnv)
@@ -307,12 +302,12 @@ CONTAINS
        zc_h2so4 = pcsa*1.e-6
        zc_org = pcocnv*1.e-6
 
-       CALL binnucl(kproma,  kbdim, klev, &
+       CALL binnucl( kbdim, klev, &
                     zc_h2so4, ptemp,  prh,     &
                     zjnuc,    znsa,   znoc, zdcrit, &
                     ppbl, zksa, zkocnv)
 
-       CALL SAnucl(kproma, kbdim, klev,   &
+       CALL SAnucl(kbdim, klev,   &
                    zc_h2so4, zc_org, zjnuc, &
                    zdcrit, ppbl, &
                    znsa, znoc, zksa, zkocnv)
@@ -324,12 +319,12 @@ CONTAINS
        zc_h2so4 = pcsa*1.e-6
        zc_org = pcocnv*1.e-6
 
-       CALL binnucl(kproma,  kbdim, klev, &
+       CALL binnucl( kbdim, klev, &
                     zc_h2so4, ptemp,  prh,     &
                     zjnuc,    znsa,   znoc, zdcrit, &
                     ppbl, zksa, zkocnv)
 
-       CALL SAORGnucl(kproma, kbdim, klev, &
+       CALL SAORGnucl(kbdim, klev, &
                     zc_h2so4, zc_org, zjnuc,  zdcrit, ppbl, &
                     znsa, znoc, zksa, zkocnv)
 
@@ -353,16 +348,16 @@ CONTAINS
 
           IF (nsnucl <= 4) THEN
              !--------------------------------------------------------------------------------
-             ! if the chosen nucleation scheme is 1-4, the nucleation occurs only due to H2SO4
+             ! If the chosen nucleation scheme is 1-4, the nucleation occurs only due to H2SO4
              ! All of the total vapor concentration that is taking part to the nucleation is
              ! there for sulphuric acid (sa) and nonvolatile organic vapor is zero.
 
              pxsa(ii,jj) = 1.                ! ratio of sulphuric acid in 3nm particles
              pxocnv(ii,jj) = 0.              ! ratio of nonvolatile organic vapor in 3nm particles
 
-          ELSEIF (nsnucl > 4) THEN
+          ELSE IF (nsnucl > 4) THEN
              !--------------------------------------------------------------------------------
-             ! if the chosen nucleation scheme is 5-9, the nucleation occurs due to organic
+             ! If the chosen nucleation scheme is 5-9, the nucleation occurs due to organic
              ! vapour or due to the combination of organic vapour and  H2SO4
              !
              ! The number of needed molecules depends on the chosen nucleation type and it has
@@ -460,7 +455,7 @@ CONTAINS
              zj3 = zjnuc(ii,jj)*exp(min(0., &
                zeta/3. - zeta/(zdcrit(ii,jj)*1.e9))) ! [#/m3] (14)
 
-          ELSEIF (nj3 > 1) THEN
+          ELSE IF (nj3 > 1) THEN
 
              ! ----------------------------------------------------------------------------------------
              ! Defining the value for zm_para
@@ -481,7 +476,7 @@ CONTAINS
              zRc2 = zdcrit(ii,jj)/2. + paero(ii,jj,:)%dwet/2. ! [m]
              zRx2 = reglim(1)/2. + paero(ii,jj,:)%dwet/2.  ! [m]
 
-             zm_c = 4./3.*pi*(zdcrit(ii,jj)/2.)**3*rhosu!(rhosu*pxsa+rhooc*pxocnv)    ! [kg] T�ss� oletettu hiukkasen massaksi vain H2SO4
+             zm_c = 4./3.*pi*(zdcrit(ii,jj)/2.)**3*rhosu!(rhosu*pxsa+rhooc*pxocnv)    ! [kg] particle mass assumed to be only H2SO4
              zm_x = 4./3.*pi*(reglim(1)/2.)**3*rhosu!(rhosu*pxsa+rhooc*pxocnv)       ! [kg]
              zm_2 = 4./3.*pi*(paero(ii,jj,:)%dwet/2.)**3*rhosu!(rhosu*pxsa+rhooc*pxocnv)   ! [kg]
 
@@ -534,7 +529,7 @@ CONTAINS
              zCoagS_x= MAX(1.e-20, sum(zK_x2*paero(ii,jj,:)%numc))  !            Coagulation sink for 3 nm cluster
 
              zm_para = LOG(zCoagS_x/zCoagS_c)/LOG(reglim(1)/zdcrit(ii,jj))
-             !-end of m-parater----------------------------------------------------------------------
+             !-End of m-parater----------------------------------------------------------------------
 
              zgamma= (((reglim(1)/zdcrit(ii,jj))**(zm_para+1.))-1.)/(zm_para+1.) ! Anttila et al. 2010, eq. 5
 
@@ -542,9 +537,9 @@ CONTAINS
 
                 zj3 = zjnuc(ii,jj)*exp(min(0.,-zgamma*zdcrit(ii,jj)*zCoagS_c/(zGRclust*1.e-9/(60.**2)))) !J before iteration, in #/m3s
 
-             ELSEIF (nj3 == 3) THEN
+             ELSE IF (nj3 == 3) THEN
 
-                ! IF polluted air... then the self-coagulation becomes important
+                ! If polluted air... then the self-coagulation becomes important
                 !------------------------------------------------------------------------
                 ! Self-coagulation of small particles < 3 nm
                 !
@@ -556,8 +551,8 @@ CONTAINS
                 ! "effective" coagulation coefficient between freshly-nucleated particles:
                 zKeff = 5.e-16              !cm3/s
 
-                ! use different values at sizes >10 nm:
-                IF (reglim(1) .ge. 10.d-9) THEN
+                ! Use different values at sizes >10 nm:
+                IF (reglim(1) >= 10.d-9) THEN
                    zlambda= 3.
                    zKeff= 5.e-17
                 END IF
@@ -625,16 +620,16 @@ CONTAINS
 
   !********************************************************************
   !
-  ! subroutine BINNUCL
-  ! subroutine TERNUCL
-  ! subroutine KINNUCL
-  ! subroutine ACTNUCL
+  ! Subroutine BINNUCL
+  ! Subroutine TERNUCL
+  ! Subroutine KINNUCL
+  ! Subroutine ACTNUCL
   !
-  ! subroutine ORGNUCL
-  ! subroutine SUMNUCL
-  ! subroutine HETNUCL
-  ! subroutine SANUCL
-  ! subroutine SAORGTNUCL
+  ! Subroutine ORGNUCL
+  ! Subroutine SUMNUCL
+  ! Subroutine HETNUCL
+  ! Subroutine SANUCL
+  ! Subroutine SAORGTNUCL
   !
   !********************************************************************
   !
@@ -678,7 +673,7 @@ CONTAINS
   !
   !---------------------------------------------------------------------
 
-  SUBROUTINE binnucl(kproma,    kbdim,      klev,                  &
+  SUBROUTINE binnucl(kbdim,      klev,                  &
                      pc_sa,     ptemp,      prh,                   &
                      pnuc_rate, pn_crit_sa, pn_crit_ocnv, pd_crit, &
                      ppbl,      pk_sa,      pk_ocnv)
@@ -689,7 +684,6 @@ CONTAINS
 
     !-- Input variables -------------------
     INTEGER, INTENT(IN) :: &
-         kproma,  &     ! number of horiz. grid kproma
          kbdim,  &      ! dimension for arrays
          klev           ! number of vertical klev
 
@@ -705,8 +699,8 @@ CONTAINS
          pn_crit_sa(kbdim,klev),  &  ! number of sulphuric acid molecules in cluster [1]
          pn_crit_ocnv(kbdim,klev),&  ! number of organic molecules in cluster [1]
          pd_crit(kbdim,klev),     &  ! diameter of critical cluster [m]
-         pk_sa(kbdim,klev),       &  ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-         pk_ocnv(kbdim,klev)         ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+         pk_sa(kbdim,klev),       &  ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+         pk_ocnv(kbdim,klev)         ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
     !-- Local variables -------------------
     INTEGER :: ii, jj   ! loop indices
@@ -719,7 +713,7 @@ CONTAINS
          zpcsa,  &   ! sulfuric acid concentration
          zrh,    &   ! relative humidity
          zma,zmw,zxmass, za, zb, zc, zroo, zm1, zm2, zv1, zv2, zcoll
-    LOGICAL::lnuctropo=.true.
+    LOGICAL::lnuctropo=.TRUE.
     !------------------------------------------------------------------------------------------------
 
     ! loops over
@@ -728,10 +722,10 @@ CONTAINS
     pd_crit    = 1.e-9
 
     zpbl(:) = ppbl(:)
-    if (lnuctropo) then
+    IF (lnuctropo) THEN
 
-       DO ii = 1,kbdim !  horizontal kbdim in the slab
-          DO jj = 1,zpbl(ii) !  vertical grid
+   DO ii = 1,kbdim !  horizontal kbdim in the slab
+      DO jj = 1,zpbl(ii) !  vertical grid
              !-- 1) Checking that we are in the validity range of the parameterization -----------
 
              zt = max(ptemp(ii,jj), 190.15)
@@ -928,16 +922,16 @@ CONTAINS
 
           END DO
        END DO
-    else
+    ELSE
        pnuc_rate(:,:)=0.
-    end if
+    END IF
   END SUBROUTINE binnucl
 
   !********************************************************************
   !********************************************************************
 
 
-  SUBROUTINE ternucl(kproma,    kbdim,      klev,                  &
+  SUBROUTINE ternucl(kbdim,      klev,                  &
                      pc_sa,     pc_nh3,     ptemp,        prh,     &
                      pnuc_rate, pn_crit_sa, pn_crit_ocnv, pd_crit, &
                      pk_sa,     pk_ocnv)
@@ -945,7 +939,6 @@ CONTAINS
     IMPLICIT NONE
     !-- Input variables -------------------
     INTEGER, INTENT(IN) ::       &
-         kproma,                 & ! number of horiz. grid kproma
          kbdim,                  & ! dimension for arrays
          klev                      ! number of vertical klev
 
@@ -961,8 +954,8 @@ CONTAINS
          pn_crit_sa(kbdim,klev), & ! number of H2SO4 molecules in cluster [1]
          pn_crit_ocnv(kbdim,klev),&! number of organic molecules in cluster [1]
          pd_crit(kbdim,klev),    & ! diameter of critical cluster [m]
-         pk_sa(kbdim,klev),      & ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-         pk_ocnv(kbdim,klev)       ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+         pk_sa(kbdim,klev),      & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+         pk_ocnv(kbdim,klev)       ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
     !-- Local variables --------------------
     INTEGER :: ii, jj  ! loop indices
@@ -1117,7 +1110,7 @@ CONTAINS
   !
   !**************************************************************
 
-  SUBROUTINE kinnucl(kproma,     kbdim,        klev,          &
+  SUBROUTINE kinnucl(kbdim,        klev,          &
                      pc_sa,      ptemp,                       &
                      pnuc_rate,  pd_crit,      ppbl,          &
                      pn_crit_sa, pn_crit_ocnv, pk_sa, pk_ocnv)
@@ -1126,7 +1119,6 @@ CONTAINS
 
      !-- Input variables -------------------
      INTEGER, INTENT(IN) :: &
-          kproma,  &    ! number of horiz. grid kproma
           kbdim,   &    ! dimension for arrays
           klev          ! number of vertical klev
 
@@ -1139,8 +1131,8 @@ CONTAINS
           pd_crit(kbdim,klev),     & ! critical diameter of clusters [m]
           pn_crit_sa(kbdim,klev),  & ! number of sulphuric acid molecules in cluster [1]
           pn_crit_ocnv(kbdim,klev),& ! number of organic molecules in cluster [1]
-          pk_sa(kbdim,klev),       & ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-          pk_ocnv(kbdim,klev)        ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+          pk_sa(kbdim,klev),       & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+          pk_ocnv(kbdim,klev)        ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
      INTEGER :: ppbl(kbdim)                      !boundary layer top
 
@@ -1151,7 +1143,7 @@ CONTAINS
      !-------------------------------------------------------------------------
      zpbl(:)=ppbl(:)
 
-     ! loops over
+     ! loops ove
      DO ii = 1,kbdim !  horizontal kbdim in the slab
         DO jj = zpbl(ii),klev !  vertical grid
 
@@ -1173,7 +1165,7 @@ CONTAINS
    !********************************************************************
    !********************************************************************
 
-   SUBROUTINE actnucl(kproma,     kbdim,        klev,                   &
+   SUBROUTINE actnucl( kbdim,        klev,                   &
                       psa_conc,   pnuc_rate,    pd_crit, ppbl,          &
                       pn_crit_sa, pn_crit_ocnv, pk_sa,   pk_ocnv, activ)
 
@@ -1181,7 +1173,6 @@ CONTAINS
 
      !-- Input variables -------------------
      INTEGER, INTENT(IN) ::   &
-          kproma,             & ! number of horiz. grid kproma
           kbdim,              & ! dimension for arrays
           klev                  ! number of vertical klev
 
@@ -1194,8 +1185,8 @@ CONTAINS
           pd_crit(kbdim,klev),     & ! critical diameter of clusters [m]
           pn_crit_sa(kbdim,klev),  & ! number of sulphuric acid molecules in cluster [1]
           pn_crit_ocnv(kbdim,klev),& ! number of organic molecules in cluster [1]
-          pk_sa(kbdim,klev),       & ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-          pk_ocnv(kbdim,klev)        ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+          pk_sa(kbdim,klev),       & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+          pk_ocnv(kbdim,klev)        ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
      !-- Local variables --------------------
      INTEGER :: ii, jj                                  ! loop indices
@@ -1204,8 +1195,8 @@ CONTAINS
      !-------------------------------------------------------------------------
      ! loops over
      !  previous loop structure
-     !    DO jj = 1,klev !  vertical grid
-     !       DO ii = 1,kbdim !  horizontal kbdim in the slab
+     !    DO ii = 1,kbdim !  horizontal kbdim in the slab
+     !       DO jj = 1,klev !  vertical grid
      !          pnuc_rate(ii,jj) = 1.e-7*psa_conc(ii,jj) ! [#/(m3 s)]
      !       END DO
      !    END DO
@@ -1241,7 +1232,7 @@ CONTAINS
    ! ORGNUCL scheme conciders only the organic matter in nucleation
    ! ---------------------------------------------------------------
 
-   SUBROUTINE orgnucl(kproma,     kbdim,        klev,            &
+   SUBROUTINE orgnucl(kbdim,        klev,            &
               pc_org,     pnuc_rate,    pd_crit, ppbl,   &
                       pn_crit_sa, pn_crit_ocnv, pk_sa,   pk_ocnv)
 
@@ -1249,7 +1240,6 @@ CONTAINS
 
      !-- Input variables -------------------
      INTEGER, INTENT(IN) :: &
-          kproma,  &     ! number of horiz. grid kproma
           kbdim,   &     ! dimension for arrays
           klev           ! number of vertical klev
 
@@ -1262,8 +1252,8 @@ CONTAINS
           pd_crit(kbdim,klev),     & ! diameter of critical cluster [m]
           pn_crit_sa(kbdim,klev),  & ! number of sulphuric acid molecules in cluster [1]
           pn_crit_ocnv(kbdim,klev),& ! number of organic molecules in cluster [1]
-          pk_sa(kbdim,klev),       & ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-          pk_ocnv(kbdim,klev)        ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+          pk_sa(kbdim,klev),       & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+          pk_ocnv(kbdim,klev)        ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
      INTEGER:: ppbl(kbdim)             !boundary layer top
 
@@ -1303,7 +1293,7 @@ CONTAINS
    ! nucleation - activation type of nucleation
    ! ---------------------------------------------------------------
 
-   SUBROUTINE sumnucl(kproma,     kbdim,        klev,                     &
+   SUBROUTINE sumnucl(kbdim,        klev,                     &
                       pc_sa,      pc_org,       pnuc_rate, pd_crit, ppbl, &
                       pn_crit_sa, pn_crit_ocnv, pk_sa,     pk_ocnv)
 
@@ -1311,7 +1301,6 @@ CONTAINS
 
      !-- Input variables -------------------
      INTEGER, INTENT(IN) :: &
-          kproma,  &     ! number of horiz. grid kproma
           kbdim,  &      ! dimension for arrays
           klev           ! number of vertical levels
 
@@ -1325,8 +1314,8 @@ CONTAINS
           pd_crit(kbdim,klev),     & ! diameter of critical cluster [m]
           pn_crit_sa(kbdim,klev),  & ! number of sulphuric acid molecules in cluster [1]
           pn_crit_ocnv(kbdim,klev),& ! number of organic molecules in cluster [1]
-          pk_sa(kbdim,klev),       & ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-          pk_ocnv(kbdim,klev)        ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+          pk_sa(kbdim,klev),       & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+          pk_ocnv(kbdim,klev)        ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
 
      INTEGER:: ppbl(kbdim)             !boundary layer top
@@ -1338,7 +1327,7 @@ CONTAINS
 
      !-------------------------------------
      zpbl(:)=ppbl(:)
-     DO ii = 1,kbdim !  horizontal kbdim in the slab
+    DO ii = 1,kbdim !  horizontal kbdim in the slab
         DO jj = zpbl(ii),klev !  vertical grid
            pnuc_rate(ii,jj) = As1*pc_sa(ii,jj)+As2*pc_org(ii,jj) ![#/m3/s]
 
@@ -1364,7 +1353,7 @@ CONTAINS
    ! nucleation - heteromolecular nucleation
    ! ---------------------------------------------------------------
 
-   SUBROUTINE hetnucl(kproma,     kbdim,        klev,          &
+   SUBROUTINE hetnucl(kbdim,        klev,          &
                       pc_sa,      pc_org,                      &
                       pnuc_rate,  pd_crit,      ppbl,          &
                       pn_crit_sa, pn_crit_ocnv, pk_sa, pk_ocnv)
@@ -1373,7 +1362,6 @@ CONTAINS
 
      !-- Input variables -------------------
      INTEGER, INTENT(IN) :: &
-          kproma,  &     ! number of horiz. grid kproma
           kbdim,  &      ! dimension for arrays
           klev           ! number of vertical klev
 
@@ -1387,8 +1375,8 @@ CONTAINS
           pd_crit(kbdim,klev),     & ! diameter of critical cluster [m]
           pn_crit_sa(kbdim,klev),  & ! number of sulphuric acid molecules in cluster [1]
           pn_crit_ocnv(kbdim,klev),& ! number of organic molecules in cluster [1]
-          pk_sa(kbdim,klev),       & ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-          pk_ocnv(kbdim,klev)        ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+          pk_sa(kbdim,klev),       & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+          pk_ocnv(kbdim,klev)        ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
      INTEGER::ppbl(kbdim)             !boundary layer top
 
@@ -1426,7 +1414,7 @@ CONTAINS
    ! sulphuric acid H2SO4 with both of the available vapours
    ! ---------------------------------------------------------------
 
-   SUBROUTINE SAnucl(kproma,     kbdim,        klev,          &
+   SUBROUTINE SAnucl(kbdim,        klev,          &
                      pc_sa,      pc_org,                      &
                      pnuc_rate,  pd_crit,      ppbl,          &
                      pn_crit_sa, pn_crit_ocnv, pk_sa, pk_ocnv)
@@ -1435,7 +1423,6 @@ CONTAINS
 
      !-- Input variables -------------------
      INTEGER, INTENT(IN) :: &
-          kproma,  &     ! number of horiz. grid kproma
           kbdim,   &     ! dimension for arrays
           klev           ! number of vertical klev
 
@@ -1449,8 +1436,8 @@ CONTAINS
           pd_crit(kbdim,klev),     & ! diameter of critical cluster [m]
           pn_crit_sa(kbdim,klev),  & ! number of sulphuric acid molecules in cluster [1]
           pn_crit_ocnv(kbdim,klev),& ! number of organic molecules in cluster [1]
-          pk_sa(kbdim,klev),       & ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-          pk_ocnv(kbdim,klev)        ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+          pk_sa(kbdim,klev),       & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+          pk_ocnv(kbdim,klev)        ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
      INTEGER::ppbl(kbdim)             !boundary layer top
 
@@ -1486,7 +1473,7 @@ CONTAINS
    ! both sulphuric acid and organic with heteromolecular nucleation
    ! ---------------------------------------------------------------
 
-   SUBROUTINE SAORGnucl(kproma,     kbdim,        klev,          &
+   SUBROUTINE SAORGnucl(     kbdim,        klev,          &
                         pc_sa,      pc_org,                      &
                         pnuc_rate,  pd_crit,      ppbl,          &
                         pn_crit_sa, pn_crit_ocnv, pk_sa, pk_ocnv)
@@ -1495,7 +1482,6 @@ CONTAINS
 
      !-- Input variables -------------------
      INTEGER, INTENT(IN) :: &
-          kproma,  &     ! number of horiz. grid points
           kbdim,   &     ! dimension for arrays
           klev           ! number of vertical klev
 
@@ -1509,8 +1495,8 @@ CONTAINS
           pd_crit(kbdim,klev),     & ! diameter of critical cluster [m]
           pn_crit_sa(kbdim,klev),  & ! number of sulphuric acid molecules in cluster [1]
           pn_crit_ocnv(kbdim,klev),& ! number of organic molecules in cluster [1]
-          pk_sa(kbdim,klev),       & ! Lever: if pk_sa = 1, h2so4 is involved in nucleation.
-          pk_ocnv(kbdim,klev)        ! Lever: if pk_ocnv = 1, organic compounds are involved in nucleation.
+          pk_sa(kbdim,klev),       & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+          pk_ocnv(kbdim,klev)        ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
      INTEGER::ppbl(kbdim)             !boundary layer top
 
@@ -1551,7 +1537,7 @@ CONTAINS
 
    FUNCTION zNnuc_tayl(d1,dx,zm_para,zjnuc_t,zeta,zGRtot) RESULT(zNnuc_taylor)
      IMPLICIT NONE
-     INTEGER :: n, i, j
+     INTEGER :: i
      REAL :: &
           d1, dx,zjnuc_t, zeta, &
           term1, term2, term3, term4, term5, &
@@ -1561,15 +1547,15 @@ CONTAINS
 
      DO i = 0,29
 
-        IF (i .eq. 0 .or. i .eq. 1) then
+        IF (i == 0 .OR. i == 1) THEN
            term1= 1.
         ELSE
-           term1= term1*real(i)
+           term1= term1*REAL(i)
         END IF
-        term2= (real(i)*(zm_para+1.)+1.)*term1
+        term2= (REAL(i)*(zm_para+1.)+1.)*term1
         term3= zeta**i
         term4= term3/term2
-        term5= real(i)*(zm_para+1.)+1.
+        term5= REAL(i)*(zm_para+1.)+1.
         zNnuc_taylor= zNnuc_taylor + term4*(dx**term5 - d1**term5)
 
      END DO
