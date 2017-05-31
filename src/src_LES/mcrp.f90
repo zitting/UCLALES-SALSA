@@ -17,6 +17,7 @@
 ! Copyright 1999-2007, Bjorn B. Stevens, Dep't Atmos and Ocean Sci, UCLA
 !----------------------------------------------------------------------------
 !
+
 MODULE mcrp
 
    USE defs, ONLY : alvl, alvi, rowt, pi, Rm, cp, kb, g, vonk
@@ -308,6 +309,7 @@ CONTAINS
       END DO
 
    END SUBROUTINE accr_SB
+
    !
    ! ---------------------------------------------------------------------
    ! SEDIM_RD: calculates the sedimentation of the rain drops and its
@@ -316,6 +318,7 @@ CONTAINS
    ! as is used elsewhere.  This is just 1/lambda in the exponential
    ! distribution
    !
+   
    SUBROUTINE sedim_rd(n1,n2,n3,dt,dn0,rp,np,tk,th,rrate,rtt,tlt,rpt,npt)
 
       INTEGER, INTENT (in)                      :: n1,n2,n3
@@ -689,8 +692,10 @@ CONTAINS
          nprecpt(:,:,:,:) = nprecpt(:,:,:,:) + prnt(:,:,:,:)/tstep
          mprecpt(:,:,:,:) = mprecpt(:,:,:,:) + prvt(:,:,:,:)/tstep
 
+
          ! Convert mass flux to heat flux (W/m^2)
          rrate(:,:,:)=rrate(:,:,:)*alvl
+
 
          IF (sflg) v1(:) = v1(:) + SUM(SUM(rrate(:,:,:),DIM=3),DIM=2)*xnpts
 
@@ -919,6 +924,7 @@ CONTAINS
 
                ! Particle diffusitivity  (15.29) in jacobson book
                mdiff = (kb*tk(k,i,j)*GG)/(6.0*pi*avis*rwet)
+
              
                Sc = kvis/mdiff
                St = vc*ustar(i,j)**2.0/g*kvis
@@ -983,6 +989,7 @@ CONTAINS
       ! For precipitation:
       REAL :: fd,fdmax,fdos ! Fall distance for rain drops, max fall distance, overshoot from nearest grid level
       REAL :: prnchg(n1,nn), prvchg(n1,nn,n4) ! Instantaneous changes in precipitation number and mass (volume)
+
  
       REAL :: prnumc, prvolc(n4)  ! Instantaneous source number and volume
       INTEGER :: kf, ni,fi
@@ -1030,6 +1037,7 @@ CONTAINS
                   ! Determine output flux for current level: Find the closest level to which the
                   ! current drop parcel can fall within 1 timestep. If the lowest atmospheric level
                   ! is reached, the drops are sedimented.
+
                 
                   ! Maximum fall distance:
                   fdmax = tstep*vc
@@ -1087,6 +1095,7 @@ CONTAINS
              
                END DO !bin
           
+
             END DO ! k
 
             prnt(:,i,j,:) = prnt(:,i,j,:) + prnchg(:,:)
@@ -1129,3 +1138,4 @@ CONTAINS
    !********************************************************************
 
 END MODULE mcrp
+

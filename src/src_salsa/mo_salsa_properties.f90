@@ -392,6 +392,7 @@ CONTAINS
                   pice(ii,jj,kk)%volc(8) = pi6*30.0E-6**3*pice(ii,jj,kk)%numc  ! set water content according to 30um diameter
                   pice(ii,jj,kk)%dwet = 30.0E-6! sqrt(3*B/A)
                END IF
+
             END DO
          END DO
       END DO

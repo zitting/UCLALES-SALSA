@@ -59,6 +59,7 @@ CONTAINS
       LOGICAL :: TMP
       INTEGER :: n4
     
+
       ztkt = 0.
 
       TMP = .FALSE.
@@ -104,6 +105,7 @@ CONTAINS
 
             END IF
             CALL SALSAInit
+
 
           
          END IF !level >= 4
@@ -724,10 +726,12 @@ CONTAINS
        END DO
     END DO
 
-   nc = GetIndex(prtcl,'H2O')
-   ! Activation + diagnostic array initialization
-   ! Clouds and aerosols
-   a_rc(:,:,:) = 0.
+
+    nc = GetIndex(prtcl,'H2O')
+    ! Activation + diagnostic array initialization
+    ! Clouds and aerosols
+    a_rc(:,:,:) = 0.
+   
     DO bb = 1, ncld
        a_rc(:,:,:) = a_rc(:,:,:) + a_mcloudp(:,:,:,(nc-1)*ncld+bb)
     END DO
@@ -737,9 +741,11 @@ CONTAINS
 
     ! Ice
     a_ri(:,:,:) = 0.
+
     DO bb = 1,nice
        a_ri(:,:,:) = a_ri(:,:,:) + a_micep(:,:,:,(nc-1)*nice + bb)
     END DO
+
 
  END SUBROUTINE SALSAInit
  !-------------------------------------------
@@ -792,6 +798,7 @@ CONTAINS
        a_maerop(:,:,:,mpar) = a_maerop(:,:,:,mpar) -  &
                               MERGE(a_vactd(:,:,:,m), 0., pactmask(:,:,:))
     END DO
+
 
  END SUBROUTINE ActInit
 

@@ -837,7 +837,7 @@ CONTAINS
 
          IF (.NOT. IsUsed(prtcl,'SS'))  &
             salsabool((/ 69, 76, 83, 90, 97,  104 /)) = .FALSE.
-
+            
          nvar0 = COUNT(salsabool) + naddsc
          ALLOCATE(sanal(nvar0))
 
@@ -1185,6 +1185,7 @@ CONTAINS
             iret = nf90_put_var(ncid0,VarID,zvar(:,i1:i2,j1:j2),start=ibeg,  &
                                 count=icnt)
        
+
             IF (lbinanl) THEN
                ! Rain drop bin wet radius
                CALL getBinRadius(nprc,nspec+1,a_nprecpp,a_mprecpp,prlim,a_Rpwet)
@@ -1229,12 +1230,14 @@ CONTAINS
             iret = nf90_put_var(ncid0,VarID,zvar(:,i1:i2,j1:j2),start=ibeg,  &
                                 count=icnt)
        
+
             IF (lbinanl) THEN
                ! Aerosol bin wet radius (regime A)
                CALL getBinRadius(nbins,nspec+1,a_naerop,a_maerop,nlim,a_Rawet)
                iret = nf90_inq_varid(ncid0,'S_Rwaba',VarID)
                iret = nf90_put_var(ncid0,VarID,a_Rawet(:,i1:i2,j1:j2,in1a:fn2a),  &
                                    start=ibegsd,count=icntaea)
+
           
                ! Aerosol bin wet radius (regime B)
                iret = nf90_inq_varid(ncid0,'S_Rwabb',VarID)
@@ -1287,11 +1290,13 @@ CONTAINS
                   iret = nf90_put_var(ncid0,VarID,a_nicep(:,i1:i2,j1:j2,iib%cur:fib%cur), &
                                       start=ibegsd,count=icntica)
              
+
                   ! Ice particle bin wet radius regime a
                   CALL getBinRadius(nice,nspec+1,a_nicep,a_micep,prlim,a_Riwet)
                   iret = nf90_inq_varid(ncid0,'S_Rwiba',VarID)
                   iret = nf90_put_var(ncid0,VarID,a_Riwet(:,i1:i2,j1:j2,iia%cur:fia%cur), &
                                       start=ibegsd,count=icntica)
+                                      
              
                   ! Ice particle bin wet radius regime b
                   iret = nf90_inq_varid(ncid0,'S_Rwibb',VarID)
@@ -1303,11 +1308,13 @@ CONTAINS
                   iret = nf90_put_var(ncid0,VarID,a_nsnowp(:,i1:i2,j1:j2,isa:fsa), &
                                       start=ibegsd,count=icntsna)
              
+
                   ! Snow drop bin wet radius
                   CALL getBinRadius(nsnw,nspec+1,a_nsnowp,a_msnowp,prlim,a_Rswet)
                   iret = nf90_inq_varid(ncid0,'S_Rwsba',VarID)
                   iret = nf90_put_var(ncid0,VarID,a_Rswet(:,i1:i2,j1:j2,isa:fsa),  &
                                       start=ibegsd,count=icntsna)
+
              
                END IF !(lbinanl)
 
@@ -1920,6 +1927,7 @@ CONTAINS
       REAL, INTENT(out) :: mixr(nzp,nxp,nyp)
 
       INTEGER :: mm
+
 
       ! Determine multipliers
       mm = GetIndex(prtcl,icomp)

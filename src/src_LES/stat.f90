@@ -728,6 +728,7 @@ CONTAINS
             ! Removal by snow
             !CALL set_cs_any(n2,n3,scs_rm(i,:,:),'rm'//nam//'sn')
             i=i+1
+            
          END IF
       END DO
 
@@ -2278,6 +2279,7 @@ CONTAINS
       SELECT CASE(type)
          CASE(0)
             IF ( .NOT. present(rv) .OR. .NOT. present(rc) .OR. .NOT. present(prc) ) &
+
                STOP 'acc_massbudget (stat): ERROR - for atm water q,rc and prc must be present'
 
             a1 = 0.; a2 = 0.; a3 = 0.

@@ -866,6 +866,7 @@ CONTAINS
                ! Tendency of water vapour mixing ratio is obtained from the change in RH during SALSA run.
                ! Assumes no temperature change during SALSA run.
                rt(kk,ii,jj) = rt(kk,ii,jj) + &
+
                   ( in_rv(1,1) - rv_old(1,1) )/tstep
 
             END DO ! kk

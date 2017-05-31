@@ -249,6 +249,7 @@ CONTAINS
                      IF (paero(ii,jj,nn)%numc<nlim) CYCLE
                      zcc(mm,nn) = coagc(zdpart(mm),zdpart(nn),zmpart(mm),zmpart(nn),temppi,pressi,1)
                      zcc(nn,mm) = zcc(mm,nn)
+
                   END DO
                END DO
             END IF
@@ -1054,6 +1055,7 @@ CONTAINS
       USE mo_salsa_nucleation
 
       USE mo_submctl,    ONLY :   &
+
          t_section,                 & ! Data type for the cloud bin representation
          fn2b,                      &
          ncld,nprc,                 &
@@ -1691,6 +1693,7 @@ CONTAINS
                   zbeta = (zknud + 1.)/(0.377*zknud+1.+4./ &
                           (3.)*(zknud+zknud**2))
 
+
                   ! Mass transfer according to Jacobson
                   zhlp1 = pcloud(ii,jj,cc)%numc*2.*pi*dwet*zdfh2o*zbeta
                   zhlp2 = mwa*zdfh2o*alv*zwsatcd(cc)*zcwsurfcd(cc)/(zthcond*ptemp(ii,jj))
@@ -1986,6 +1989,7 @@ CONTAINS
 
    SUBROUTINE gpparthno3(kbdim,klev,ppres,ptemp,paero,pcloud,    &
       pprecp,pghno3,pgnh3,prv,prs,pbeta,ptstep)
+
     
       USE mo_submctl, ONLY : t_section,           &
                              nbins, ncld, nprc,   &
@@ -2656,7 +2660,6 @@ CONTAINS
          ztshear, &  ! turbulent shear
          zturbinert  ! turbulent inertia
 
-
       REAL, DIMENSION (2) :: &
          diam,   &   ! diameters of particles [m]
          mpart,  &   ! masses of particles [kg]
@@ -2684,11 +2687,13 @@ CONTAINS
       coagc = 0.
 
 
+
       !-------------------------------------------------------------------------------
 
       !-- 0) Initializing particle and ambient air variables --------------------
       diam = (/ diam1, diam2 /)       ! particle diameters [m]
       mpart = (/ mass1, mass2 /)       ! particle masses [kg]
+
 
       visc = (7.44523e-3*temp**1.5)/(5093.*(temp+110.4)) ! viscosity of air [kg/(m s)]
 
@@ -2745,6 +2750,7 @@ CONTAINS
             zrhop = mpart/(pi6*diam**3)             ! Density of particles
             vkin = visc/zrhoa   ! Kinematic viscosity of air [m2 s-1]
 
+
             termv(1) = terminal_vel(diam(1)/2.,zrhop(1),zrhoa,visc,beta(1))
             termv(2) = terminal_vel(diam(2)/2.,zrhop(2),zrhoa,visc,beta(2))
 
@@ -2758,6 +2764,7 @@ CONTAINS
             !Brownian component
             zbrown = flux(1) / (mdiam/(mdiam+fmdist) + flux(1)/flux(2))
 
+
             ! Convective enhancement
             IF (reyn(lrg) <= 1.) THEN
                zbrconv = 0.45*zbrown*( reyn(lrg)**(1./3.) )*( schm(sml)**(1./3.) )
@@ -2770,6 +2777,7 @@ CONTAINS
             ztshear=(8.*pi*eddy_dis/(15.*vkin))**(1./2.)*(0.5*(diam(1)+diam(2)))**3.
             zturbinert = pi*eddy_dis**(3./4.)/(grav*vkin**(1./4.)) &
                          *(0.5*(diam(1)+diam(2)))**2.* ABS(termv(1)-termv(2))
+
 
             ! gravitational collection
             zea = stok**2/( stok + 0.5 )**2
@@ -2826,5 +2834,32 @@ CONTAINS
    END FUNCTION terminal_vel
   !********************************************************************
 
+
+  !********************************************************************
+  ! Function for calculating terminal velocities for different particles size ranges.
+  !     Tomi Raatikainen (2.5.2017)
+  REAL FUNCTION terminal_vel(radius,rhop,rhoa,visc,beta)
+    USE mo_submctl, ONLY : grav
+    implicit none
+    REAL, intent(in) :: radius, rhop ! Particle radius and density
+    REAL, intent(in) :: rhoa, visc, beta ! Air density, viscocity and Cunningham correction factor
+    ! Constants
+    real, parameter :: rhoa_ref = 1.225 ! reference air density (kg/m^3)
+
+    IF (radius<40.0e-6) THEN
+        ! Stokes law with Cunningham slip correction factor
+        terminal_vel = (4.*radius**2)*(rhop-rhoa)*grav*beta/(18.*visc) ![m s-1]
+    ELSEIF (radius<0.6e-3) THEN
+        ! Droplets from 40 um to 0.6 mm: linear dependence on particle radius and a correction for reduced pressure
+        !   R.R. Rogers: A Short Course in Cloud Physics, Pergamon Press Ltd., 1979.
+        terminal_vel = 8.e3*radius*sqrt(rhoa_ref/rhoa)
+    ELSE
+        ! Droplets larger than 0.6 mm: square root dependence on particle radius and a correction for reduced pressure
+        !   R.R. Rogers: A Short Course in Cloud Physics, Pergamon Press Ltd., 1979.
+        ! Note: this is valid up to 2 mm or 9 m/s (at 1000 mbar), where droplets start to break
+        terminal_vel = 2.01e2*sqrt( min(radius,2.0e-3)*rhoa_ref/rhoa)
+    ENDIF
+  END FUNCTION terminal_vel
+  !********************************************************************
 
 END MODULE mo_salsa_dynamics
