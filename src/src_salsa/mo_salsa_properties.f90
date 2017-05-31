@@ -71,14 +71,14 @@ CONTAINS
    !---------------------------------------------------------------------
 
    SUBROUTINE equilibration(kbdim, klev,    &
-      prh, ptemp, paero, init )
+                            prh, ptemp, paero, init )
 
       USE mo_submctl, ONLY : &
          t_section,    &
          pi6,          & ! pi/6
          in1a, fn1a,   &
-         in2a,    &
-         fn2b,   &
+         in2a,         &
+         fn2b,         &
          boltz,        & ! Boltzmann constant [J/K]
          nlim,         & ! lowest possible particle conc. in a bin [#/m3]
     
@@ -102,7 +102,7 @@ CONTAINS
       IMPLICIT NONE
 
       !-- input variables -------------
-      INTEGER, INTENT(in) ::          &
+      INTEGER, INTENT(in) ::      &
          kbdim,                     & ! dimension for arrays
          klev                         ! number of vertical levels 
 
@@ -131,7 +131,7 @@ CONTAINS
          zdold,      &   !
          zrh
       REAL :: zcore,  &
-         zdwet
+              zdwet
 
 
       zcore = 0.
@@ -199,13 +199,13 @@ CONTAINS
                      ! (see e.g. equation (9.98) in Seinfeld and Pandis (1998))
                      !
                      zlwc = (paero(ii,jj,kk)%volc(1)*(rhosu/msu))/zbinmol(1)       + &
-                        epsoc * paero(ii,jj,kk)%volc(2)*(rhooc/moc)/zbinmol(2) + &
-                        (paero(ii,jj,kk)%volc(6)*(rhono/mno))/zbinmol(6)
+                            epsoc * paero(ii,jj,kk)%volc(2)*(rhooc/moc)/zbinmol(2) + &
+                            (paero(ii,jj,kk)%volc(6)*(rhono/mno))/zbinmol(6)
                    
                      !-- particle wet radius [m]
                      zdwet = (zlwc/paero(ii,jj,kk)%numc/rhowa/pi6 + &
-                        (SUM(zvpart(6:7))/pi6)**(1./3.) + &
-                        zcore/pi6)**(1./3.)
+                              (SUM(zvpart(6:7))/pi6)**(1./3.) +     &
+                              zcore/pi6)**(1./3.)
 
                      zke = exp(2.*surfw0*mvsu/(boltz*ptemp(ii,jj)*zdwet))
                      !-- Kelvin effect
@@ -306,14 +306,14 @@ CONTAINS
                       
                         !-- calculate the liquid water content (kg/m3-air)
                         zlwc = (paero(ii,jj,kk)%volc(1)*(rhosu/msu))/zbinmol(1) +                 &
-                           epsoc * (paero(ii,jj,kk)%volc(2)*(rhooc/moc))/zbinmol(2) +         &
-                           (paero(ii,jj,kk)%volc(6)*(rhono/mno))/zbinmol(6)         +         &
-                           (paero(ii,jj,kk)%volc(5)*(rhoss/mss))/zbinmol(5)
+                               epsoc * (paero(ii,jj,kk)%volc(2)*(rhooc/moc))/zbinmol(2) +         &
+                               (paero(ii,jj,kk)%volc(6)*(rhono/mno))/zbinmol(6)         +         &
+                               (paero(ii,jj,kk)%volc(5)*(rhoss/mss))/zbinmol(5)
                       
                         !-- particle wet radius [m]
                         zdwet = (zlwc/paero(ii,jj,kk)%numc/rhowa/pi6 +  &
-                           (SUM(zvpart(6:7))/pi6)**(1./3.) + &
-                           zcore/pi6)**(1./3.)
+                                 (SUM(zvpart(6:7))/pi6)**(1./3.) + &
+                                 zcore/pi6)**(1./3.)
 
                         !-- Kelvin effect
                         zke = exp(2.*surfw0*mvsu/(boltz*ptemp(ii,jj)*zdwet))
@@ -344,26 +344,26 @@ CONTAINS
    END SUBROUTINE equilibration
 
    ! Juha: It should not be necessary to do this since cloud water content is Always calculated via condensation equations
-   !               - This is done only for initialization call, otherwise the
-   !                 water contents are computed via condensation
+   ! This is done for initialization call when non-zero cloud or ice number concentration is initialized
+   !                 manually. Otherwise water contents are computed via condensation
    !               - Not an equilibrium, but fixed droplet/ice diameter
    !               - Regimes 2a & 2b for ice and cloud droplets
    ! ----------------------------------------------------------------------------------------------------------------------
    SUBROUTINE equilibration_cloud( kbdim, klev,    &
-      pcloud, pice )
+                                   pcloud, pice )
 
       USE mo_submctl, ONLY : &
          t_section,    &
          pi6,          & ! pi/6
          ica, fcb,     &
          iia, fib,     &
-         ncld,nice,  &
+         ncld,nice,    &
          nlim, prlim
 
       IMPLICIT NONE
 
       !-- input variables -------------
-      INTEGER, INTENT(in) ::          &
+      INTEGER, INTENT(in) ::      &
          kbdim,                     & ! dimension for arrays
          klev                         ! number of vertical levels
 
@@ -381,12 +381,7 @@ CONTAINS
                IF ((pcloud(ii,jj,kk)%numc > nlim)) THEN
                   !-- 1) particle properties calculated for non-empty bins ---------
                   pcloud(ii,jj,kk)%volc(8) = pi6*12.0E-6**3*pcloud(ii,jj,kk)%numc ! set water content according to 12um diameter
-                  pcloud(ii,jj,kk)%dwet = 11.0E-6
-                  pcloud(ii,jj,kk)%core = pi6*pcloud(ii,jj,kk)%dmid**3
-               ELSE
-                  !-- 2) empty bins given bin average values -------------------------
-                  pcloud(ii,jj,kk)%dwet = pcloud(ii,jj,kk)%dmid
-                  pcloud(ii,jj,kk)%core = pi6*pcloud(ii,jj,kk)%dmid**3
+                  pcloud(ii,jj,kk)%dwet = 12.0E-6
                END IF
             END DO
 
@@ -396,11 +391,6 @@ CONTAINS
                    !-- 1) particle properties calculated for non-empty bins ---------
                   pice(ii,jj,kk)%volc(8) = pi6*30.0E-6**3*pice(ii,jj,kk)%numc  ! set water content according to 30um diameter
                   pice(ii,jj,kk)%dwet = 30.0E-6! sqrt(3*B/A)
-                  pice(ii,jj,kk)%core = pi6*pice(ii,jj,kk)%dmid**3
-               ELSE
-                  !-- 2) empty bins given bin average values -------------------------
-                  pice(ii,jj,kk)%dwet = pice(ii,jj,kk)%dmid
-                  pice(ii,jj,kk)%core = pi6*pice(ii,jj,kk)%dmid**3
                END IF
             END DO
          END DO

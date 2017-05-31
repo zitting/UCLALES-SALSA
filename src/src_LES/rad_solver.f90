@@ -297,7 +297,7 @@ CONTAINS
       ELSE
          IF ( wn >= 0.999999 ) wn = 0.999999
          CALL coefft(solar,wn,w1(1),w2(1),w3(1),0.0,t(1),u0(1),f0(1), &
-            aa,zz,a1,z1,fk1(1),fk2(1))
+                     aa,zz,a1,z1,fk1(1),fk2(1))
       END IF
       DO  i = 1, 4
          z4(i,1) = z1(i)
@@ -325,7 +325,7 @@ CONTAINS
          ELSE
             IF ( wn >= 0.999999 ) wn = 0.999999
             CALL coefft(solar,wn,w1(k),w2(k),w3(k),t(k-1),t(k),u0(k),f0(k),  &
-               aa,zz,a1,z1,fk1(k),fk2(k))
+                        aa,zz,a1,z1,fk1(k),fk2(k))
          END IF
          DO  i = 1, 4
             z4(i,k) = z1(i)

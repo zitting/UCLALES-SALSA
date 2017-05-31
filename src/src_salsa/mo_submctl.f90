@@ -19,7 +19,7 @@ MODULE mo_submctl
    PUBLIC :: pi, pi6, rg, avog, planck, boltz, cpa, mair, grav, eps
    PUBLIC :: rhosu,rhooc, rhobc,rhoss, rhodu, rhowa, rhonh, rhono, rhoic,rhosn
    PUBLIC :: msu,mdu,mno,mnh,n3,massacc,d_sa,pstand,mss,mbc,moc,epsoc,mwa,ions,&
-      mvsu,mvoc,mvss,surfw0,surfi0,mvwa,mvno,mvnh
+             mvsu,mvoc,mvss,surfw0,surfi0,mvwa,mvno,mvnh
 
    PUBLIC :: t_section,t_parallelbin
    PUBLIC :: ncldbin,ica,fca,icb,fcb,ira,fra,ncld,nprc,dmincld
@@ -34,42 +34,42 @@ MODULE mo_submctl
 
 
    PUBLIC :: nlcoag,                &
-      nlcgaa,nlcgcc,nlcgpp,  &
-      nlcgca,nlcgpa,nlcgpc,  &
-      nlcgia,nlcgic,nlcgii,  &
-      nlcgip,nlcgsa,nlcgsc,  &
-      nlcgsi,nlcgsp,nlcgss,  &
-      nlcnd,                 &
-      nlcndgas,              &
-      nlcndh2oae,nlcndh2ocl, &
-      nlcndh2oic,            & ! ice'n'snow
-      nlauto,                &
-      nlautosnow,            &
-      nlactiv,nlactbase,     &
-      nlactintst,            &
-      nlichom,               &
-      nlichet,               &
-      nlicimmers,            &
-      nlicmelt,              &
-      nldebug,               &
-      lscoag,                &
-      lscgaa,lscgcc,lscgpp,  &
-      lscgca,lscgpa,lscgpc,  &
-      lscgia,lscgic,lscgii,  &
-      lscgip,lscgsa,lscgsc,  &
-      lscgsi,lscgsp,lscgss,  &
-      lscnd,                 &
-      lscndgas,              &
-      lscndh2oae,lscndh2ocl, &
-      lscndh2oic,            & ! ice'n'snow
-      lsauto,                &
-      lsautosnow,            &
-      lsactiv,lsactbase,     &
-      lsactintst,            &
-      lsichom,               &
-      lsichet,               &
-      lsicimmers,            &
-      lsicmelt
+             nlcgaa,nlcgcc,nlcgpp,  &
+             nlcgca,nlcgpa,nlcgpc,  &
+             nlcgia,nlcgic,nlcgii,  &
+             nlcgip,nlcgsa,nlcgsc,  &
+             nlcgsi,nlcgsp,nlcgss,  &
+             nlcnd,                 &
+             nlcndgas,              &
+             nlcndh2oae,nlcndh2ocl, &
+             nlcndh2oic,            & ! ice'n'snow
+             nlauto,                &
+             nlautosnow,            &
+             nlactiv,nlactbase,     &
+             nlactintst,            &
+             nlichom,               &
+             nlichet,               &
+             nlicimmers,            &
+             nlicmelt,              &
+             nldebug,               &
+             lscoag,                &
+             lscgaa,lscgcc,lscgpp,  &
+             lscgca,lscgpa,lscgpc,  &
+             lscgia,lscgic,lscgii,  &
+             lscgip,lscgsa,lscgsc,  &
+             lscgsi,lscgsp,lscgss,  &
+             lscnd,                 &
+             lscndgas,              &
+             lscndh2oae,lscndh2ocl, &
+             lscndh2oic,            & ! ice'n'snow
+             lsauto,                &
+             lsautosnow,            &
+             lsactiv,lsactbase,     &
+             lsactintst,            &
+             lsichom,               &
+             lsichet,               &
+             lsicimmers,            &
+             lsicmelt
 
    PUBLIC :: nspec, listspec, maxspec, nmod
    PUBLIC :: sigmag, dpg, n, volDistA, volDistB, nf2a
@@ -82,22 +82,22 @@ MODULE mo_submctl
    ! ---------------------------------------------------------------------------------------------------------
    TYPE t_section
       REAL :: vhilim,     & ! bin volume at the high limit
-         vlolim,     & ! - '' - at the low limit
-         vratiohi,   & ! volume ratio between the center and high limit
-         vratiolo,   & ! - '' - and the low limit
-         dmid,       & ! bin middle diameter
+              vlolim,     & ! - '' - at the low limit
+              vratiohi,   & ! volume ratio between the center and high limit
+              vratiolo,   & ! - '' - and the low limit
+              dmid,       & ! bin middle diameter
          !******************************************************
          ! ^ Do NOT change the stuff above after initialization !
          !******************************************************
-         dwet,       & ! Wet diameter or mean droplet diameter
+              dwet,       & ! Wet diameter or mean droplet diameter
 
-         volc(8),    & ! Volume concentrations of aerosol species + water
+              volc(8),    & ! Volume concentrations of aerosol species + water
                        ! Since most of the stuff in SALSA is hard coded, these
                        ! *have to be* in the order: 1:SO4, 2:OC, 3:BC, 4:DU, 5:SS, 6:NO, 7:NH, 8:H2O
 
-         veqh2o,     & ! Equilibrium h2o concentration for each particle
-         numc,       & ! Number concentration of particles/droplets
-         core          ! Volume of dry particle
+              veqh2o,     & ! Equilibrium h2o concentration for each particle
+              numc,       & ! Number concentration of particles/droplets
+              core          ! Volume of dry particle
    END TYPE t_section
    ! ---------------------------------------------------------------------------------------------------
 
@@ -110,77 +110,104 @@ MODULE mo_submctl
 
    !Switches for SALSA aerosol microphysical processes
    LOGICAL :: nldebug      = .FALSE., & ! debuggin output
-      debug
+              debug
 
    ! Process switches: nl* is read from the NAMELIST and NOT changed during runtime.
    !                   ls* is the switch actually used and will get the value of nl*
    !                   except for special circumstances such as spinup period etc.
 
-   LOGICAL :: nlcoag    = .TRUE., & ! Coagulation master switch
-      lscoag
+   LOGICAL :: nlcoag  = .TRUE., & ! Coagulation master switch
+              lscoag
+
    LOGICAL :: nlcgaa  = .TRUE., & ! Coagulation between aerosols
-      lscgaa
+              lscgaa
+
    LOGICAL :: nlcgcc  = .TRUE., & ! Collision-coalescence between cloud droplets
-      lscgcc
+              lscgcc
+
    LOGICAL :: nlcgca  = .TRUE., & ! Cloud collection of aerosols
-      lscgca
+              lscgca
+
    LOGICAL :: nlcgpc  = .TRUE., & ! Collection of cloud droplets by rain
-      lscgpc
+              lscgpc
+
    LOGICAL :: nlcgpa  = .TRUE., & ! Collection of aerosols by rain
-      lscgpa
+              lscgpa
+
    LOGICAL :: nlcgpp  = .TRUE., & ! Collision between rain drops
-      lscgpp
+              lscgpp
 
    LOGICAL :: nlcgia  = .TRUE., & ! Ice collection of aerosols
-      lscgia
+              lscgia
+
    LOGICAL :: nlcgic  = .TRUE., & ! Collection of cloud droplets by ice particles
-      lscgic
+              lscgic
+
    LOGICAL :: nlcgii  = .TRUE., & ! Collision-coalescence between ice particles
-      lscgii
+              lscgii
+
    LOGICAL :: nlcgip  = .TRUE., & ! Collection of precipitation by ice particles
-      lscgip
+              lscgip
+
    LOGICAL :: nlcgsa  = .TRUE., & ! Collection of aerosols by snow
-      lscgsa
+              lscgsa
+
    LOGICAL :: nlcgsc  = .TRUE., & ! Collection of cloud droplets by snow
-      lscgsc
+              lscgsc
+
    LOGICAL :: nlcgsi  = .TRUE., & ! Collection of ice by snow
-      lscgsi
+              lscgsi
+
    LOGICAL :: nlcgsp  = .TRUE., & ! Collection of precipitation by snow
-      lscgsp
+              lscgsp
+
    LOGICAL :: nlcgss  = .TRUE., & ! Collision-coalescence between snow particles
-      lscgss
+              lscgss
+
 
    LOGICAL :: nlcnd      = .TRUE., & ! Condensation
-      lscnd
+              lscnd
+
    LOGICAL :: nlcndgas   = .TRUE., & ! Condensation of precursor gases
-      lscndgas
+              lscndgas
+
    LOGICAL :: nlcndh2ocl = .TRUE., & ! Condensation of water vapour on clouds (drizzle)
-      lscndh2ocl
+              lscndh2ocl
+
    LOGICAL :: nlcndh2oae = .TRUE., & ! Condensation of water vapour on aerosol particles (FALSE -> equilibrium calc.)
-      lscndh2oae
+              lscndh2oae
+
    LOGICAL :: nlcndh2oic = .TRUE., & ! Condensation of water vapour on ice particles
-      lscndh2oic
+              lscndh2oic
+
 
    LOGICAL :: nlauto      = .TRUE.,   & ! Autoconversion of cloud droplets (needs activation)
-      lsauto
+              lsauto
+
    LOGICAL :: nlautosnow  = .TRUE.,   & ! Autoconversion of ice particles to snow (needs activation)
-      lsautosnow
+              lsautosnow
+
    LOGICAL :: nlactiv     = .TRUE.,   & ! Cloud droplet activation
-      lsactiv
+              lsactiv
+
    LOGICAL :: nlactintst  = .TRUE.,   & ! Switch for interstitial activation: use particle wet size determined by
-      lsactintst                ! codensation equations and supersaturation directly from the host model
+              lsactintst                ! codensation equations and supersaturation directly from the host model
+
    LOGICAL :: nlactbase   = .TRUE.,   & ! Switch for cloud base activation: use the regular parameterized method
-      lsactbase                 ! for maximum supersaturation and cloud activation.
+              lsactbase                 ! for maximum supersaturation and cloud activation.
 
 
    LOGICAL :: nlichom     = .TRUE., & ! homogenous ice nucleation
-      lsichom
+              lsichom
+
    LOGICAL :: nlichet     = .TRUE., & ! heterogenous ice nucleation
-      lsichet
+              lsichet
+
    LOGICAL :: nlicimmers  = .TRUE., & ! ice nucleation by immersion
-      lsicimmers
+              lsicimmers
+
    LOGICAL :: nlicmelt    = .TRUE., & ! ice melting
-      lsicmelt
+              lsicmelt
 
    LOGICAL :: lsdistupdate = .TRUE.  ! Perform the size distribution update
 
@@ -237,8 +264,8 @@ MODULE mo_submctl
                           !                                              number concentrations from an input file
 
    REAL :: sigmag(nmod) = (/2.0,2.0,2.0,2.0,2.0,2.0,2.0/),               & ! Stdev
-      dpg(nmod) = (/0.03, 0.15, 0.2, 0.2, 0.2, 0.2, 0.2/),    & ! Mode diam in um
-      n(nmod) = (/1600.,640.,0.,0.,0.,0.,0./)                   ! #/mg ~ #/cm3
+           dpg(nmod) = (/0.03, 0.15, 0.2, 0.2, 0.2, 0.2, 0.2/),    & ! Mode diam in um
+           n(nmod) = (/1600.,640.,0.,0.,0.,0.,0./)                   ! #/mg ~ #/cm3
 
    INTEGER, PARAMETER ::            &
       nreg = 2                          ! number of main size regimes
@@ -268,41 +295,45 @@ MODULE mo_submctl
    INTEGER :: ncldbin(2) = (/7,7/)        ! Number of bins for cloud bins in regime a and b
                                          
    TYPE(t_parallelbin) ::   ica, & ! cloud droplets (first, regime a)
-      fca, & ! cloud droplets (last, regime a)
-      icb, & ! cloud droplets (first, regime b)
-      fcb    ! cloud droplets (last, regime b)
+                            fca, & ! cloud droplets (last, regime a)
+                            icb, & ! cloud droplets (first, regime b)
+                            fcb    ! cloud droplets (last, regime b)
+
    INTEGER             ::   ira,fra! Rain/drizzle bin indices
    INTEGER             ::   ncld   ! Total number of cloud bins
    INTEGER             ::   nprc   ! Total number of precipitation bins
-   REAL            ::   dmincld = 5.e-8   ! Minimum diameter for the cloud droplet regime in terms of the
-                                                 ! ccn dry radius. The first cloud droplet bin is taken to coincide
-                                                 ! with the smallest full aerosol bin that conforms with this diameter.
+
+   REAL                ::   dmincld = 5.e-8   ! Minimum diameter for the cloud droplet regime in terms of the
+                                              ! ccn dry radius. The first cloud droplet bin is taken to coincide
+                                              ! with the smallest full aerosol bin that conforms with this diameter.
 
     ! Jaakko: ice bins:
    INTEGER :: nicebin(2) = (/7,7/)        ! Number of bins for ice bins in regime a and b
 
    TYPE(t_parallelbin) ::   iia, & ! ice particles (first, regime a)
-      fia, & ! ice particles (last, regime a)
-      iib, & ! ice particles (first, regime b)
-      fib    ! ice particles (last, regime b)
+                            fia, & ! ice particles (last, regime a)
+                            iib, & ! ice particles (first, regime b)
+                            fib    ! ice particles (last, regime b)
+
    INTEGER             ::   isa,fsa! snow bin indices
    INTEGER             ::   nice   ! Total number of ice bins
    INTEGER             ::   nsnw   ! Total number of snow bins
-   REAL :: dminice = 5.e-8    ! Minimum diameter for the ice particle regime in terms of the
-                                     ! ccn dry radius. The first cloud droplet bin is taken to coincide
-                                     ! with the smallest full aerosol bin that conforms with this diameter
+
+   REAL                :: dminice = 5.e-8    ! Minimum diameter for the ice particle regime in terms of the
+                                             ! ccn dry radius. The first cloud droplet bin is taken to coincide
+                                             ! with the smallest full aerosol bin that conforms with this diameter
 
    REAL, ALLOCATABLE :: aerobins(:),  &  ! These are just to deliver information about the bin diameters if the
-      cloudbins(:), &  ! host model needs it (lower limits).
-      precpbins(:), &
-      icebins(:), &
-      snowbins(:)
+                        cloudbins(:), &  ! host model needs it (lower limits).
+                        precpbins(:), &
+                        icebins(:), &
+                        snowbins(:)
 
    REAL, ALLOCATABLE :: vhilim(:),         &
-      vlolim(:),         &
-      vratiohi(:),       &
-      vratiolo(:),       &
-      dpmid(:)
+                        vlolim(:),         &
+                        vratiohi(:),       &
+                        vratiolo(:),       &
+                        dpmid(:)
 
    REAL, PARAMETER ::     &
       avog   = 6.0221e+23,   & ! Avogadro number (#/mol)
@@ -362,7 +393,7 @@ MODULE mo_submctl
                                 !  assuming d_sa = 5.54 ???
 
    ! Dry air and water vapour thermodynamic constants
-   REAL, PARAMETER ::     &
+   REAL, PARAMETER ::  &
       rd    = 287.05,    &        ! gas constant for dry air in J/K/kg
       rv    = 461.51,    &        ! gas constant for water vapour in J/K/kg
       alv    = 2.5008e6, &        ! latent heat for vaporisation in J/kg
@@ -377,10 +408,10 @@ MODULE mo_submctl
       d_h2o  = 3.851565216195334e-10
 
    REAL, PARAMETER :: &
-      ions = 3.0,    & ! van't Hoff factor (ions produced upon dissociation)
-      surfw0 = 0.073, & ! surface tension of pure water @ ~ 293 K [J/m2]
-      surfi0 = 0.105, & ! surface tension of ice
-      epsoc = 0.15     ! water uptake of organic material
+      ions = 3.0,       & ! van't Hoff factor (ions produced upon dissociation)
+      surfw0 = 0.073,   & ! surface tension of pure water @ ~ 293 K [J/m2]
+      surfi0 = 0.105,   & ! surface tension of ice
+      epsoc = 0.15        ! water uptake of organic material
 
 
    !-- 7) Parameters for cloud activation

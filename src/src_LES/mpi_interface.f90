@@ -38,20 +38,20 @@ MODULE mpi_interface
    !
 
    INTEGER :: myid, pecount, nxpg, nypg, nxg, nyg, nbytes, intsize, &
-      MY_SIZE, MY_CMPLX
+              MY_SIZE, MY_CMPLX
    INTEGER :: xcomm, ycomm,commxid,commyid
    INTEGER :: nxnzp,nynzp,fftinix,fftiniy
    INTEGER :: wrxid, wryid, nxprocs, nyprocs
    INTEGER, ALLOCATABLE, DIMENSION(:) :: xoffset, yoffset, nxpa, nypa, &
-      nynza, nxnza
+                                         nynza, nxnza
 
    ! these are the parameters used in the alltoallw call in the fft
 
    INTEGER, ALLOCATABLE, DIMENSION(:,:) :: ranktable,xtype,ytype,xdisp,&
-      ydisp,xcount,ycount
+                                           ydisp,xcount,ycount
 
    INTEGER :: stridetype,xstride,ystride,xystride,xylarry,xyzlarry,&
-      fxytype,fxyztype
+              fxytype,fxyztype
 
    CHARACTER(len=80) :: ver='', author=''
    ! Additional, e.g. case specific, information
@@ -236,10 +236,10 @@ CONTAINS
 
       CALL mpi_comm_group(mpi_comm_world, worldgroup, ierror)
       CALL mpi_group_incl(worldgroup, nxprocs,ranktable(0:nxprocs-1,wryid),&
-         xgroup,ierror)
+                          xgroup,ierror)
       CALL mpi_comm_create(mpi_comm_world, xgroup,xcomm,ierror)
       CALL mpi_group_incl(worldgroup, nyprocs,ranktable(wrxid,0:nyprocs-1),&
-         ygroup,ierror)
+                          ygroup,ierror)
       CALL mpi_comm_create(mpi_comm_world, ygroup,ycomm,ierror)
 
       CALL mpi_comm_rank(xcomm,commxid,ierror)
@@ -467,40 +467,40 @@ CONTAINS
       pxysw = ranktable(wrxid-1,wryid-1)
 
       CALL mpi_isend(var(1,n2-3,3),1,xstride, pxfwd, 130, &
-         MPI_COMM_WORLD, req(1), ierror)
+                     MPI_COMM_WORLD, req(1), ierror)
       CALL mpi_isend(var(1,3,3), 1, xstride, pxback, 140, &
-         MPI_COMM_WORLD, req(2), ierror)
+                     MPI_COMM_WORLD, req(2), ierror)
       CALL mpi_irecv(var(1,n2-1,3), 1, xstride, pxfwd, 140, &
-         MPI_COMM_WORLD, req(3), ierror)
+                     MPI_COMM_WORLD, req(3), ierror)
       CALL mpi_irecv(var(1,1,3), 1, xstride, pxback, 130, &
-         MPI_COMM_WORLD, req(4), ierror)
+                     MPI_COMM_WORLD, req(4), ierror)
 
       CALL mpi_isend(var(1,3,3), 1, ystride, pyback, 110, &
-         MPI_COMM_WORLD, req(5), ierror)
+                     MPI_COMM_WORLD, req(5), ierror)
       CALL mpi_irecv(var(1,3,n3-1), 1, ystride, pyfwd, 110, &
-         MPI_COMM_WORLD, req(6), ierror)
+                     MPI_COMM_WORLD, req(6), ierror)
       CALL mpi_isend(var(1,3,n3-3), 1, ystride, pyfwd, 120, &
-         MPI_COMM_WORLD, req(7), ierror)
+                     MPI_COMM_WORLD, req(7), ierror)
       CALL mpi_irecv(var(1,3,1), 1, ystride, pyback, 120, &
-         MPI_COMM_WORLD, req(8), ierror)
+                     MPI_COMM_WORLD, req(8), ierror)
 
       CALL mpi_isend(var(1,n2-3,n3-3), 1, xystride, pxyne, 150, &
-         MPI_COMM_WORLD, req(9), ierror)
+                     MPI_COMM_WORLD, req(9), ierror)
       CALL mpi_irecv(var(1,1,1), 1, xystride, pxysw, 150, &
-         MPI_COMM_WORLD, req(10), ierror)
+                     MPI_COMM_WORLD, req(10), ierror)
       CALL mpi_isend(var(1,n2-3,3), 1, xystride, pxyse, 160, &
-         MPI_COMM_WORLD, req(11), ierror)
+                     MPI_COMM_WORLD, req(11), ierror)
       CALL mpi_irecv(var(1,1,n3-1), 1, xystride, pxynw, 160, &
-         MPI_COMM_WORLD, req(12), ierror)
+                     MPI_COMM_WORLD, req(12), ierror)
 
       CALL mpi_isend(var(1,3,n3-3), 1, xystride, pxynw, 170, &
-         MPI_COMM_WORLD, req(13), ierror)
+                     MPI_COMM_WORLD, req(13), ierror)
       CALL mpi_irecv(var(1,n2-1,1), 1, xystride, pxyse, 170, &
-         MPI_COMM_WORLD, req(14), ierror)
+                     MPI_COMM_WORLD, req(14), ierror)
       CALL mpi_isend(var(1,3,3), 1, xystride, pxysw, 180, &
-         MPI_COMM_WORLD, req(15), ierror)
+                     MPI_COMM_WORLD, req(15), ierror)
       CALL mpi_irecv(var(1,n2-1,n3-1), 1, xystride, pxyne, 180, &
-         MPI_COMM_WORLD, req(16), ierror)
+                     MPI_COMM_WORLD, req(16), ierror)
 
    END SUBROUTINE cyclics
    !
@@ -540,7 +540,7 @@ CONTAINS
       IF(isign == 1) THEN
          IF(nxprocs /= 1)then
             CALL mpi_alltoallw( a,xcount(0:,1) , xdisp(0:,1), xtype(0:,1), atmp, &
-               xcount(0:,2), xdisp(0:,2),xtype(0:,2),xcomm,ierr)
+                                xcount(0:,2), xdisp(0:,2),xtype(0:,2),xcomm,ierr)
          ELSE
             ll=0
             DO k=1,nz
@@ -556,7 +556,7 @@ CONTAINS
       ELSE
          IF(nxprocs /= 1)then
             CALL mpi_alltoallw(atmp,xcount(0:,2),xdisp(0:,2),xtype(0:,2),a, &
-               xcount(0:,1), xdisp(0:,1),xtype(0:,1),xcomm,ierr)
+                               xcount(0:,1), xdisp(0:,1),xtype(0:,1),xcomm,ierr)
          ELSE
             ll=0
             DO k=1,nz
@@ -582,7 +582,7 @@ CONTAINS
       IF(isign == 1) THEN
          IF(nyprocs /= 1)then
             CALL mpi_alltoallw( a,ycount(0:,1),ydisp(0:,1),ytype(0:,1),atmp, &
-               ycount(0:,2),ydisp(0:,2),ytype(0:,2),ycomm,ierr)
+                                ycount(0:,2),ydisp(0:,2),ytype(0:,2),ycomm,ierr)
          ELSE
             ll=0
             DO k=1,nz
@@ -625,7 +625,7 @@ CONTAINS
 
 
       CALL mpi_allreduce(xxl,xxg,1,MPI_DOUBLE_PRECISION, MPI_MAX, &
-         MPI_COMM_WORLD, ierror)
+                         MPI_COMM_WORLD, ierror)
 
    END SUBROUTINE double_scalar_par_max
 
@@ -638,7 +638,7 @@ CONTAINS
 
 
       CALL mpi_allreduce(xxl,xxg,1,MPI_DOUBLE_PRECISION, MPI_SUM, &
-         MPI_COMM_WORLD, ierror)
+                         MPI_COMM_WORLD, ierror)
 
    END SUBROUTINE double_scalar_par_sum
 
@@ -651,7 +651,7 @@ CONTAINS
 
 
       CALL mpi_allreduce(xxl,xxg,n,MPI_DOUBLE_PRECISION, MPI_SUM, &
-         MPI_COMM_WORLD, ierror)
+                         MPI_COMM_WORLD, ierror)
 
    END SUBROUTINE double_array_par_sum
 

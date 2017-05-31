@@ -79,8 +79,8 @@ CONTAINS
     USE mo_submctl,   ONLY:  &
          t_section,              &
          act_coeff,              &
-         nj3,              &
-         nsnucl,            &
+         nj3,                    &
+         nsnucl,                 &
          fn2b,                   &
          pstand,                 &
          d_sa,                   &
@@ -302,7 +302,7 @@ CONTAINS
        zc_h2so4 = pcsa*1.e-6
        zc_org = pcocnv*1.e-6
 
-       CALL binnucl( kbdim, klev, &
+       CALL binnucl(kbdim, klev, &
                     zc_h2so4, ptemp,  prh,     &
                     zjnuc,    znsa,   znoc, zdcrit, &
                     ppbl, zksa, zkocnv)
@@ -319,14 +319,14 @@ CONTAINS
        zc_h2so4 = pcsa*1.e-6
        zc_org = pcocnv*1.e-6
 
-       CALL binnucl( kbdim, klev, &
+       CALL binnucl(kbdim, klev, &
                     zc_h2so4, ptemp,  prh,     &
                     zjnuc,    znsa,   znoc, zdcrit, &
                     ppbl, zksa, zkocnv)
 
        CALL SAORGnucl(kbdim, klev, &
-                    zc_h2so4, zc_org, zjnuc,  zdcrit, ppbl, &
-                    znsa, znoc, zksa, zkocnv)
+                      zc_h2so4, zc_org, zjnuc,  zdcrit, ppbl, &
+                      znsa, znoc, zksa, zkocnv)
 
     END SELECT
 
@@ -416,7 +416,7 @@ CONTAINS
           ! Fuchs and Sutugin (1971), In: Hidy et al. (ed.)
           ! Topics in current aerosol research, Pergamon.
           zbeta = (zknud + 1.)/ &
-               (0.377*zknud+1.+4./(3.*massacc)*(zknud+zknud**2))   !(4)
+                  (0.377*zknud+1.+4./(3.*massacc)*(zknud+zknud**2))   !(4)
           !--- condensational sink [#/m2]
           zcsink = sum(paero(ii,jj,:)%dwet*zbeta*paero(ii,jj,:)%numc)                    !(3)
 
@@ -444,16 +444,15 @@ CONTAINS
                   sum(paero(ii,jj,:)%numc*paero(ii,jj,:)%dwet)*1.e9
 
                 zgamma = 0.23*(zdcrit(ii,jj)*1.e9)**0.2 &! fxm: can we use simple version of zgamma given in Kerminen et al.?
-                     *(zdmean/150.)**0.048 &
-                     *(ptemp(ii,jj)/293.)**(-0.75)*(rhosu/1000.)**(-0.33)
+                         *(zdmean/150.)**0.048 &
+                         *(ptemp(ii,jj)/293.)**(-0.75)*(rhosu/1000.)**(-0.33)
                 ! [nm2*m2/h] (22)
                 zeta = min(zgamma*zcsink/zGRclust, zdcrit(ii,jj)*1e11)! [nm] (11)
              END IF
 
              !-- Number conc. of clusters surviving to 3 nm in a time step
 
-             zj3 = zjnuc(ii,jj)*exp(min(0., &
-               zeta/3. - zeta/(zdcrit(ii,jj)*1.e9))) ! [#/m3] (14)
+             zj3 = zjnuc(ii,jj)*exp(min(0.,zeta/3. - zeta/(zdcrit(ii,jj)*1.e9))) ! [#/m3] (14)
 
           ELSE IF (nj3 > 1) THEN
 
@@ -510,14 +509,14 @@ CONTAINS
              zgammaF_2 = 8.*zDc_2/pi/zcv_2    ! [m]
 
              zomega_c = ((zRc2+zgammaF_c)**3-(zRc2**2+zgammaF_c)**(3./2.))/&
-                  (3.*zRc2*zgammaF_c)-zRc2 ! zomega1, [m]
+                        (3.*zRc2*zgammaF_c)-zRc2 ! zomega1, [m]
              zomega_x = ((zRx2+zgammaF_x)**3-(zRx2**2+zgammaF_x)**(3./2.))/&
-                  (3.*zRx2*zgammaF_x)-zRx2 ! zomega1
+                        (3.*zRx2*zgammaF_x)-zRx2 ! zomega1
 
              zomega_2c = ((zRc2+zgammaF_2)**3-(zRc2**2+zgammaF_2)**(3./2.))/&
-                  (3.*zRc2*zgammaF_2)-zRc2 ! zomega2
+                         (3.*zRc2*zgammaF_2)-zRc2 ! zomega2
              zomega_2x = ((zRx2+zgammaF_2)**3-(zRx2**2+zgammaF_2)**(3./2.))/&
-                  (3.*zRx2*zgammaF_2)-zRx2 ! zomega2
+                         (3.*zRx2*zgammaF_2)-zRx2 ! zomega2
 
              zsigma_c2 = SQRT(zomega_c**2+zomega_2c**2) ! zigma12, [m]
              zsigma_x2 = SQRT(zomega_x**2+zomega_2x**2) ! zigma12
@@ -576,7 +575,7 @@ CONTAINS
                    zCoagStot = zCoagS_c + zKeff*zNnuc*1.e-6  ! = CoagS + CoagSscg(d1) (1/s)
 
                    zGRtot = zGRclust*1.e-9/(3600.) + &
-                        1.5708e-6*zlambda*zdcrit(ii,jj)**3*(zNnuc*1.e-6)*zcv_c*avog*1.e-9/3600.
+                            1.5708e-6*zlambda*zdcrit(ii,jj)**3*(zNnuc*1.e-6)*zcv_c*avog*1.e-9/3600.
                    ! = GRcond + GRscg, m/s
 
                    zeta = -zCoagStot/((zm_para+1.)*zGRtot*(zdcrit(ii,jj)**zm_para)) ! eq (7b)
@@ -588,7 +587,7 @@ CONTAINS
                 zCoagStot = zCoagS_c + zKeff*zNnuc*1.e-6 ! = CoagS + CoagSscg(d1) (1/s)
 
                 zGRtot = zGRclust*1.e-9/(3600) + &
-                     1.5708e-6*zlambda*zdcrit(ii,jj)**3*(zNnuc*1.e-6)*zcv_c*avog*1.e-9/3600. ![m/s]
+                         1.5708e-6*zlambda*zdcrit(ii,jj)**3*(zNnuc*1.e-6)*zcv_c*avog*1.e-9/3600. ![m/s]
 
                 zj3 = zjnuc(ii,jj)*exp(min(0.,-zgamma*zdcrit(ii,jj)*zCoagStot/zGRtot))  !(5a) [#/m3s]
 
@@ -884,15 +883,15 @@ CONTAINS
                 zxmass = 1.
                 !          zxmass = zxmole*zma/((1.0-zxmole)*zmw + zxmole*zma) !mass fraction of h2so4
                 za=0.7681724  +zxmass*(2.1847140   +zxmass*(7.1630022 + &
-                     zxmass*(-44.31447 + zxmass * (88.75606  + zxmass*(-75.73729+ &
-                     zxmass*23.43228)))))
+                                       zxmass*(-44.31447 + zxmass * (88.75606  + zxmass*(-75.73729+ &
+                                       zxmass*23.43228)))))
                 zb=1.808225e-3+zxmass*(-9.294656e-3+zxmass*(-0.03742148+&
-                     zxmass*(0.2565321 + zxmass * (-0.5362872+ zxmass*(0.4857736- &
-                     zxmass*0.1629592)))))
+                                       zxmass*(0.2565321 + zxmass * (-0.5362872+ zxmass*(0.4857736- &
+                                       zxmass*0.1629592)))))
 
                 zc=-3.478524e-6+zxmass*(1.335867e-5+zxmass*(5.195706e-5+ &
-                     zxmass*(-3.717636e-4+zxmass * (7.990811e-4+zxmass*(-7.458060e-4+ &
-                     zxmass*2.58139e-4)))))
+                                        zxmass*(-3.717636e-4+zxmass * (7.990811e-4+zxmass*(-7.458060e-4+ &
+                                        zxmass*2.58139e-4)))))
 
                 zroo=za+zt*(zb+zc*zt) ! g/cm^3
                 zroo= zroo*1.e+3 !kg/m^3
@@ -902,11 +901,11 @@ CONTAINS
                 zv1 = zm1/avog/zroo
                 zv2 = zv1
 
-                zcoll =   zpcsa*zpcsa* &
-                     (3.*pi/4.)**(1./6.) * &
-                     SQRT(6.*rg*zt/zm1+6.*rg*zt/zm2) * &
-                     (zv1**(1./3.) + zv2**(1./3.))**2. * &
-                     1.e+6        ! m3 -> cm3
+                zcoll = zpcsa*zpcsa* &
+                        (3.*pi/4.)**(1./6.) * &
+                        SQRT(6.*rg*zt/zm1+6.*rg*zt/zm2) * &
+                        (zv1**(1./3.) + zv2**(1./3.))**2. * &
+                        1.e+6        ! m3 -> cm3
 
                 zcoll=MIN(zcoll,1.e10)
 
@@ -950,12 +949,12 @@ CONTAINS
 
     !-- Output variables -------------------
     REAL, INTENT(OUT) ::     &
-         pnuc_rate(kbdim,klev),  & ! nucleation rate [#/(m3 s)]
-         pn_crit_sa(kbdim,klev), & ! number of H2SO4 molecules in cluster [1]
-         pn_crit_ocnv(kbdim,klev),&! number of organic molecules in cluster [1]
-         pd_crit(kbdim,klev),    & ! diameter of critical cluster [m]
-         pk_sa(kbdim,klev),      & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
-         pk_ocnv(kbdim,klev)       ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
+         pnuc_rate(kbdim,klev),   & ! nucleation rate [#/(m3 s)]
+         pn_crit_sa(kbdim,klev),  & ! number of H2SO4 molecules in cluster [1]
+         pn_crit_ocnv(kbdim,klev),& ! number of organic molecules in cluster [1]
+         pd_crit(kbdim,klev),     & ! diameter of critical cluster [m]
+         pk_sa(kbdim,klev),       & ! Lever: If pk_sa = 1, h2so4 is involved in nucleation.
+         pk_ocnv(kbdim,klev)        ! Lever: If pk_ocnv = 1, organic compounds are involved in nucleation.
 
     !-- Local variables --------------------
     INTEGER :: ii, jj  ! loop indices
@@ -1074,15 +1073,15 @@ CONTAINS
           pnuc_rate(ii,jj) = pnuc_rate(ii,jj)*1.e6 ! [#/(m3 s)]
           !-- 3) Number of H2SO4 molecules in a critical cluster -----------------------
           pn_crit_sa(ii,jj) = 38.16448247950508 + 0.7741058259731187*zlnj +                      &
-               0.002988789927230632*zlnj**2 - 0.3576046920535017*ptemp(ii,jj) -                  &
-               0.003663583011953248*zlnj*ptemp(ii,jj) + 0.000855300153372776*ptemp(ii,jj)**2
+                              0.002988789927230632*zlnj**2 - 0.3576046920535017*ptemp(ii,jj) -   &
+                              0.003663583011953248*zlnj*ptemp(ii,jj) + 0.000855300153372776*ptemp(ii,jj)**2
 
           pn_crit_sa(ii,jj) = MAX(pn_crit_sa(ii,jj),2.e0) ! kinetic limit: at least 2 H2SO4 molecules in a cluster
 
           !-- 4) Size of the critical cluster ------------------------------------------
-          pd_crit(ii,jj) = 0.1410271086638381 - 0.001226253898894878*zlnj - &
-               7.822111731550752e-6*zlnj**2 - 0.001567273351921166*ptemp(ii,jj) - &
-               0.00003075996088273962*zlnj*ptemp(ii,jj) + 0.00001083754117202233*ptemp(ii,jj)**2  ! [nm]
+          pd_crit(ii,jj) = 0.1410271086638381 - 0.001226253898894878*zlnj -                      &
+                           7.822111731550752e-6*zlnj**2 - 0.001567273351921166*ptemp(ii,jj) -    &
+                           0.00003075996088273962*zlnj*ptemp(ii,jj) + 0.00001083754117202233*ptemp(ii,jj)**2  ! [nm]
 
           pd_crit(ii,jj) = pd_crit(ii,jj)*2.e-9  ! [m]
 
@@ -1233,7 +1232,7 @@ CONTAINS
    ! ---------------------------------------------------------------
 
    SUBROUTINE orgnucl(kbdim,        klev,            &
-              pc_org,     pnuc_rate,    pd_crit, ppbl,   &
+                      pc_org,     pnuc_rate,    pd_crit, ppbl,   &
                       pn_crit_sa, pn_crit_ocnv, pk_sa,   pk_ocnv)
 
      IMPLICIT NONE
@@ -1509,7 +1508,7 @@ CONTAINS
      DO ii = 1,kbdim !  horizontal points in the slab
         DO jj = zpbl(ii),klev !  vertical grid
            pnuc_rate(ii,jj) = (zKs1*pc_sa(ii,jj)**2 + &
-                zKs2*pc_sa(ii,jj)*pc_org(ii,jj)+ zKs3*pc_org(ii,jj)**2)*1.E6  ![#/m3/s]
+                               zKs2*pc_sa(ii,jj)*pc_org(ii,jj)+ zKs3*pc_org(ii,jj)**2)*1.E6  ![#/m3/s]
 
            !-- Organic compounds not involved when kinetic nucleation is assumed.
            pn_crit_sa(ii,jj) = 3.

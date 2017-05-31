@@ -145,70 +145,70 @@ CONTAINS
 
       REAL, DIMENSION(7) :: gamma_out  ! Juha: Changed dimension 5->7
 
-      REAL,DIMENSION(7)::ions,ions_mol
+      REAL, DIMENSION(7) :: ions,ions_mol
 
-      REAL,DIMENSION(7) :: mols_out  ! Juha: put out ion molalities
+      REAL, DIMENSION(7) :: mols_out  ! Juha: put out ion molalities
 
-      REAL::charge_sum, nitric_acid, hydrochloric_acid, sulphuric_acid,&
-         &ammonium_sulphate, ammonium_nitrate, ammonium_chloride, sodium_sulphate,&
-         &sodium_nitrate, sodium_chloride, solutes, hydrochloric_acid_eq_frac,&
-         &sulphuric_acid_eq_frac, ammonium_sulphate_eq_frac, ammonium_nitrate_eq_frac,&
-         &ammonium_chloride_eq_frac, sodium_sulphate_eq_frac, sodium_nitrate_eq_frac,&
-         &sodium_chloride_eq_frac, nitric_acid_eq_frac, RH, Temp
+      REAL :: charge_sum, nitric_acid, hydrochloric_acid, sulphuric_acid,&
+              &ammonium_sulphate, ammonium_nitrate, ammonium_chloride, sodium_sulphate,&
+              &sodium_nitrate, sodium_chloride, solutes, hydrochloric_acid_eq_frac,&
+              &sulphuric_acid_eq_frac, ammonium_sulphate_eq_frac, ammonium_nitrate_eq_frac,&
+              &ammonium_chloride_eq_frac, sodium_sulphate_eq_frac, sodium_nitrate_eq_frac,&
+              &sodium_chloride_eq_frac, nitric_acid_eq_frac, RH, Temp
 
-      REAL:: water_total, h_out, hso4_out, so4_out
+      REAL :: water_total, h_out, hso4_out, so4_out
 		
-      INTEGER::binary_case, full_complexity
+      INTEGER :: binary_case, full_complexity
 
-      REAL::binary_hno3
+      REAL :: binary_hno3
 
-      REAL::HCL_hno3, H2SO4_hno3, NH42SO4_hno3, NH4NO3_hno3, NH4Cl_hno3,&
-         &Na2SO4_hno3, NaNO3_hno3, NaCl_hno3
+      REAL :: HCL_hno3, H2SO4_hno3, NH42SO4_hno3, NH4NO3_hno3, NH4Cl_hno3,&
+              &Na2SO4_hno3, NaNO3_hno3, NaCl_hno3
 
-      REAL::Ln_HNO3_act, gamma_hno3, Press_HNO3, K_hno3
+      REAL :: Ln_HNO3_act, gamma_hno3, Press_HNO3, K_hno3
 
-      REAL::binary_hcl
+      REAL :: binary_hcl
 
-      REAL::HNO3_hcl, H2SO4_hcl, NH42SO4_hcl, NH4NO3_hcl, NH4Cl_hcl,&
-         &Na2SO4_hcl, NaNO3_hcl, NaCl_hcl
+      REAL :: HNO3_hcl, H2SO4_hcl, NH42SO4_hcl, NH4NO3_hcl, NH4Cl_hcl,&
+              &Na2SO4_hcl, NaNO3_hcl, NaCl_hcl
 
-      REAL::Ln_HCl_act, gamma_hcl, Press_HCl
+      REAL :: Ln_HCl_act, gamma_hcl, Press_HCl
 
-      REAL::HNO3_nh3, HCl_nh3, H2SO4_nh3, NH42SO4_nh3, NH4NO3_nh3, NH4Cl_nh3,&
-         &Na2SO4_nh3, NaNO3_nh3, NaCl_nh3
+      REAL :: HNO3_nh3, HCl_nh3, H2SO4_nh3, NH42SO4_nh3, NH4NO3_nh3, NH4Cl_nh3,&
+              &Na2SO4_nh3, NaNO3_nh3, NaCl_nh3
 
-      REAL:: gamma_nh3, Press_NH3
+      REAL :: gamma_nh3, Press_NH3
 
-      REAL::K_hcl
+      REAL ::K_hcl
 
-      REAL::Kh, Knh4, Kw, molality_ratio_nh3
+      REAL :: Kh, Knh4, Kw, molality_ratio_nh3
 
       !----variables used in calculating bisulphate dissociation----
 
-      REAL::binary_hhso4
+      REAL :: binary_hhso4
 
-      REAL::HNO3_hhso4, HCL_hhso4, NH42SO4_hhso4, NH4NO3_hhso4, NH4Cl_hhso4,&
-         &Na2SO4_hhso4, NaNO3_hhso4, NaCl_hhso4
+      REAL :: HNO3_hhso4, HCL_hhso4, NH42SO4_hhso4, NH4NO3_hhso4, NH4Cl_hhso4,&
+              &Na2SO4_hhso4, NaNO3_hhso4, NaCl_hhso4
 
-      REAL::Ln_hhso4_act, gamma_hhso4
+      REAL :: Ln_hhso4_act, gamma_hhso4
 
-      REAL::binary_h2so4
+      REAL :: binary_h2so4
 
-      REAL::HNO3_h2so4, HCl_h2so4, NH42SO4_h2so4, NH4NO3_h2so4, NH4Cl_h2so4,&
-         &Na2SO4_h2so4, NaNO3_h2so4, NaCl_h2so4
+      REAL :: HNO3_h2so4, HCl_h2so4, NH42SO4_h2so4, NH4NO3_h2so4, NH4Cl_h2so4,&
+              &Na2SO4_h2so4, NaNO3_h2so4, NaCl_h2so4
 
-      REAL::Ln_h2so4_act, gamma_h2so4
+      REAL :: Ln_h2so4_act, gamma_h2so4
 
-      REAL::act_product, a, b, c, root1, root2
+      REAL :: act_product, a, b, c, root1, root2
 
-      REAL::h_REAL, hso4_REAL, so4_REAL
+      REAL :: h_REAL, hso4_REAL, so4_REAL
 
-      REAL:: henrys_temp_dep
+      REAL :: henrys_temp_dep
 
       !---new nh3 variables---
-      REAL::binary_nh4hso4,HNO3_nh4hso4,HCL_nh4hso4,H2SO4_nh4hso4,NH42SO4_nh4hso4,&
-         &NH4NO3_nh4hso4,NH4Cl_nh4hso4,Na2SO4_nh4hso4,NaNO3_nh4hso4,NaCl_nh4hso4
-      REAL::Ln_NH4HSO4_act,gamma_nh4hso4
+      REAL :: binary_nh4hso4,HNO3_nh4hso4,HCL_nh4hso4,H2SO4_nh4hso4,NH42SO4_nh4hso4,&
+              &NH4NO3_nh4hso4,NH4Cl_nh4hso4,Na2SO4_nh4hso4,NaNO3_nh4hso4,NaCl_nh4hso4
+      REAL :: Ln_NH4HSO4_act,gamma_nh4hso4
 
       !----------------------------------------------------------------------------------
       !
@@ -265,8 +265,8 @@ CONTAINS
 
       solutes=0.0e0
       solutes=3.0e0*sulphuric_acid+2.0e0*hydrochloric_acid+2.0e0*nitric_acid+3.0e0*ammonium_sulphate+&
-         &2.0e0*ammonium_nitrate+2.0e0*ammonium_chloride+3.0e0*sodium_sulphate+2.0e0*sodium_nitrate+&
-         &2.0e0*sodium_chloride
+              &2.0e0*ammonium_nitrate+2.0e0*ammonium_chloride+3.0e0*sodium_sulphate+2.0e0*sodium_nitrate+&
+              &2.0e0*sodium_chloride
 
       nitric_acid_eq_frac=2.0e0*nitric_acid/(solutes)
       hydrochloric_acid_eq_frac=2.0e0*hydrochloric_acid/(solutes)
@@ -329,7 +329,7 @@ CONTAINS
 
          IF (hydrochloric_acid > 0.0e0) THEN
             HCL_hhso4=- 54.845*(RH**7)+209.54*(RH**6)-336.59*(RH**5)+&
-               &294.21*(RH**4)-150.07*(RH**3)+43.767*(RH**2)-6.5495*RH+0.60048;
+                      &294.21*(RH**4)-150.07*(RH**3)+43.767*(RH**2)-6.5495*RH+0.60048;
          END IF
 
          IF (ammonium_sulphate > 0.0e0) THEN
@@ -369,9 +369,9 @@ CONTAINS
          END IF
 
          Ln_hhso4_act=binary_hhso4+nitric_acid_eq_frac*HNO3_hhso4+hydrochloric_acid_eq_frac*HCL_hhso4+&
-            &ammonium_sulphate_eq_frac*NH42SO4_hhso4+ammonium_nitrate_eq_frac*NH4NO3_hhso4+&
-            &ammonium_chloride_eq_frac*NH4Cl_hhso4+sodium_sulphate_eq_frac*Na2SO4_hhso4+&
-            &sodium_nitrate_eq_frac*NaNO3_hhso4+sodium_chloride_eq_frac*NaCl_hhso4
+                     &ammonium_sulphate_eq_frac*NH42SO4_hhso4+ammonium_nitrate_eq_frac*NH4NO3_hhso4+&
+                     &ammonium_chloride_eq_frac*NH4Cl_hhso4+sodium_sulphate_eq_frac*Na2SO4_hhso4+&
+                     &sodium_nitrate_eq_frac*NaNO3_hhso4+sodium_chloride_eq_frac*NaCl_hhso4
 
          gamma_hhso4=exp(Ln_hhso4_act)
 
@@ -425,9 +425,9 @@ CONTAINS
          END IF
 
          Ln_h2so4_act=binary_h2so4+nitric_acid_eq_frac*HNO3_h2so4+hydrochloric_acid_eq_frac*HCl_h2so4+&
-            &ammonium_sulphate_eq_frac*NH42SO4_h2so4+ammonium_nitrate_eq_frac*NH4NO3_h2so4+&
-            &ammonium_chloride_eq_frac*NH4Cl_h2so4+sodium_sulphate_eq_frac*Na2SO4_h2so4+&
-            &sodium_nitrate_eq_frac*NaNO3_h2so4+sodium_chloride_eq_frac*NaCl_h2so4;
+                      &ammonium_sulphate_eq_frac*NH42SO4_h2so4+ammonium_nitrate_eq_frac*NH4NO3_h2so4+&
+                      &ammonium_chloride_eq_frac*NH4Cl_h2so4+sodium_sulphate_eq_frac*Na2SO4_h2so4+&
+                      &sodium_nitrate_eq_frac*NaNO3_h2so4+sodium_chloride_eq_frac*NaCl_h2so4;
 
          gamma_h2so4=exp(Ln_h2so4_act)
 
@@ -588,8 +588,9 @@ CONTAINS
          END IF
 
          Ln_HNO3_act=binary_hno3+hydrochloric_acid_eq_frac*HCL_hno3+sulphuric_acid_eq_frac*H2SO4_hno3+&
-            &ammonium_sulphate_eq_frac*NH42SO4_hno3+ammonium_nitrate_eq_frac*NH4NO3_hno3+ammonium_chloride_eq_frac*NH4Cl_hno3+&
-            &sodium_sulphate_eq_frac*Na2SO4_hno3+sodium_nitrate_eq_frac*NaNO3_hno3+sodium_chloride_eq_frac*NaCl_hno3
+                     &ammonium_sulphate_eq_frac*NH42SO4_hno3+ammonium_nitrate_eq_frac*NH4NO3_hno3+&
+                     &ammonium_chloride_eq_frac*NH4Cl_hno3+sodium_sulphate_eq_frac*Na2SO4_hno3+&
+                     &sodium_nitrate_eq_frac*NaNO3_hno3+sodium_chloride_eq_frac*NaCl_hno3
 
          gamma_hno3=exp(Ln_HNO3_act)
          gamma_out(1) = gamma_hno3
@@ -616,62 +617,62 @@ CONTAINS
          IF (nitric_acid > 0.0e0) THEN
             !---HNO3---
             HNO3_nh4hso4=104.8369*(RH**8)-288.8923*(RH**7)+129.3445*(RH**6)+373.0471*(RH**5)-571.0385*(RH**4)+ &
-               326.3528*(RH**3)-74.169*(RH**2)-2.4999*(RH)+3.17
+                         326.3528*(RH**3)-74.169*(RH**2)-2.4999*(RH)+3.17
          END IF
 
          IF (hydrochloric_acid > 0.0e0) THEN
             !---HCl---
             HCL_nh4hso4=-7.9133*(RH**8)+126.6648*(RH**7)-460.7425*(RH**6)+731.606*(RH**5)-582.7467*(RH**4)+ &
-               216.7197*(RH**3)-11.3934*(RH**2)-17.7728*(RH)+5.75
+                        216.7197*(RH**3)-11.3934*(RH**2)-17.7728*(RH)+5.75
          END IF
 
          IF (sulphuric_acid > 0.0e0) THEN
             !---H2SO4---
             H2SO4_nh4hso4=195.981*(RH**8)-779.2067*(RH**7)+1226.3647*(RH**6)-964.0261*(RH**5)+391.7911*(RH**4)- &
-               84.1409*(RH**3)+20.0602*(RH**2)-10.2663*(RH)+3.5817
+                          84.1409*(RH**3)+20.0602*(RH**2)-10.2663*(RH)+3.5817
          END IF
 
          IF (ammonium_sulphate > 0.0e0) THEN
             !---NH42SO4---
             NH42SO4_nh4hso4=617.777*(RH**8)-2547.427*(RH**7)+4361.6009*(RH**6)-4003.162*(RH**5)+ &
-               2117.8281*(RH**4)-640.0678*(RH**3)+98.0902*(RH**2)-2.2615*(RH)-2.3811
+                            2117.8281*(RH**4)-640.0678*(RH**3)+98.0902*(RH**2)-2.2615*(RH)-2.3811
          END IF
 
          IF (ammonium_nitrate > 0.0e0) THEN
             !---NH4NO3---
             NH4NO3_nh4hso4=-104.4504*(RH**8)+539.5921*(RH**7)-1157.0498*(RH**6)+1322.4507*(RH**5)- &
-               852.2475*(RH**4)+298.3734*(RH**3)-47.0309*(RH**2)+1.297*(RH)-0.8029
+                           852.2475*(RH**4)+298.3734*(RH**3)-47.0309*(RH**2)+1.297*(RH)-0.8029
          END IF
 
          IF (ammonium_chloride > 0.0e0) THEN
             !---NH4Cl---
             NH4Cl_nh4hso4=258.1792*(RH**8)-1019.3777*(RH**7)+1592.8918*(RH**6)-1221.0726*(RH**5)+ &
-               442.2548*(RH**4)-43.6278*(RH**3)-7.5282*(RH**2)-3.8459*(RH)+2.2728
+                          442.2548*(RH**4)-43.6278*(RH**3)-7.5282*(RH**2)-3.8459*(RH)+2.2728
          END IF
 
          IF (sodium_sulphate > 0.0e0) THEN
             !---Na2SO4---
             Na2SO4_nh4hso4=225.4238*(RH**8)-732.4113*(RH**7)+843.7291*(RH**6)-322.7328*(RH**5)- &
-               88.6252*(RH**4)+72.4434*(RH**3)+22.9252*(RH**2)-25.3954*(RH)+4.6971
+                           88.6252*(RH**4)+72.4434*(RH**3)+22.9252*(RH**2)-25.3954*(RH)+4.6971
          END IF
 
          IF (sodium_nitrate > 0.0e0) THEN
             !---NaNO3---
             NaNO3_nh4hso4=96.1348*(RH**8)-341.6738*(RH**7)+406.5314*(RH**6)-98.5777*(RH**5)- &
-               172.8286*(RH**4)+149.3151*(RH**3)-38.9998*(RH**2)-0.2251*(RH)+0.4953
+                          172.8286*(RH**4)+149.3151*(RH**3)-38.9998*(RH**2)-0.2251*(RH)+0.4953
          END IF
 
          IF (sodium_chloride > 0.0e0) THEN
             !---NaCl---
             NaCl_nh4hso4=91.7856*(RH**8)-316.6773*(RH**7)+358.2703*(RH**6)-68.9142*(RH**5)- &
-               156.5031*(RH**4)+116.9592*(RH**3)-22.5271*(RH**2)-3.7716*(RH)+1.56
+                         156.5031*(RH**4)+116.9592*(RH**3)-22.5271*(RH**2)-3.7716*(RH)+1.56
          END IF
 
          Ln_NH4HSO4_act=binary_nh4hso4+nitric_acid_eq_frac*HNO3_nh4hso4+hydrochloric_acid_eq_frac*HCL_nh4hso4+ &
-            sulphuric_acid_eq_frac*H2SO4_nh4hso4+ammonium_sulphate_eq_frac*NH42SO4_nh4hso4+&
-            ammonium_nitrate_eq_frac*NH4NO3_nh4hso4+ammonium_chloride_eq_frac*NH4Cl_nh4hso4+&
-            sodium_sulphate_eq_frac*Na2SO4_nh4hso4+sodium_nitrate_eq_frac*NaNO3_nh4hso4+&
-            sodium_chloride_eq_frac*NaCl_nh4hso4
+                        sulphuric_acid_eq_frac*H2SO4_nh4hso4+ammonium_sulphate_eq_frac*NH42SO4_nh4hso4+&
+                        ammonium_nitrate_eq_frac*NH4NO3_nh4hso4+ammonium_chloride_eq_frac*NH4Cl_nh4hso4+&
+                        sodium_sulphate_eq_frac*Na2SO4_nh4hso4+sodium_nitrate_eq_frac*NaNO3_nh4hso4+&
+                        sodium_chloride_eq_frac*NaCl_nh4hso4
 
          gamma_nh4hso4=exp(Ln_NH4HSO4_act)
          ! Juha: Put this out as well
@@ -691,7 +692,7 @@ CONTAINS
          IF (hydrochloric_acid > 0.0e0) THEN
             !---HCl---
             HCL_hhso4=- 54.845*(RH**7)+209.54*(RH**6)-336.59*(RH**5)+&
-               &294.21*(RH**4)-150.07*(RH**3)+43.767*(RH**2)-6.5495*RH+0.60048;
+                      &294.21*(RH**4)-150.07*(RH**3)+43.767*(RH**2)-6.5495*RH+0.60048;
          END IF
 
          IF (ammonium_sulphate > 0.0e0) THEN
@@ -737,9 +738,9 @@ CONTAINS
          END IF
 
          Ln_HHSO4_act=binary_hhso4+nitric_acid_eq_frac*HNO3_hhso4+hydrochloric_acid_eq_frac*HCL_hhso4+&
-            &ammonium_sulphate_eq_frac*NH42SO4_hhso4+ammonium_nitrate_eq_frac*NH4NO3_hhso4+&
-            &ammonium_chloride_eq_frac*NH4Cl_hhso4+sodium_sulphate_eq_frac*Na2SO4_hhso4+&
-            &sodium_nitrate_eq_frac*NaNO3_hhso4+sodium_chloride_eq_frac*NaCl_hhso4
+                     &ammonium_sulphate_eq_frac*NH42SO4_hhso4+ammonium_nitrate_eq_frac*NH4NO3_hhso4+&
+                     &ammonium_chloride_eq_frac*NH4Cl_hhso4+sodium_sulphate_eq_frac*Na2SO4_hhso4+&
+                     &sodium_nitrate_eq_frac*NaNO3_hhso4+sodium_chloride_eq_frac*NaCl_hhso4
 
          gamma_hhso4=exp(Ln_HHSO4_act)
          ! Juha: Put this out as well
@@ -848,8 +849,9 @@ CONTAINS
          END IF
 
          Ln_HCl_act=binary_hcl+nitric_acid_eq_frac*HNO3_hcl+sulphuric_acid_eq_frac*H2SO4_hcl+&
-            &ammonium_sulphate_eq_frac*NH42SO4_hcl+ammonium_nitrate_eq_frac*NH4NO3_hcl+ammonium_chloride_eq_frac*NH4Cl_hcl+&
-            &sodium_sulphate_eq_frac*Na2SO4_hcl+sodium_nitrate_eq_frac*NaNO3_hcl+sodium_chloride_eq_frac*NaCl_hcl
+                   &ammonium_sulphate_eq_frac*NH42SO4_hcl+ammonium_nitrate_eq_frac*NH4NO3_hcl+&
+                   &ammonium_chloride_eq_frac*NH4Cl_hcl+sodium_sulphate_eq_frac*Na2SO4_hcl+&
+                   &sodium_nitrate_eq_frac*NaNO3_hcl+sodium_chloride_eq_frac*NaCl_hcl
 
 
          gamma_hcl=exp(Ln_HCl_act)

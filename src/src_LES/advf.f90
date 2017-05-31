@@ -32,11 +32,11 @@ CONTAINS
   ! times.
   !
   SUBROUTINE fadvect
-    USE grid, ONLY : a_up, a_vp, a_wp, a_uc, a_vc, a_wc, a_rc, a_qp, newsclr  &
-         , nscl, a_sp, a_st, dn0 , nxp, nyp, nzp, dtlt  &
-         , dzt, dzm, zt, dxi, dyi, level, isgstyp
-    USE stat, ONLY      : sflg, updtst
-    USE util, ONLY      : get_avg3
+    USE grid, ONLY : a_up, a_vp, a_wp, a_uc, a_vc, a_wc, a_rc, a_qp, newsclr,  &
+                     nscl, a_sp, a_st, dn0 , nxp, nyp, nzp, dtlt,  &
+                     dzt, dzm, zt, dxi, dyi, level, isgstyp
+    USE stat, ONLY : sflg, updtst
+    USE util, ONLY : get_avg3
 
     REAL    :: v1da(nzp), a_tmp1(nzp,nxp,nyp), a_tmp2(nzp,nxp,nyp)
     INTEGER :: n
@@ -44,7 +44,7 @@ CONTAINS
     !
     ! diagnose liquid water flux
     !
-    IF (sflg .AND. level > 1 .AND. level < 4) THEN
+    IF (sflg .AND. level > 1) THEN
        a_tmp1=a_rc
        CALL add_vel(nzp,nxp,nyp,a_tmp2,a_wp,a_wc,.FALSE.)
        CALL mamaos(nzp,nxp,nyp,a_tmp2,a_rc,a_tmp1,zt,dzm,dn0,dtlt,.FALSE.)
@@ -134,7 +134,7 @@ CONTAINS
 
           ! Add to cloud droplets
           a_ncloudt(kp1,:,:,bb) = a_ncloudt(kp1,:,:,bb) +   &
-                                 MERGE( dn(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
+                                  MERGE( dn(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
 
           ! Remove from aerosols
           a_naerot(kp1,:,:,bbpar) = a_naerot(kp1,:,:,bbpar) -   &
@@ -155,7 +155,7 @@ CONTAINS
 
              ! Add to cloud droplets
              a_mcloudt(kp1,:,:,mm) = a_mcloudt(kp1,:,:,mm) +   &
-                                    MERGE( dv(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
+                                     MERGE( dv(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
 
              ! Remove from aerosols
              a_maerot(kp1,:,:,mmpar) = a_maerot(kp1,:,:,mmpar) -   &
@@ -178,7 +178,7 @@ CONTAINS
                                  pactmask(kk,:,:) )
           ! Add to cloud droplets
           a_mcloudt(kp1,:,:,mm) = a_mcloudt(kp1,:,:,mm) +   &
-                                 MERGE( fix_flux(:,:)*zw(:,:)*a_vactd(kk,:,:,mm)*dzt(kk), 0., pactmask(kk,:,:) )
+                                  MERGE( fix_flux(:,:)*zw(:,:)*a_vactd(kk,:,:,mm)*dzt(kk), 0., pactmask(kk,:,:) )
 
           ! Remove from aerosols
           a_maerot(kp1,:,:,mmpar) = a_maerot(kp1,:,:,mmpar) -   &
@@ -359,13 +359,13 @@ CONTAINS
           wp(n1-1,i,j) = 0.
           DO k = 2, n1-2
              wp(k,i,j) = 0.5 * wpdn(k) * (scp0(k+1,i,j)+scp0(k,i,j)) - &
-                  0.5 * (scp0(k+1,i,j)-scp0(k,i,j)) *                  &
-                  ((1.-C(k))*abs(wpdn(k)) + wpdn(k)*cfl(k)*C(k))
+                         0.5 * (scp0(k+1,i,j)-scp0(k,i,j)) *           &
+                         ((1.-C(k))*abs(wpdn(k)) + wpdn(k)*cfl(k)*C(k))
           END DO
           DO k = 2,n1-1
              scp(k,i,j) = scp(k,i,j) - ((wp(k,i,j)-wp(k-1,i,j)) -      &
-                  scp0(k,i,j)*(wpdn(k)-wpdn(k-1))) *                   &
-                  dt*dzt_local(k)/dn0(k)
+                          scp0(k,i,j)*(wpdn(k)-wpdn(k-1))) *           &
+                          dt*dzt_local(k)/dn0(k)
           END DO
 
        END DO
@@ -438,13 +438,13 @@ CONTAINS
              END SELECT
 
              scr(i,k) = 0.5 * up(k,i,j) * (scr(i,k)+scp0(k,i,j)) -      &
-                  0.5 * (scr(i,k)-scp0(k,i,j)) *                        &
-                  ((1.-C(i,k))*abs(up(k,i,j)) + up(k,i,j)*cfl(i,k)*C(i,k))
+                        0.5 * (scr(i,k)-scp0(k,i,j)) *                  &
+                        ((1.-C(i,k))*abs(up(k,i,j)) + up(k,i,j)*cfl(i,k)*C(i,k))
           END DO
 
           DO i = 3,n2-2
              scp(k,i,j) = scp(k,i,j) - ((scr(i,k)-scr(i-1,k)) -         &
-                  scp0(k,i,j)*(up(k,i,j)-up(k,i-1,j)))*dt*dxi
+                          scp0(k,i,j)*(up(k,i,j)-up(k,i-1,j)))*dt*dxi
           END DO
        END DO
 
@@ -517,13 +517,13 @@ CONTAINS
              END SELECT
 
              scr(j,k) = 0.5 * vp(k,i,j) * (scr(j,k)+scp0(k,i,j)) -      &
-                  0.5 * (scr(j,k)-scp0(k,i,j)) *                        &
-                  ((1.-C(j,k))*abs(vp(k,i,j)) + vp(k,i,j)*cfl(j,k)*C(j,k))
+                        0.5 * (scr(j,k)-scp0(k,i,j)) *                  &
+                        ((1.-C(j,k))*abs(vp(k,i,j)) + vp(k,i,j)*cfl(j,k)*C(j,k))
           END DO
 
           DO j = 3,n3-2
              scp(k,i,j) = scp(k,i,j) - ((scr(j,k)-scr(j-1,k)) -         &
-                  scp0(k,i,j)*(vp(k,i,j)-vp(k,i,j-1)))*dt*dyi
+                          scp0(k,i,j)*(vp(k,i,j)-vp(k,i,j-1)))*dt*dyi
           END DO
        END DO
 

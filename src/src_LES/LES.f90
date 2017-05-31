@@ -47,7 +47,7 @@ CONTAINS
       USE init, ONLY          : initialize
       USE step, ONLY          : stepper
       USE mpi_interface, ONLY : init_mpi, define_decomp,                    &
-         init_alltoall_reorder, appl_finalize
+                                init_alltoall_reorder, appl_finalize
 
       ! Added for SALSA
       USE mo_salsa_init, ONLY : define_salsa, salsa_initialize
@@ -91,26 +91,26 @@ CONTAINS
       USE sgsm, ONLY : csx, prndtl
       USE srfc, ONLY : isfctyp, zrough, ubmin, dthcon, drtcon
       USE step, ONLY : timmax, istpfl, corflg, outflg, frqanl, frqhis,          &
-         strtim, radfrq, cntlat, nudge_time, nudge_zmin, nudge_zmax, &
-         nudge_theta, tau_theta, nudge_rv, tau_rv, nudge_u, tau_u, &
-         nudge_v, tau_v, nudge_ccn, tau_ccn
+                       strtim, radfrq, cntlat, nudge_time, nudge_zmin, nudge_zmax, &
+                       nudge_theta, tau_theta, nudge_rv, tau_rv, nudge_u, tau_u, &
+                       nudge_v, tau_v, nudge_ccn, tau_ccn
       USE grid, ONLY : deltaz, deltay, deltax, nzp, nyp, nxp, nxpart, &
-         dtlong, dzrat,dzmax, th00, umean, vmean, isgstyp, naddsc, level,     &
-         filprf, expnme, iradtyp, igrdtyp, nfpt, distim, runtype, CCN,        &
-         Tspinup,sst, lbinanl
+                       dtlong, dzrat,dzmax, th00, umean, vmean, isgstyp, naddsc, level,     &
+                       filprf, expnme, iradtyp, igrdtyp, nfpt, distim, runtype, CCN,        &
+                       Tspinup,sst, lbinanl
       USE init, ONLY : us, vs, ts, rts, ps, hs, ipsflg, itsflg,iseed, hfilin,   &
-         zrand
+                       zrand
       USE stat, ONLY : ssam_intvl, savg_intvl, mcflg, csflg
-      USE forc, ONLY : radsounding, &        ! Juha: added for radiation background profile
-         div, case_name, &     ! Divergence, forcing case name
-         sfc_albedo, &         ! Surface albedo
-         useMcICA,RadConstPress,RadPrecipBins
+      USE forc, ONLY : radsounding,    &     ! Juha: added for radiation background profile
+                       div, case_name, &     ! Divergence, forcing case name
+                       sfc_albedo,     &     ! Surface albedo
+                       useMcICA,RadConstPress,RadPrecipBins
       USE mcrp, ONLY : sed_aero, sed_cloud, sed_precp, sed_ice, sed_snow
       USE mpi_interface, ONLY : myid, appl_abort, ver, author
 
       IMPLICIT NONE
 
-      NAMELIST /model/  &
+      NAMELIST /model/     &
          expnme    ,       & ! experiment name
          nxpart    ,       & ! whether partition in x direction?
          naddsc    ,       & ! Number of additional scalars
@@ -138,8 +138,8 @@ CONTAINS
          umean  , vmean  , th00,    & ! gallilean E/W wind, basic state
          Tspinup, lbinanl,          & ! Length of spinup period in seconds
          nudge_time,                & ! Total nudging time (independent of spin-up)
-         nudge_zmin, nudge_zmax, & ! Altitude (m) range for nudging
-         nudge_theta, tau_theta,   & ! Temperature nudging
+         nudge_zmin, nudge_zmax,    & ! Altitude (m) range for nudging
+         nudge_theta, tau_theta,    & ! Temperature nudging
          nudge_rv, tau_rv,   & ! Water vapor mixing ratio nudging
          nudge_u, tau_u, nudge_v, tau_v,  & ! Horozontal wind nudging
          nudge_ccn, tau_ccn,   & ! Aerosol number concentration nudging
@@ -151,7 +151,7 @@ CONTAINS
          sed_aero, sed_cloud, sed_precp, sed_ice, sed_snow ! Sedimentation (T/F)
 
       NAMELIST /version/  &
-         ver, author        ! Information about UCLALES-SALSA version and author
+               ver, author        ! Information about UCLALES-SALSA version and author
 
       ps       = 0.
       ts       = th00
@@ -200,14 +200,14 @@ CONTAINS
       END IF
 
 600   FORMAT(//' ',49('-')/,' ',/,'  Initial Experiment: ',A50 &
-         /,'  Final Time:         ',F8.1,' s'              )
+             /,'  Final Time:         ',F8.1,' s'              )
 601   FORMAT(//' ',49('-')/,' ',/,'  Restart Experiment: ',A50 &
-         /,'  Restart File: ',A30,                           &
-         /,'  Final Time: ',F10.1,' s'              )
-602   FORMAT('  Output File Stem:   ',A50                      &
-         /,'  History Frequency:  ',F7.1,                    &
-         /,'  Analysis Frequency: ',F7.1,                    &
-         /,'  Model spinup period: ',F7.1)
+             /,'  Restart File: ',A30,                           &
+             /,'  Final Time: ',F10.1,' s'              )
+602   FORMAT('  Output File Stem:   ',A50                        &
+             /,'  History Frequency:  ',F7.1,                    &
+             /,'  Analysis Frequency: ',F7.1,                    &
+             /,'  Model spinup period: ',F7.1)
 
       RETURN
    END SUBROUTINE define_parm

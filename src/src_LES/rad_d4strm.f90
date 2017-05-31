@@ -81,7 +81,7 @@ CONTAINS
   ! defined by input ckd file
   !
   SUBROUTINE rad (as, u0, ss, pts, ee, pp, pt, ph, po, fds, fus, fdir, fuir, &
-       McICA, plwc, pre, piwc, pde, pgwc )
+                  McICA, plwc, pre, piwc, pde, pgwc )
 
     REAL, INTENT (in)  :: pp (nv1) ! pressure at interfaces
 
@@ -124,7 +124,7 @@ CONTAINS
   ! defined by input ckd file
   !
   SUBROUTINE rad_ir (pts, ee, pp, pt, ph, po, fdir, fuir, McICA, &
-       plwc, pre, piwc, pde, pgwc )
+                     plwc, pre, piwc, pde, pgwc )
 
     REAL, INTENT (in)  :: pp (nv1) ! pressure at interfaces
 
@@ -136,7 +136,7 @@ CONTAINS
     REAL, OPTIONAL, DIMENSION(nv), INTENT (in)  :: &
          plwc, & ! cloud liquid water content [g/m^3]
          pre,  & ! effective radius of cloud droplets [microns]
-            piwc, & ! cloud ice water content [g/m^3]
+         piwc, & ! cloud ice water content [g/m^3]
          pde,  & ! effective diameter of ice particles [microns]
          pgwc    ! graupel water content
          !prwc, & ! rain water content [g/m^3]
@@ -228,7 +228,7 @@ CONTAINS
            tau(k) = tau(k) + tau(k - 1)
          END DO
          CALL qft (.FALSE., ee, 0., 0., bf, tau, w, pf(:, 1), pf(:, 2),      &
-              pf(:, 3), pf(:, 4), fu1, fd1)
+                   pf(:, 3), pf(:, 4), fu1, fd1)
 
          IF (McICA) THEN 
             xir_norm = 1./bandweights(ib)
@@ -253,7 +253,7 @@ CONTAINS
   !
 
   SUBROUTINE rad_vis (as, u0, ss, pp, pt, ph, po, fds, fus, McICA,  &
-       plwc, pre, piwc, pde, pgwc )
+                      plwc, pre, piwc, pde, pgwc )
 
     REAL, INTENT (in)  :: pp (nv1) ! pressure at interfaces
 
@@ -339,7 +339,7 @@ CONTAINS
          ! Rayleigh scattering
          !
          CALL rayle ( ib, u0, power(solar_bands(ib)), pp, pt, dz, tauNoGas, &
-              wNoGas, pfNoGas)
+                      wNoGas, pfNoGas)
          !
          ! Water vapor continuum
          !
@@ -374,7 +374,7 @@ CONTAINS
              tau(k) = tau(k) + tau(k - 1)
            END DO
            CALL qft (.TRUE., 0., as, u0, bf, tau, w, pf(:, 1), pf(:, 2),    &
-                pf(:, 3), pf(:, 4), fu1, fd1)
+                     pf(:, 3), pf(:, 4), fu1, fd1)
            IF (McICA) THEN 
               xs_norm =power(solar_bands(ib))/ bandweights(ib)
            ELSE
@@ -466,14 +466,14 @@ CONTAINS
        DO j = 1, size(pF, 2) 
           where (ssa(:) * tau(:) + ssaToAdd(:) * tauToAdd(:) > 0.)
              pf(:, j) = (ssa(:)*tau(:)*pf(:, j) + ssaToAdd(:)*tauToAdd(:)     &
-                  * pfToAdd(:, j))/(ssa(:)*tau(:) + ssaToAdd(:) * tauToAdd(:))
+                        * pfToAdd(:, j))/(ssa(:)*tau(:) + ssaToAdd(:) * tauToAdd(:))
           ELSEwhere
              pf(:, j) = 0.  
           END where
        END DO
        where (tau(:) + tauToAdd(:) > 0.)
           ssa(:) = (ssa(:) * tau(:) + ssaToAdd(:) * tauToAdd(:)) /            &
-               (tau(:) + tauToAdd(:))
+                   (tau(:) + tauToAdd(:))
        ELSEwhere     
           ssa(:) = 0. 
        END where
@@ -504,7 +504,7 @@ CONTAINS
     REAL, INTENT (out)   :: tr(nv), wr(nv), wwr(nv,4)
 
     REAL, PARAMETER :: ri(6)=(/ 0.9022e-5, 0.5282e-6, 0.5722e-7, &
-         0.1433e-7, 0.4526e-8, 0.1529e-8 /)
+                                0.1433e-7, 0.4526e-8, 0.1529e-8 /)
 
     INTEGER :: i
     REAL    :: x

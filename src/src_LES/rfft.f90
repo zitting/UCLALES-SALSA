@@ -377,8 +377,8 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSB (NAC,IDO,IP,L1,IDL1,CC,C1,C2,CH,CH2,WA)
     DIMENSION       CH(IDO,L1,IP)          ,CC(IDO,IP,L1)          , &
-       C1(IDO,L1,IP)          ,WA(*)      ,C2(IDL1,IP), &
-       CH2(IDL1,IP)
+                    C1(IDO,L1,IP)          ,WA(*)      ,C2(IDL1,IP), &
+                    CH2(IDL1,IP)
     IDOT = IDO/2
     NT = IP*IDL1
     IPP2 = IP+2
@@ -493,7 +493,7 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSB2 (IDO,L1,CC,CH,WA1)
     DIMENSION       CC(IDO,2,L1)           ,CH(IDO,L1,2)           , &
-       WA1(*)
+                    WA1(*)
     IF (IDO > 2) GO TO 102
     DO 101 K=1,L1
        CH(1,K,1) = CC(1,1,K)+CC(1,2,K)
@@ -516,7 +516,7 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSB3 (IDO,L1,CC,CH,WA1,WA2)
     DIMENSION       CC(IDO,3,L1)           ,CH(IDO,L1,3)           , &
-       WA1(*)     ,WA2(*)
+                    WA1(*)     ,WA2(*)
     DATA TAUR,TAUI /-.5,.866025403784439/
     IF (IDO /= 2) GO TO 102
     DO 101 K=1,L1
@@ -558,7 +558,7 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSB4 (IDO,L1,CC,CH,WA1,WA2,WA3)
     DIMENSION       CC(IDO,4,L1)           ,CH(IDO,L1,4)           , &
-       WA1(*)     ,WA2(*)     ,WA3(*)
+                    WA1(*)     ,WA2(*)     ,WA3(*)
     IF (IDO /= 2) GO TO 102
     DO 101 K=1,L1
        TI1 = CC(2,1,K)-CC(2,3,K)
@@ -609,7 +609,7 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSB5 (IDO,L1,CC,CH,WA1,WA2,WA3,WA4)
     DIMENSION       CC(IDO,5,L1)           ,CH(IDO,L1,5)           , &
-       WA1(*)     ,WA2(*)     ,WA3(*)     ,WA4(*)
+                    WA1(*)     ,WA2(*)     ,WA3(*)     ,WA4(*)
     DATA TR11,TI11,TR12,TI12 /.309016994374947,.951056516295154, &
        -.809016994374947,.587785252292473/
     IF (IDO /= 2) GO TO 102
@@ -684,8 +684,8 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSF (NAC,IDO,IP,L1,IDL1,CC,C1,C2,CH,CH2,WA)
     DIMENSION       CH(IDO,L1,IP)          ,CC(IDO,IP,L1)          , &
-       C1(IDO,L1,IP)          ,WA(*)      ,C2(IDL1,IP), &
-       CH2(IDL1,IP)
+                    C1(IDO,L1,IP)          ,WA(*)      ,C2(IDL1,IP), &
+                    CH2(IDL1,IP)
     IDOT = IDO/2
     NT = IP*IDL1
     IPP2 = IP+2
@@ -800,7 +800,7 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSF2 (IDO,L1,CC,CH,WA1)
     DIMENSION       CC(IDO,2,L1)           ,CH(IDO,L1,2)           , &
-       WA1(*)
+                    WA1(*)
     IF (IDO > 2) GO TO 102
     DO 101 K=1,L1
        CH(1,K,1) = CC(1,1,K)+CC(1,2,K)
@@ -823,7 +823,7 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSF3 (IDO,L1,CC,CH,WA1,WA2)
     DIMENSION       CC(IDO,3,L1)           ,CH(IDO,L1,3)           , &
-       WA1(*)     ,WA2(*)
+                    WA1(*)     ,WA2(*)
     DATA TAUR,TAUI /-.5,-.866025403784439/
     IF (IDO /= 2) GO TO 102
     DO 101 K=1,L1
@@ -865,7 +865,7 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSF4 (IDO,L1,CC,CH,WA1,WA2,WA3)
     DIMENSION       CC(IDO,4,L1)           ,CH(IDO,L1,4)           , &
-       WA1(*)     ,WA2(*)     ,WA3(*)
+                    WA1(*)     ,WA2(*)     ,WA3(*)
     IF (IDO /= 2) GO TO 102
     DO 101 K=1,L1
        TI1 = CC(2,1,K)-CC(2,3,K)
@@ -916,7 +916,7 @@ SUBROUTINE CFFTB1 (N,C,CH,WA,IFAC)
  END
  SUBROUTINE PASSF5 (IDO,L1,CC,CH,WA1,WA2,WA3,WA4)
     DIMENSION       CC(IDO,5,L1)           ,CH(IDO,L1,5)           , &
-       WA1(*)     ,WA2(*)     ,WA3(*)     ,WA4(*)
+                    WA1(*)     ,WA2(*)     ,WA3(*)     ,WA4(*)
     DATA TR11,TI11,TR12,TI12 /.309016994374947,-.951056516295154, &
        -.809016994374947,-.587785252292473/
     IF (IDO /= 2) GO TO 102

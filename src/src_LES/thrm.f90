@@ -44,8 +44,8 @@ CONTAINS
   SUBROUTINE thermo (level)
 
     USE grid, ONLY : a_rc, a_rv, a_rh, a_theta, a_pexnr, a_press, a_temp,  &
-         a_rsl, a_rp, a_tp, nxp, nyp, nzp, th00, pi0, pi1,a_rpp,   &
-         a_srp, a_ri, a_rsi, a_rhi, a_srs
+                     a_rsl, a_rp, a_tp, nxp, nyp, nzp, th00, pi0, pi1,a_rpp,   &
+                     a_srp, a_ri, a_rsi, a_rhi, a_srs
 
     INTEGER, INTENT (in) :: level
 
@@ -111,17 +111,17 @@ CONTAINS
                         tl(n1,n2,n3)          ! liquid potential temp
     REAL, INTENT(in) :: th00
     REAL, INTENT(in) :: pi0(n1),pi1(n1)
-    REAL, INTENT(IN) :: rc(n1,n2,n3),  &  ! Total cloud condensate mix rat
-                         srp(n1,n2,n3)            ! Precipitation mix rat
+    REAL, INTENT(IN) :: rc(n1,n2,n3),   &  ! Total cloud condensate mix rat
+                        srp(n1,n2,n3)            ! Precipitation mix rat
     REAL, INTENT(OUT) :: rs(n1,n2,n3),  &   ! Saturation mix rat
                          rh(n1,n2,n3),  &     ! Relative humidity
                          th(n1,n2,n3),  &     ! Potential temperature
                          tk(n1,n2,n3),  &     ! Absolute temperature
                          p(n1,n2,n3)          ! Air pressure
-    REAL, OPTIONAL, INTENT(IN) :: ri(n1,n2,n3),  &  ! Total ice condensate mix rat
-                         srs(n1,n2,n3)      ! Snow mix rat
-    REAL, OPTIONAL, INTENT(OUT) :: rsi(n1,n2,n3), & ! Saturation mix rat over ice
-                         rhi(n1,n2,n3)      ! relative humidity over ice
+    REAL, OPTIONAL, INTENT(IN) :: ri(n1,n2,n3),   &  ! Total ice condensate mix rat
+                                  srs(n1,n2,n3)      ! Snow mix rat
+    REAL, OPTIONAL, INTENT(OUT) :: rsi(n1,n2,n3), &  ! Saturation mix rat over ice
+                                   rhi(n1,n2,n3)     ! relative humidity over ice
     REAL :: exner
     INTEGER :: k,i,j
     REAL :: thil
@@ -221,7 +221,7 @@ CONTAINS
                 DO iterate=1,3
                    x1=alvl/(cp*xx)
                    xx=xx - (xx - til*(1.+x1*zz))/(1. + x1*til                &
-                        *(zz/xx+(1.+yy*ep)*yy*alvl/(Rm*xx*xx)))
+                      *(zz/xx+(1.+yy*ep)*yy*alvl/(Rm*xx*xx)))
                    yy=rslf(p(k,i,j),xx)
                    zz=max(rt(k,i,j)-yy,0.)
                 END DO
@@ -430,7 +430,7 @@ CONTAINS
                  bb=ep2
               END IF
               en2(k,i,j)=g*dzm(k)*(aa*(tl(k+1,i,j)-tl(k,i,j))/th00        &
-                   + bb*(rt(k+1,i,j)-rt(k,i,j)))
+                         + bb*(rt(k+1,i,j)-rt(k,i,j)))
            CASE (3,4,5)
               rtbar=0.5*(rt(k,i,j)+rt(k+1,i,j))
               rsbar=0.5*(rs(k,i,j)+rs(k+1,i,j))
@@ -443,7 +443,7 @@ CONTAINS
                  bb=ep2
               END IF
               en2(k,i,j)=g*dzm(k)*(aa*(tl(k+1,i,j)-tl(k,i,j))/th00        &
-                   + bb*(rt(k+1,i,j)-rt(k,i,j)))
+                         + bb*(rt(k+1,i,j)-rt(k,i,j)))
            CASE DEFAULT
               STOP 'level not supported in bruvais'
            END SELECT

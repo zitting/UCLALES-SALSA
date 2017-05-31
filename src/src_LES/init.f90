@@ -85,30 +85,22 @@ CONTAINS
 
             IF ( nxp == 5 .AND. nyp == 5 ) THEN
                CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,zwp,a_dn, &
-                  a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
-                  a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
-                  a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
-                  a_nicep,   a_nicet,   a_micep,   a_micet,    &
-                  a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
-                  a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
-                  a_Radry,   a_Rcdry,   a_Rpdry,               &
-                  a_Ridry,   a_Rsdry,                          &
-                  a_Rawet,   a_Rcwet,   a_Rpwet,               &
-                  a_Riwet,   a_Rswet,                          &
-                  1, prtcl, dtlt, level   )
+                              a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
+                              a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
+                              a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
+                              a_nicep,   a_nicet,   a_micep,   a_micet,    &
+                              a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
+                              a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
+                              1, prtcl, dtlt, level   )
             ELSE
                CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,a_wp,a_dn, &
-                  a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
-                  a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
-                  a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
-                  a_nicep,   a_nicet,   a_micep,   a_micet,    &
-                  a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
-                  a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
-                  a_Radry,   a_Rcdry,   a_Rpdry,               &
-                  a_Ridry,   a_Rsdry,                          &
-                  a_Rawet,   a_Rcwet,   a_Rpwet,               &
-                  a_Riwet,   a_Rswet,                          &
-                  1, prtcl, dtlt, level   )
+                              a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
+                              a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
+                              a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
+                              a_nicep,   a_nicet,   a_micep,   a_micet,    &
+                              a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
+                              a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
+                              1, prtcl, dtlt, level   )
 
             END IF
             CALL SALSAInit
@@ -135,7 +127,7 @@ CONTAINS
          mc_ApVdom = mc_Adom/mc_Vdom
          ! Get the initial mass of atmospheric water
          CALL acc_massbudged(nzp,nxp,nyp,0,dtlt,dzt,a_dn,     &
-            rv=a_rp,rc=a_rc,prc=a_srp)
+                             rv=a_rp,rc=a_rc,prc=a_srp)
       END IF ! mcflg
       !
       ! write analysis and history files from restart if appropriate
@@ -424,7 +416,7 @@ CONTAINS
     IF (ipsflg == 0) THEN
        DO k=2,ns
           hs(k)=hs(k-1)-r*.5 *(tks(k)*(1.+ep2*rts(k))                      &
-             +tks(k-1)*(1.+ep2*rts(k-1)))*(log(ps(k))-log(ps(k-1)))/g
+                +tks(k-1)*(1.+ep2*rts(k-1)))*(log(ps(k))-log(ps(k-1)))/g
        END DO
     END IF
 
@@ -533,7 +525,7 @@ CONTAINS
     psrf  = ps(1)
 
     IF(myid == 0) WRITE(*,fmt) (zt(k),u0(k),v0(k),dn0(k),v1da(k),v1db(k), &
-       th0(k),v1dc(k),rt0(k)*1000.,k=1,nzp)
+                                th0(k),v1dc(k),rt0(k)*1000.,k=1,nzp)
 
     RETURN
  END SUBROUTINE basic_state
@@ -630,7 +622,7 @@ CONTAINS
  SUBROUTINE random_pert(n1,n2,n3,zt,fld,xmag,kmx)
 
     USE mpi_interface, ONLY :  nypg,nxpg,myid,wrxid,wryid,xoffset,yoffset, &
-       double_scalar_par_sum
+                               double_scalar_par_sum
 
     USE util, ONLY : sclrset
     IMPLICIT NONE
@@ -662,7 +654,7 @@ CONTAINS
        ALLOCATE (rand_temp(3:n2g-2,3:n3g-2))
        CALL random_number(rand_temp)
        rand(3:n2-2, 3:n3-2)=rand_temp(3+xoffset(wrxid):n2+xoffset(wrxid)-2, &
-          3+yoffset(wryid):n3+yoffset(wryid)-2)
+                            3+yoffset(wryid):n3+yoffset(wryid)-2)
        deALLOCATE (rand_temp)
 
        xx = 0.
@@ -689,10 +681,10 @@ CONTAINS
 
     RETURN
 
-600 FORMAT(2x,'Inserting random temperature perturbations',    &
-       /3x,'Below: ',F7.2,' meters;',                        &
-       /3x,'with test value of: ',E12.5,                     &
-       /3x,'and a magnitude of: ',E12.5)
+600 FORMAT(2x,'Inserting random temperature perturbations',      &
+           /3x,'Below: ',F7.2,' meters;',                        &
+           /3x,'with test value of: ',E12.5,                     &
+           /3x,'and a magnitude of: ',E12.5)
  END SUBROUTINE random_pert
 
 
@@ -706,9 +698,9 @@ CONTAINS
  !
  SUBROUTINE SALSAInit
     USE mo_submctl, ONLY : ncld,nbins,nice
+    USE class_componentIndex, ONLY : GetIndex
     IMPLICIT NONE
-
-    INTEGER :: k,i,j,bb
+    INTEGER :: k,i,j,bb,nc
 
     DO j=1,nyp
        DO i=1,nxp
@@ -732,20 +724,21 @@ CONTAINS
        END DO
     END DO
 
-    ! Activation + diagnostic array initialization
-    ! Clouds and aerosols
-    a_rc(:,:,:) = 0.
+   nc = GetIndex(prtcl,'H2O')
+   ! Activation + diagnostic array initialization
+   ! Clouds and aerosols
+   a_rc(:,:,:) = 0.
     DO bb = 1, ncld
-       CALL DiagInitCloud(bb)
+       a_rc(:,:,:) = a_rc(:,:,:) + a_mcloudp(:,:,:,(nc-1)*ncld+bb)
     END DO
     DO bb = 1,nbins
-       CALL DiagInitAero(bb)
+       a_rc(:,:,:) = a_rc(:,:,:) + a_maerop(:,:,:,(nc-1)*nbins+bb)
     END DO
 
     ! Ice
     a_ri(:,:,:) = 0.
     DO bb = 1,nice
-       CALL DiagInitIce(bb)
+       a_ri(:,:,:) = a_ri(:,:,:) + a_micep(:,:,:,(nc-1)*nice + bb)
     END DO
 
  END SUBROUTINE SALSAInit
@@ -781,137 +774,27 @@ CONTAINS
 
     ! Remove water from the vapor phase
     a_rp(:,:,:) = a_rp(:,:,:) -    &
-       MERGE( a_vactd(:,:,:,m)-frac(:,:,:)*a_maerop(:,:,:,mpar), 0.,  &
-       pactmask(:,:,:))
+                  MERGE( a_vactd(:,:,:,m)-frac(:,:,:)*a_maerop(:,:,:,mpar), 0.,  &
+                         pactmask(:,:,:))
 
     ! Remove aerosol particles due to activation
     a_naerop(:,:,:,bpar) = a_naerop(:,:,:,bpar) -   &
-       MERGE(a_nactd(:,:,:,b), 0., pactmask(:,:,:))
+                           MERGE(a_nactd(:,:,:,b), 0., pactmask(:,:,:))
 
     ! Water from aerosol phase
     a_maerop(:,:,:,mpar) = a_maerop(:,:,:,mpar) -   &
-       MERGE(frac(:,:,:)*a_maerop(:,:,:,mpar), 0., pactmask(:,:,:))
+                           MERGE(frac(:,:,:)*a_maerop(:,:,:,mpar), 0., pactmask(:,:,:))
 
     ! Aerosol mass
     DO s = 1,GetNcomp(prtcl)
        m = (s-1)*ncld + b
        mpar = (s-1)*nbins + bpar
        a_maerop(:,:,:,mpar) = a_maerop(:,:,:,mpar) -  &
-          MERGE(a_vactd(:,:,:,m), 0., pactmask(:,:,:))
+                              MERGE(a_vactd(:,:,:,m), 0., pactmask(:,:,:))
     END DO
 
  END SUBROUTINE ActInit
- !------------------------------------------
- SUBROUTINE DiagInitCloud(b)
-    USE mo_submctl, ONLY : ncld, pi6, rhowa, rhosu, nlim
-    USE class_componentIndex, ONLY : GetIndex
-    IMPLICIT NONE
 
-    INTEGER, INTENT(in) :: b
-
-    INTEGER :: str,k,i,j,nc
-    REAL :: zvol
-
-    nc = GetIndex(prtcl,'H2O')
-    str = (nc-1)*ncld+b
-
-    DO j = 1,nyp
-       DO i = 1,nxp
-          DO k = 1,nzp
-
-             IF (a_ncloudp(k,i,j,b)  > nlim) THEN
-                CALL binMixrat('cloud','dry',b,i,j,k,zvol)
-                zvol = zvol/rhosu
-                a_Rcdry(k,i,j,b) = 0.5*( zvol/(pi6*a_ncloudp(k,i,j,b)) )**(1./3.)
-                CALL binMixrat('cloud','wet',b,i,j,k,zvol)
-                zvol = zvol/rhowa
-                a_Rcwet(k,i,j,b) = 0.5*( zvol/(pi6*a_ncloudp(k,i,j,b)) )**(1./3.)
-             ELSE
-                a_Rcdry(k,i,j,b) = 1.e-10
-                a_Rcwet(k,i,j,b) = 1.e-10
-             END IF
-
-             ! Cloud water
-             a_rc(k,i,j) = a_rc(k,i,j) + a_mcloudp(k,i,j,str)
-
-          END DO ! k
-       END DO ! i
-    END DO ! j
- END SUBROUTINE DiagInitCloud
-   !------------------------------------------
- SUBROUTINE DiagInitIce(b)
-    USE mo_submctl, ONLY : nice, pi6, rhosu,rhoic, prlim
-    USE class_componentIndex, ONLY : IsUsed, GetIndex
-    IMPLICIT NONE
-
-    INTEGER, INTENT(in) :: b
-
-    INTEGER :: str,k,i,j,nc
-    REAL :: zvol
-
-    nc = GetIndex(prtcl,'H2O')
-    str = (nc-1)*nice + b
-
-    DO j = 1,nyp
-       DO i = 1,nxp
-          DO k = 1,nzp
-
-             IF (a_nicep(k,i,j,b)  > prlim) THEN
-                CALL binMixrat('ice','dry',b,i,j,k,zvol)
-                zvol = zvol/rhosu
-                a_Ridry(k,i,j,b) = 0.5*( zvol/(pi6*a_nicep(k,i,j,b)) )**(1./3.)
-                CALL binMixrat('ice','wet',b,i,j,k,zvol)
-                zvol = zvol/rhoic
-                a_Riwet(k,i,j,b) = 0.5*( zvol/(pi6*a_nicep(k,i,j,b)) )**(1./3.)
-             ELSE
-                a_Ridry(k,i,j,b) = 1.e-10
-                a_Riwet(k,i,j,b) = 1.e-10
-             END IF
-
-             ! Cloud ice
-             a_ri(k,i,j) = a_ri(k,i,j) + a_micep(k,i,j,str)
-
-          END DO ! k
-       END DO ! i
-    END DO ! j
- END SUBROUTINE DiagInitIce
-   !------------------------------------------
- SUBROUTINE DiagInitAero(b)
-    USE mo_submctl, ONLY : nbins, pi6, rhowa, nlim
-    USE class_componentIndex, ONLY : IsUsed, GetIndex
-    IMPLICIT NONE
-
-    INTEGER, INTENT(in) :: b
-
-    INTEGER :: k,i,j,nc, str
-    REAL :: zvol
-
-    nc = GetIndex(prtcl,'H2O')
-    str = (nc-1)*nbins+b
-
-    DO j = 1,nyp
-       DO i = 1,nxp
-          DO k = 1,nzp
-
-             IF (a_naerop(k,i,j,b) > nlim) THEN
-                CALL binMixrat('aerosol','dry',b,i,j,k,zvol)
-                a_Radry(k,i,j,b) = 0.5*( zvol/(pi6*a_naerop(k,i,j,b)) )**(1./3.)
-                CALL binMixrat('aerosol','wet',b,i,j,k,zvol)
-                a_Rawet(k,i,j,b) = 0.5*( zvol/(pi6*a_naerop(k,i,j,b)) )**(1./3.)
-             ELSE
-                a_Radry(k,i,j,b) = 1.e-10
-                a_Rawet(k,i,j,b) = 1.e-10
-             END IF
-
-             ! To cloud water
-             a_rc(k,i,j) = a_rc(k,i,j) + a_maerop(k,i,j,str)
-
-          END DO ! k
-       END DO ! i
-    END DO ! j
- END SUBROUTINE DiagInitAero
-
-   !
  ! --------------------------------------------------------------------------------------------------
  ! Replacement for subroutine init_aero_sizedist (init.f90): initilize altitude-dependent aerosol
  ! size distributions and compositions.
@@ -924,8 +807,8 @@ CONTAINS
     USE mo_salsa_sizedist, ONLY : size_distribution
     USE mo_salsa_driver, ONLY : aero
     USE mo_submctl, ONLY : pi6, nbins, in1a,in2a,in2b,fn1a,fn2a,fn2b,  &
-       sigmag, dpg, n, volDistA, volDistB, nf2a, nreg,isdtyp,nspec,maxspec, &
-       rhosu, rhooc, rhobc, rhodu, rhoss, rhono, rhonh
+                           sigmag, dpg, n, volDistA, volDistB, nf2a, nreg,isdtyp,nspec,maxspec, &
+                           rhosu, rhooc, rhobc, rhodu, rhoss, rhono, rhonh
     USE mpi_interface, ONLY : myid
 
     IMPLICIT NONE
@@ -936,7 +819,7 @@ CONTAINS
     REAL :: pvfOC1a(nzp)                              ! Mass distribution between SO4 and OC in 1a
     INTEGER :: ss,ee,i,j,k
     INTEGER :: iso4=-1, ioc=-1, ibc=-1, idu=-1, &
-       iss=-1, inh=-1, ino=-1
+               iss=-1, inh=-1, ino=-1
 
     CHARACTER(len=600) :: fmt = &
        "(/,' -------------------------------------------------',/," // &
@@ -1155,14 +1038,14 @@ CONTAINS
 
     !USE mo_salsa_driver, ONLY : aero
     USE mo_submctl, ONLY : nbins, in2a,in2b,fn2a,fn2b,  &
-       nspec, ncld, nice, initliqice, &
-       liqFracA,iceFracA,liqFracB,iceFracB
+                           nspec, ncld, nice, initliqice, &
+                           liqFracA,iceFracA,liqFracB,iceFracB
 
     IMPLICIT NONE
 
     INTEGER :: i,j,k,bb,m
     REAL :: zumA, zumB, zumCumIce, zumCumLiq, &
-       excessIce, excessLiq,excessFracIce,excessFracLiq
+            excessIce, excessLiq,excessFracIce,excessFracLiq
 
     ! initialize liquid and ice only if it is determinded so in the namelist.salsa
     IF(initliqice) THEN
@@ -1327,7 +1210,7 @@ CONTAINS
  SUBROUTINE READ_AERO_INPUT(piso4,pioc,ppndist,ppvfOC1a,ppvf2a,ppvf2b,ppnf2a)
     USE ncio, ONLY : open_aero_nc, read_aero_nc_1d, read_aero_nc_2d, close_aero_nc
     USE mo_submctl, ONLY : nbins,  &
-       nspec, maxspec, nmod
+                           nspec, maxspec, nmod
     USE mo_salsa_sizedist, ONLY : size_distribution
     USE mpi_interface, ONLY : appl_abort, myid
     IMPLICIT NONE
@@ -1344,16 +1227,16 @@ CONTAINS
     INTEGER :: nc_levs=500, nc_nspec, nc_nmod
 
     ! Stuff that will be read from the file
-    REAL, ALLOCATABLE :: zlevs(:),         &  ! Levels in meters
-       zvolDistA(:,:),  &  ! Volume distribution of aerosol species in a and b bins
-       zvoldistB(:,:),  &  ! (Don't mess these with the ones in namelist.salsa -
+    REAL, ALLOCATABLE :: zlevs(:),        &  ! Levels in meters
+                         zvolDistA(:,:),  &  ! Volume distribution of aerosol species in a and b bins
+                         zvoldistB(:,:),  &  ! (Don't mess these with the ones in namelist.salsa -
                            !  they are not used here!)
-       znf2a(:),        &  ! Number fraction for bins 2a
-       zn(:,:),         &  ! Aerosol mode number concentrations
-       zsigmag(:,:),    &  ! Geometric standard deviations
-       zdpg(:,:),       &  ! Mode mean diameters
-       znsect(:,:),     &  ! Helper for binned number concentrations
-       helper(:,:)         ! nspec helper
+                         znf2a(:),        &  ! Number fraction for bins 2a
+                         zn(:,:),         &  ! Aerosol mode number concentrations
+                         zsigmag(:,:),    &  ! Geometric standard deviations
+                         zdpg(:,:),       &  ! Mode mean diameters
+                         znsect(:,:),     &  ! Helper for binned number concentrations
+                         helper(:,:)         ! nspec helper
     LOGICAL :: READ_NC
 
     ! Read the NetCDF input when it is available
@@ -1366,16 +1249,16 @@ CONTAINS
     ! ....
 
     ! Allocate input variables
-    ALLOCATE( zlevs(nc_levs),               &
-       zvolDistA(nc_levs,maxspec),  &
-       zvolDistB(nc_levs,maxspec),  &
-       znf2a(nc_levs),              &
-       zn(nc_levs,nmod),            &
-       zsigmag(nc_levs,nmod),       &
-       zdpg(nc_levs,nmod),          &
-       ! Couple of helper arrays
-       znsect(nc_levs,nbins),        &
-       helper(nc_levs,nspec)        )
+    ALLOCATE( zlevs(nc_levs),              &
+              zvolDistA(nc_levs,maxspec),  &
+              zvolDistB(nc_levs,maxspec),  &
+              znf2a(nc_levs),              &
+              zn(nc_levs,nmod),            &
+              zsigmag(nc_levs,nmod),       &
+              zdpg(nc_levs,nmod),          &
+        ! Couple of helper arrays
+              znsect(nc_levs,nbins),       &
+              helper(nc_levs,nspec)        )
 
     zlevs = 0.; zvolDistA = 0.; zvolDistB = 0.; znf2a = 0.; zn = 0.; zsigmag = 0.
     zdpg = 0.; znsect = 0.; helper = 0.

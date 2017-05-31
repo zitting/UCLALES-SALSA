@@ -485,7 +485,7 @@ CONTAINS
    ! Juha Tonttila, FMI, 2014
    !
    SUBROUTINE maskactiv(act_mask,nx,ny,nz,nbins,mode,prtcl,rh,    &
-      rc,pa_naerop, pa_maerop, pt, w)
+                        rc,pa_naerop, pa_maerop, pt, w)
       USE mo_submctl, ONLY : rhowa, rhosu, rhooc, rhoss, mwa, msu, moc, mss, pi6, nlim
       USE class_ComponentIndex, ONLY : ComponentIndex,GetIndex,IsUsed
       IMPLICIT NONE
@@ -494,10 +494,10 @@ CONTAINS
       REAL, INTENT(in)    :: rh(nz,nx,ny)
 
       REAL, OPTIONAL, INTENT(in) :: pa_naerop(nz,nx,ny,nbins),    &
-         pa_maerop(nz,nx,ny,8*nbins),  &
-         pt(nz,nx,ny),                 &
-         w(nz,nx,ny),                  &
-         rc(nz,nx,ny)
+                                    pa_maerop(nz,nx,ny,8*nbins),  &
+                                    pt(nz,nx,ny),                 &
+                                    w(nz,nx,ny),                  &
+                                    rc(nz,nx,ny)
     
       INTEGER, INTENT(in) :: mode ! 1 = Initialization; 2 = Normal timestepping
       TYPE(ComponentIndex), INTENT(in) :: prtcl
@@ -509,8 +509,8 @@ CONTAINS
       LOGICAL :: actmask_oldcloud(nz,nx,ny)
       LOGICAL :: cldmask(nz,nx,ny)
       LOGICAL :: cldm1(nz,nx,ny),   & !inverse cloud mask offset downwards by one grid level
-         cldp1(nz,nx,ny),   & !inverse cloud mask offset upwards by one grid level
-         cldpm(nz,nx,ny)
+                 cldp1(nz,nx,ny),   & !inverse cloud mask offset upwards by one grid level
+                 cldpm(nz,nx,ny)
 
       REAL :: nwpure ! number of moles for 1 micron droplet of pure water
       REAL :: nwkelvin ! kelvin effect for 1 micron droplet
@@ -559,7 +559,7 @@ CONTAINS
                      ! -- Get the water content and the soluble material content for imaginary 1 micron droplets
                      ! -- Kelvin effect for 1 micron droplets
                      nwkelvin = EXP( 4.*0.073*mwa /           &
-                        (8.314*pt(k,i,j)*rhowa*(1.e-6)) )
+                                   (8.314*pt(k,i,j)*rhowa*(1.e-6)) )
 
                      nsaero(:) = 0.
                      vsaero(:) = 0.
@@ -618,7 +618,7 @@ CONTAINS
             cldp1(:,:,:) = .TRUE.
             cldp1(2:nz,:,:) = ( .NOT. cldpm(1:nz-1,:,:) )
             actmask_newcloud(:,:,:) = ( cldpm(:,:,:) .AND. cldp1(:,:,:) ) .AND. ( w(:,:,:) > 0. ) &
-               .AND. (rc(:,:,:)<5.e-5)
+                                       .AND. (rc(:,:,:)<5.e-5)
 
             ! Base of existing cloud
             cldpm(:,:,:) = .FALSE.
@@ -633,7 +633,7 @@ CONTAINS
             DO k = 2,nz-1
                ! New cloud + no old cloud
                act_mask(k,:,:) = MERGE( (actmask_oldcloud(k,:,:) .OR. actmask_newcloud(k,:,:))  &
-                  .AND. cldp1(k,:,:), .FALSE., notused(:,:))
+                                 .AND. cldp1(k,:,:), .FALSE., notused(:,:))
                notused(:,:) = notused(:,:) .AND. .NOT. act_mask(k,:,:)
                notused(:,:) =  (rh(k,:,:) < 0.99 .OR. notused(:,:))
             END DO

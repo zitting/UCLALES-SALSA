@@ -23,19 +23,19 @@ MODULE stat
    USE ncio, ONLY : open_nc, define_nc, define_nc_cs
    USE grid, ONLY : level
    USE util, ONLY : get_avg3, get_cor3, get_var3, get_avg_ts, &
-      get_avg2dh, get_3rd3
+                    get_avg2dh, get_3rd3
 
    IMPLICIT NONE
    PRIVATE
 
    INTEGER, PARAMETER :: nvar1 = 28,               &
-      nv1sbulk = 62,            &
-      nv1MB = 4,                &
-      nvar2 = 92,               &
-      nv2sbulk = 40,            &
-      nv2saa = 8, nv2sab = 8,   &
-      nv2sca = 8, nv2scb = 8,   &
-      nv2sp = 8
+                         nv1sbulk = 62,            &
+                         nv1MB = 4,                &
+                         nvar2 = 92,               &
+                         nv2sbulk = 40,            &
+                         nv2saa = 8, nv2sab = 8,   &
+                         nv2sca = 8, nv2scb = 8,   &
+                         nv2sp = 8
 
    INTEGER, SAVE      :: nvar_spec3=0
 
@@ -58,7 +58,7 @@ MODULE stat
    ! 5. Make sure stat_init is up to date (boolean arrays etc).
 
 
-   CHARACTER (len=7), SAVE :: s1(nvar1)=(/                           &
+   CHARACTER (len=7), SAVE :: s1(nvar1)=(/                         &
       'time   ','cfl    ','maxdiv ','zi1_bar','zi2_bar','zi3_bar', & ! 1
       'vtke   ','sfcbflx','wmax   ','tsrf   ','ustar  ','shf_bar', & ! 7
       'lhf_bar','zi_bar ','lwp_bar','lwp_var','zc     ','zb     ', & !13
@@ -148,19 +148,19 @@ MODULE stat
    LOGICAL, SAVE :: s2bool(nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+nv2sp)
    LOGICAL, SAVE :: s1bool(nvar1+nv1sbulk)
 
-   REAL, SAVE, ALLOCATABLE   :: tke_sgs(:), tke_res(:), tke0(:), wtv_sgs(:),  &
-      wtv_res(:), wrl_sgs(:), thvar(:), svctr(:,:), ssclr(:),               &
+   REAL, SAVE, ALLOCATABLE   :: tke_sgs(:), tke_res(:), tke0(:), wtv_sgs(:),            &
+                                wtv_res(:), wrl_sgs(:), thvar(:), svctr(:,:), ssclr(:), &
       ! Additional ssclr and svctr for BULK SALSA output
-      svctr_b(:,:), ssclr_b(:),                                             &
+                                svctr_b(:,:), ssclr_b(:),                               &
       ! Additional ssclr and svctr for BINNED SALSA output.
-      svctr_aa(:,:,:), svctr_ca(:,:,:), svctr_p(:,:,:),                     &
-      svctr_ab(:,:,:), svctr_cb(:,:,:),                                     &
-      ! Mass budget arrays
-      massbdg(:), scs_rm(:,:,:)
+                                svctr_aa(:,:,:), svctr_ca(:,:,:), svctr_p(:,:,:),       &
+                                svctr_ab(:,:,:), svctr_cb(:,:,:),                       &
+            ! Mass budget arrays
+                                massbdg(:), scs_rm(:,:,:)
 
-   PUBLIC :: sflg, ssam_intvl, savg_intvl, statistics, init_stat, write_ps,   &
-      acc_tend, updtst, sfc_stat, close_stat, fill_scalar, tke_sgs, sgsflxs,&
-      sgs_vel, comp_tke, get_zi, acc_removal, cs_rem_set, acc_massbudged, write_massbudged, mcflg, csflg
+   PUBLIC :: sflg, ssam_intvl, savg_intvl, statistics, init_stat, write_ps,        &
+             acc_tend, updtst, sfc_stat, close_stat, fill_scalar, tke_sgs, sgsflxs,&
+             sgs_vel, comp_tke, get_zi, acc_removal, cs_rem_set, acc_massbudged, write_massbudged, mcflg, csflg
 
 CONTAINS
    !
@@ -249,8 +249,8 @@ CONTAINS
          ALLOCATE ( ssclr(nvar1), svctr(nzp,nvar2) )
          ALLOCATE ( ssclr_b(nv1sbulk), svctr_b(nzp,nv2sbulk))
          ALLOCATE ( svctr_aa(nzp,fn2a,nv2saa), svctr_ab(nzp,fn2b-fn2a,nv2sab),          &
-            svctr_ca(nzp,fca%cur,nv2sca), svctr_cb(nzp,fcb%cur-fca%cur,nv2scb), &
-            svctr_p(nzp,nprc,nv2sp)   )
+                    svctr_ca(nzp,fca%cur,nv2sca), svctr_cb(nzp,fcb%cur-fca%cur,nv2scb), &
+                    svctr_p(nzp,nprc,nv2sp)   )
          IF (mcflg) &
             ALLOCATE ( massbdg(nv1MB) ) ! Mass budged array
          svctr(:,:) = 0.
@@ -483,7 +483,7 @@ CONTAINS
       CALL open_nc( fname, expnme, time,(nxp-4)*(nyp-4), ncid2, nrec2, ver, author, info)
       ! Juha: Modified due to SALSA output
       CALL define_nc( ncid2, nrec2, COUNT(s2bool), PACK(s2Total,s2bool), n1=nzp, inae_a=fn2a, inae_b=fn2b-fn2a, &
-         incld_a=fca%cur, incld_b=fcb%cur-fca%cur, inprc=fra)
+                      incld_a=fca%cur, incld_b=fcb%cur-fca%cur, inprc=fra)
       IF (myid == 0) PRINT *, '   ...starting record: ', nrec2
 
 
@@ -513,10 +513,10 @@ CONTAINS
    ! Jaakko Ahola, FMI, 2016
    SUBROUTINE statistics(time)
 
-      USE grid, ONLY : a_up, a_vp, a_wp, a_rc, a_theta, a_rsl           &
-         , a_rp, a_tp, a_press, nxp, nyp, nzp, dzm, dzt, zm, zt, th00, umean            &
-         , vmean, dn0, precip, a_rpp, a_npp, CCN, iradtyp, a_rflx               &
-         , a_sflx, albedo, a_srp, a_snrp, a_ncloudp, xt, yt
+      USE grid, ONLY : a_up, a_vp, a_wp, a_rc, a_theta, a_rsl,                               &
+                       a_rp, a_tp, a_press, nxp, nyp, nzp, dzm, dzt, zm, zt, th00, umean,    &
+                       vmean, dn0, precip, a_rpp, a_npp, CCN, iradtyp, a_rflx,               &
+                       a_sflx, albedo, a_srp, a_snrp, a_ncloudp, xt, yt
 
       REAL, INTENT (in) :: time
 
@@ -540,8 +540,8 @@ CONTAINS
       !
       ! profile statistics
       !
-      CALL accum_stat(nzp, nxp, nyp, a_up, a_vp, a_wp, a_tp, a_press, umean &
-         ,vmean,th00)
+      CALL accum_stat(nzp, nxp, nyp, a_up, a_vp, a_wp, a_tp, a_press, umean, &
+                      vmean,th00)
       IF (iradtyp == 3) THEN
          CALL accum_rad(nzp, nxp, nyp, a_rflx, sflx=a_sflx, alb=albedo)
       ELSE IF (iradtyp > 0) THEN
@@ -549,9 +549,9 @@ CONTAINS
       END IF
       IF (level >=1) CALL accum_lvl1(nzp, nxp, nyp, rxt)
       IF (level >=2) CALL accum_lvl2(nzp, nxp, nyp, th00, dn0, zm, a_wp,        &
-         a_theta, a_tp, a_rc, a_rsl, rxt   )
+                                     a_theta, a_tp, a_rc, a_rsl, rxt   )
       IF (level >=3) CALL accum_lvl3(nzp, nxp, nyp, dn0, zm, xrpp,  &
-         xnpp, precip, CCN                    )
+                                     xnpp, precip, CCN                    )
       IF (level >=4)  CALL accum_lvl4(nzp, nxp, nyp)
        !for Salsa output in ps files .. by Zubair Maalick
 
@@ -639,10 +639,10 @@ CONTAINS
 
       INTEGER, INTENT(in) :: n2,n3,n4   ! Grid dimensions
       REAL, INTENT(in) :: raer(n2,n3,n4*nbins), & ! Removal arrays
-         rcld(n2,n3,n4*ncld), &
-         rprc(n2,n3,n4*nprc), &
-         rice(n2,n3,n4*nice), &
-         rsnw(n2,n3,n4*nsnw)
+                          rcld(n2,n3,n4*ncld),  &
+                          rprc(n2,n3,n4*nprc),  &
+                          rice(n2,n3,n4*nice),  &
+                          rsnw(n2,n3,n4*nsnw)
 
       INTEGER :: si, i, end,str
 
@@ -743,7 +743,7 @@ CONTAINS
       REAL, INTENT(in)    :: rc(n1,n2,n3),nc(n1,n2,n3),rp(n1,n2,n3),np(n1,n2,n3),th(n1,n2,n3)
       REAL, INTENT(in)    :: dn0(n1),zm(n1),zt(n1),dzm(n1),xt(n2),yt(n3),time
       REAL :: lwp(n2,n3), ncld(n2,n3), rwp(n2,n3), nrain(n2,n3), zb(n2,n3), zc(n2,n3), &
-         th1(n2,n3), lmax(n2,n3)
+              th1(n2,n3), lmax(n2,n3)
       INTEGER :: ncloudy(n2,n3), nrainy(n2,n3)
       INTEGER :: i, j, k
       REAL    :: cld, rn, sval, dmy
@@ -1098,7 +1098,7 @@ CONTAINS
    ! on level 2 variables.
    !
    SUBROUTINE accum_lvl2(n1, n2, n3, th00, dn0, zm, w, th, tl, &
-      rl, rs, rt)
+                         rl, rs, rt)
 
       USE defs, ONLY : ep2
 
@@ -1325,12 +1325,12 @@ CONTAINS
    ! on level 4 variables.
    !
    SUBROUTINE accum_lvl4(n1,n2,n3)
-      USE mo_submctl, ONLY : in1a,in2b,fn2a,fn2b, &
-         ica,fca,icb,fcb,ira,fra, &
-         nprc,nlim,prlim
+      USE mo_submctl, ONLY : in1a,in2b,fn2a,fn2b,     &
+                             ica,fca,icb,fcb,ira,fra, &
+                             nprc,nlim,prlim
       USE grid, ONLY : bulkNumc, bulkMixrat, meanRadius, binSpecMixrat, &
-         a_rc, a_srp, a_rp, a_rh, prtcl,    &
-         a_naerop, a_ncloudp, a_nprecpp
+                       a_rc, a_srp, a_rp, a_rh, prtcl,    &
+                       a_naerop, a_ncloudp, a_nprecpp
       USE class_ComponentIndex, ONLY : IsUsed
 
       IMPLICIT NONE
@@ -1607,11 +1607,11 @@ CONTAINS
          DO i=3,n2-2
             DO k=2,n1-1
                uw_shear = -(u(k,i,j)-ub(k))*fact*(                              &
-                  (w(k,i,j)  +w(k,i+1,j)  )*(ub(k+1)-ub(k)  )*dzm(k) +        &
-                  (w(k-1,i,j)+w(k-1,i+1,j))*(ub(k)  -ub(k-1))*dzm(k-1))
+                           (w(k,i,j)  +w(k,i+1,j)  )*(ub(k+1)-ub(k)  )*dzm(k) +        &
+                           (w(k-1,i,j)+w(k-1,i+1,j))*(ub(k)  -ub(k-1))*dzm(k-1))
                IF (j > 1) vw_shear = -(v(k,i,j)-vb(k))*fact*(                   &
-                  (w(k,i,j)  +w(k,i,j+1)  )*(vb(k+1)-vb(k)  )*dzm(k) +        &
-                  (w(k-1,i,j)+w(k-1,i,j+1))*(vb(k)  -vb(k-1))*dzm(k-1))
+                                      (w(k,i,j)  +w(k,i,j+1)  )*(vb(k+1)-vb(k)  )*dzm(k) +  &
+                                      (w(k-1,i,j)+w(k-1,i,j+1))*(vb(k)  -vb(k-1))*dzm(k-1))
 
                svctr(k,48) = svctr(k,48)+uw_shear
                svctr(k,36) = svctr(k,36)+uw_shear+vw_shear
@@ -1660,7 +1660,7 @@ CONTAINS
       USE netcdf
       USE defs, ONLY : alvl, cp
       USE mo_submctl, ONLY : in1a,in2b,fn2a,fn2b,fca,ica,fcb,icb,fra,ira, &
-         aerobins,cloudbins,precpbins
+                             aerobins,cloudbins,precpbins
 
       INTEGER, INTENT (in) :: n1
       REAL, INTENT (in)    :: time
@@ -1680,9 +1680,9 @@ CONTAINS
          svctr(k,54) = svctr(k,54)*alvl
          svctr(k,62) = svctr(k,62)*alvl
          svctr(k,37) = svctr(k,44) + svctr(k,47) +(                         &
-            +svctr(k,45) + svctr(kp1,45) + svctr(k,46) + svctr(kp1,46)    &
-            +svctr(k,42) + svctr(kp1,42) + svctr(k,43) + svctr(kp1,43)    &
-            -svctr(k,36) - svctr(kp1,36)   )*0.5
+                       +svctr(k,45) + svctr(kp1,45) + svctr(k,46) + svctr(kp1,46)    &
+                       +svctr(k,42) + svctr(kp1,42) + svctr(k,43) + svctr(kp1,43)    &
+                       -svctr(k,36) - svctr(kp1,36)   )*0.5
          IF (lsttm>fsttm) THEN
             svctr(k,49) = (tke_res(k) - tke0(k))/(lsttm-fsttm)
          ELSE
@@ -1697,6 +1697,9 @@ CONTAINS
             svctr_ca(k,:,:) = svctr_ca(k,:,:)/nsmp
             svctr_cb(k,:,:) = svctr_cb(k,:,:)/nsmp
             svctr_p(k,:,:) = svctr_p(k,:,:)/nsmp
+
+            ! Replace level 3 CDNC=CCN with that from SALSA (a + b bins)
+            svctr(k,84)=svctr_b(k,8)+svctr_b(k,9)
          END IF
 
       END DO
@@ -1740,7 +1743,7 @@ CONTAINS
       DO n=10,nvar2
          iret = nf90_inq_varid(ncid2, s2(n), VarID)
          iret = nf90_put_var(ncid2,VarID,svctr(:,n), start=(/1,nrec2/),    &
-            count=(/n1,1/))
+                             count=(/n1,1/))
       END DO
 
       IF (level >= 4) THEN
@@ -1749,7 +1752,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2SalsaBulk(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! This is intended to mainly keep track of which variables are used
             iret = nf90_put_var(ncid2,VarID,svctr_b(:,n), start=(/1,nrec2/),  &
-               count=(/n1,1/))
+                                count=(/n1,1/))
          END DO
 
          ! Binned aerosols, regime a
@@ -1757,7 +1760,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Aeroa(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! keep track of used vars
             iret = nf90_put_var(ncid2,VarID,svctr_aa(:,:,n), start=(/1,1,nrec2/),  &
-               count=(/n1,fn2a,1/))
+                                count=(/n1,fn2a,1/))
          END DO
 
          ! Aerosols, regime b
@@ -1765,7 +1768,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Aerob(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! Keep track of used variables
             iret = nf90_put_var(ncid2,VarID,svctr_ab(:,:,n), start=(/1,1,nrec2/),  &
-               count=(/n1,fn2b-fn2a,1/))
+                                count=(/n1,fn2b-fn2a,1/))
          END DO
 
          ! Cloud droplets, regime a
@@ -1773,7 +1776,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Clouda(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! Keep track of used variables
             iret = nf90_put_var(ncid2,VarID,svctr_ca(:,:,n), start=(/1,1,nrec2/),  &
-               count=(/n1,fca%cur,1/))
+                                count=(/n1,fca%cur,1/))
          END DO
 
          ! Cloud droplets, regime b
@@ -1781,7 +1784,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Cloudb(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! Keep track of used variables
             iret = nf90_put_var(ncid2,VarID,svctr_cb(:,:,n), start=(/1,1,nrec2/),  &
-               count=(/n1,fcb%cur-fca%cur,1/))
+                                count=(/n1,fcb%cur-fca%cur,1/))
          END DO
 
          ! Precipitation
@@ -1789,7 +1792,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Precp(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! Keep track of used variables
             iret = nf90_put_var(ncid2,VarID,svctr_p(:,:,n), start=(/1,1,nrec2/),   &
-               count=(/n1,fra,1/))
+                                count=(/n1,fra,1/))
          END DO
 
       END IF
@@ -1894,9 +1897,9 @@ CONTAINS
             DO i = 3,n2-2
                DO k = 1,n1-1
                   IF (rl(k+1,i,j) > 0.) THEN
-                     fctt = rnpts*(1. + rv(k,i,j)*(1.+ep2 +ep2*rv(k,i,j)*alvl   &
-                        /(rm*th(k,i,j))))                                     &
-                        /(1.+(rv(k,i,j)*(alvl/th(k,i,j))**2)/(rm*cp))
+                     fctt = rnpts*(1. + rv(k,i,j)*(1.+ep2 +ep2*rv(k,i,j)*alvl     &
+                            /(rm*th(k,i,j))))                                     &
+                            /(1.+(rv(k,i,j)*(alvl/th(k,i,j))**2)/(rm*cp))
                      SELECT CASE (type)
                         CASE ('tl')
                            fctl =-rnpts/(rm*th(k,i,j)**2/(rv(k,i,j)*alvl)+alvl/cp)
@@ -2094,9 +2097,9 @@ CONTAINS
       INTEGER, INTENT(in)           :: n2,n3,n4                     ! Grid dimensions
       REAL, INTENT(in)              :: raer(n2,n3,n4*nbins)        ! Array containing the binned 2d-field
       REAL, OPTIONAL, INTENT(in)    :: rcld(n2,n3,n4*ncld), &
-         rprc(n2,n3,n4*nprc), &     ! 2 optional arrays for calculating total removals
-         rice(n2,n3,n4*nice), &
-         rsnw(n2,n3,n4*nsnw)
+                                       rprc(n2,n3,n4*nprc), &     ! 2 optional arrays for calculating total removals
+                                       rice(n2,n3,n4*nice), &
+                                       rsnw(n2,n3,n4*nsnw)
 
       CHARACTER(len=3), PARAMETER :: zspec(7) = (/'SO4','OC ','BC ','DU ','SS ','NH ','NO '/)
       INTEGER, PARAMETER          :: sstrt(7) = (/28,    33,   38,   43,   48,   53,   58/)
@@ -2249,7 +2252,7 @@ CONTAINS
    ! Juha Tonttila, FMI, 2016
    !
    SUBROUTINE acc_massbudged(n1,n2,n3,type,tstep,dz,dn,    &
-      rv,rc,prc,revap,rdep,ApVdom   )
+                             rv,rc,prc,revap,rdep,ApVdom   )
       USE mo_submctl, ONLY : rhowa
       IMPLICIT NONE
 
@@ -2263,10 +2266,10 @@ CONTAINS
 
       REAL, INTENT(in), OPTIONAL :: rv(n1,n2,n3)      ! Water vapor mixing ratio
       REAL, INTENT(in), OPTIONAL :: rc(n1,n2,n3), &   ! Cloud water mixing ratio
-         prc(n1,n2,n3)     ! Precipitation mixing ratio
+                                    prc(n1,n2,n3)     ! Precipitation mixing ratio
 
       REAL, INTENT(in), OPTIONAL :: revap(n2,n3), &   ! Gain of water through evaporation at the surface
-         rdep(n2,n3)       ! Loss of water through deposition
+                                    rdep(n2,n3)       ! Loss of water through deposition
 
       REAL, INTENT(in), OPTIONAL :: ApVdom            ! Domain surface area / Domain atm volume
 
@@ -2364,8 +2367,8 @@ CONTAINS
                   END DO
                   IF (k == n1-2) zibar = -999.
                   IF (zibar /= -999.) zibar = zibar + z(k-1) +  &
-                     (threshold - sx(k-1,i,j))/xx(k-1)     /  &
-                     (sx(k,i,j) - sx(k-1,i,j) + epsilon(1.))
+                                             (threshold - sx(k-1,i,j))/xx(k-1)     /  &
+                                             (sx(k,i,j) - sx(k-1,i,j) + epsilon(1.))
                END DO
             END DO
             IF (zibar /= -999.) get_zi = zibar/REAL((n3-4)*(n2-4))

@@ -4,7 +4,7 @@ MODULE mo_salsa_sizedist
 CONTAINS
 
    SUBROUTINE size_distribution( kbdim, klev, &
-      n, dpg, sigmag, naero)
+                                 n, dpg, sigmag, naero)
 
       USE mo_submctl, ONLY :      &
          nreg,                      &
@@ -18,13 +18,13 @@ CONTAINS
 
       INTEGER, PARAMETER :: nmod = 7
 
-      INTEGER, INTENT(IN) ::          &
+      INTEGER, INTENT(IN) ::      &
          kbdim,                     & ! dimension for arrays
          klev                         ! number of vertical levels
 
       REAL, INTENT(IN) ::         &
-         n(nmod)                  , & ! total concentration of a mode
-         dpg(nmod)                , & ! geometric-mean diameter of a mode
+         n(nmod),                   & ! total concentration of a mode
+         dpg(nmod),                 & ! geometric-mean diameter of a mode
          sigmag(nmod)                 ! standard deviation of a mode
 
       REAL, INTENT(OUT) ::        &
@@ -60,8 +60,8 @@ CONTAINS
                   !   dpg = geometric-mean number, area, or volume diameter
                   !   n(kk) = number, area, or volume concentration in a bin
                   naero(ii,jj,kk) = naero(ii,jj,kk)+sum(n*deltadp/                        &
-                     (sqrt(2.*pi)*log(sigmag))*                 &
-                     exp(-log(dmid/dpg)**2/(2.*log(sigmag)**2)))
+                                                        (sqrt(2.*pi)*log(sigmag))*        &
+                                                        exp(-log(dmid/dpg)**2/(2.*log(sigmag)**2)))
                END DO
 
             END DO

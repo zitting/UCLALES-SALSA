@@ -176,10 +176,10 @@ CONTAINS
           IF (j >= 1 .AND. j < nsizes) THEN
              j1 = j+1
              wght = (pre(k)-re(j))/(re(j1)-re(j))
-             tw(k) = dz(k) * cwmks * ( bz(j,ib) / fl(j) +   &
-                  ( bz(j1,ib) / fl(j1) - bz(j,ib) / fl(j) ) /    &
-                  ( 1.0 / re(j1) - 1.0 / re(j) ) * ( 1.0 / pre(k) &
-                  - 1.0 / re(j) ) )
+             tw(k) = dz(k) * cwmks * ( bz(j,ib) / fl(j) +            &
+                     ( bz(j1,ib) / fl(j1) - bz(j,ib) / fl(j) ) /     &
+                     ( 1.0 / re(j1) - 1.0 / re(j) ) * ( 1.0 / pre(k) &
+                     - 1.0 / re(j) ) )
              ww(k) = wz(j,ib) + (wz(j1,ib) - wz(j,ib) ) * wght
              gg    = gz(j,ib) + (gz(j1,ib) - gz(j,ib) ) * wght
           ELSE
@@ -233,30 +233,30 @@ CONTAINS
          fw2 = fw1 * pde(k)
          fw3 = fw2 * pde(k)
          ti(k) = dz(k) * cwmks * ( ap(1,ib) + &
-             ap(2,ib) / fw1 + ap(3,ib) / fw2 )
+                 ap(2,ib) / fw1 + ap(3,ib) / fw2 )
          wi(k) = 1.0 - ( bp(1,ib) + bp(2,ib) * fw1 + &
-             bp(3,ib) * fw2 + bp(4,ib) * fw3 )
+                 bp(3,ib) * fw2 + bp(4,ib) * fw3 )
          IF (wi(k)<0.) PRINT*,'bad wi, ',wi(k),ib,k,bp(1,ib),bp(2,ib),bp(3,ib),bp(4,ib),fw1,fw2,fw3
          IF (ti(k)<0.) PRINT*,'bad ti, ',ti(k),ib,k,cwmks,dz(k),ap(1,ib),ap(2,ib),ap(3,ib),fw1,fw2
          IF ( ib <= mbs ) THEN ! shortwave
            fd = dps(1,ib) + dps(2,ib) * fw1 + &
-               dps(3,ib) * fw2 + dps(4,ib) * fw3
+                dps(3,ib) * fw2 + dps(4,ib) * fw3
            wf1 = cps(1,1,ib) + cps(2,1,ib) * fw1 + &
-               cps(3,1,ib) * fw2 + cps(4,1,ib) * fw3
+                 cps(3,1,ib) * fw2 + cps(4,1,ib) * fw3
            wwi(k,1) = ( 1.0 - fd ) * wf1 + 3.0 * fd
            wf2 = cps(1,2,ib) + cps(2,2,ib) * fw1 + &
-               cps(3,2,ib) * fw2 + cps(4,2,ib) * fw3
+                 cps(3,2,ib) * fw2 + cps(4,2,ib) * fw3
            wwi(k,2) = ( 1.0 - fd ) * wf2 + 5.0 * fd
            wf3 = cps(1,3,ib) + cps(2,3,ib) * fw1 + &
-               cps(3,3,ib) * fw2 + cps(4,3,ib) * fw3
+                 cps(3,3,ib) * fw2 + cps(4,3,ib) * fw3
            wwi(k,3) = ( 1.0 - fd ) * wf3 + 7.0 * fd
            wf4 = cps(1,4,ib) + cps(2,4,ib) * fw1 + &
-               cps(3,4,ib) * fw2 + cps(4,4,ib) * fw3
+                 cps(3,4,ib) * fw2 + cps(4,4,ib) * fw3
            wwi(k,4) = ( 1.0 - fd ) * wf4 + 9.0 * fd
          ELSE ! longwave
            ibr = ib - mbs
            gg = cpir(1,ibr) + cpir(2,ibr) * fw1 + &
-               cpir(3,ibr) * fw2 + cpir(4,ibr) * fw3
+                cpir(3,ibr) * fw2 + cpir(4,ibr) * fw3
            x1 = gg
            x2 = x1 * gg
            x3 = x2 * gg
@@ -359,7 +359,7 @@ CONTAINS
     RETURN
 
 600 FORMAT(/'CLOUD_INIT WARNING:  Extrapolating because data out of range', &
-         /1x,'x = ',F8.1,', ymax = ',F7.0,', ymin =',F7.0,', alpha = ',F6.3)
+           /1x,'x = ',F8.1,', ymax = ',F7.0,', ymin =',F7.0,', alpha = ',F6.3)
   END SUBROUTINE interpolate
 
 END MODULE cldwtr

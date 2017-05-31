@@ -36,7 +36,7 @@ MODULE radiation
 
   LOGICAL, SAVE     :: first_time = .TRUE.
   REAL, ALLOCATABLE, SAVE ::  pp(:), pt(:), ph(:), po(:), pre(:), pde(:), &
-       plwc(:), piwc(:), prwc(:), pgwc(:), fds(:), fus(:), fdir(:), fuir(:)
+                              plwc(:), piwc(:), prwc(:), pgwc(:), fds(:), fus(:), fdir(:), fuir(:)
 
   INTEGER :: k,i,j, npts
   REAL    :: ee, u0, day, time, alat, zz
@@ -44,7 +44,7 @@ MODULE radiation
   CONTAINS
 
     SUBROUTINE d4stream(n1, n2, n3, alat, time, sknt, sfc_albedo, dn0, pi0, pi1, dzm, &
-         pip, tk, rv, rc, nc, tt, rflx, sflx, albedo, rr, ice, nice, grp, radsounding, useMcICA, ConstPrs)
+                        pip, tk, rv, rc, nc, tt, rflx, sflx, albedo, rr, ice, nice, grp, radsounding, useMcICA, ConstPrs)
       USE mpi_interface, ONLY: myid, pecount
       INTEGER, INTENT (in) :: n1, n2, n3
       REAL, INTENT (in)    :: alat, time, sknt, sfc_albedo
@@ -69,8 +69,8 @@ MODULE radiation
       IF (first_time) THEN
          ! Possible to use constant LES pressure levels (fixed during the first call)
          ALLOCATE(exner(n1), pres(n1))
-         exner(1:n1) = (pi0(1:n1)+pi1(1:n1))/cp
-         pres(1:n1) = p00*( exner(1:n1) )**cpr
+                  exner(1:n1) = (pi0(1:n1)+pi1(1:n1))/cp
+                  pres(1:n1) = p00*( exner(1:n1) )**cpr
          IF (.TRUE.) THEN
             ! Works well with the LES model
             p0(1:n1) = 0.01*pres(1:n1)
@@ -178,22 +178,22 @@ MODULE radiation
 
             IF (present(ice).AND.present(rr).AND.present(grp)) THEN
                 CALL rad( sfc_albedo, u0, SolarConstant, sknt, ee, pp, pt, ph, po,&
-                     fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre, piwc=piwc, pde=pde, pgwc=pgwc)
+                          fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre, piwc=piwc, pde=pde, pgwc=pgwc)
             ELSE IF (present(ice).AND.present(grp)) THEN
                 CALL rad( sfc_albedo, u0, SolarConstant, sknt, ee, pp, pt, ph, po,&
-                     fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre, piwc=piwc, pde=pde, pgwc=pgwc)
+                          fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre, piwc=piwc, pde=pde, pgwc=pgwc)
             ELSE IF (present(ice).AND.present(rr)) THEN
                 CALL rad( sfc_albedo, u0, SolarConstant, sknt, ee, pp, pt, ph, po,&
-                     fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre, piwc=piwc, pde=pde)
+                          fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre, piwc=piwc, pde=pde)
             ELSE IF (present(ice)) THEN
                 CALL rad( sfc_albedo, u0, SolarConstant, sknt, ee, pp, pt, ph, po,&
-                     fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre, piwc=piwc, pde=pde)
+                          fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre, piwc=piwc, pde=pde)
             ELSE IF (present(rr)) THEN
                 CALL rad( sfc_albedo, u0, SolarConstant, sknt, ee, pp, pt, ph, po,&
-                     fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre)
+                          fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre)
             ELSE
                 CALL rad( sfc_albedo, u0, SolarConstant, sknt, ee, pp, pt, ph, po,&
-                     fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre)
+                          fds, fus, fdir, fuir, McICA, plwc=plwc, pre=pre)
             END IF
 
             DO k=1,n1

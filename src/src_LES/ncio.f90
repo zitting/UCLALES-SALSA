@@ -80,7 +80,7 @@ CONTAINS
   ! precipitation particles.
   !
   SUBROUTINE define_nc(ncID, nRec, nVar, sx, n1, n2, n3, &
-                       inae_a,incld_a,inprc,           &
+                       inae_a,incld_a,inprc,             &
                        inae_b,incld_b,inice_a,inice_b,insnw         )
 
     INTEGER, INTENT (in)           :: nVar, ncID
@@ -93,9 +93,9 @@ CONTAINS
     INTEGER, INTENT (inout)        :: nRec
     CHARACTER (len=7), INTENT (in) :: sx(nVar)
 
-    INTEGER, SAVE :: timeID=0, ztID=0, zmID=0, xtID=0, xmID=0, ytID=0, ymID=0,&
-         dim_mttt(4) = 0, dim_tmtt(4) = 0, dim_ttmt(4) = 0, dim_tttt(4) = 0  ,&
-         dim_tt(2)  = 0, dim_mt(2)  = 0
+    INTEGER, SAVE :: timeID=0, ztID=0, zmID=0, xtID=0, xmID=0, ytID=0, ymID=0,            &
+                     dim_mttt(4) = 0, dim_tmtt(4) = 0, dim_ttmt(4) = 0, dim_tttt(4) = 0,  &
+                     dim_tt(2)  = 0, dim_mt(2)  = 0
 
     ! Juha: added
     INTEGER, SAVE :: aeaID=0, claID=0, aebID=0, clbID=0, prcID=0,   &

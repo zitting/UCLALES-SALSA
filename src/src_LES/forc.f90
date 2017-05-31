@@ -41,10 +41,10 @@ CONTAINS
   !
   SUBROUTINE forcings(time_in, cntlat, sst)
 
-    USE grid, ONLY: nxp, nyp, nzp, zm, zt, dzt, dzm, dn0, iradtyp, a_rc     &
-         , a_rflx, a_sflx, albedo, a_tt, a_tp, a_rt, a_rp, a_pexnr, a_temp  &
-         , a_rv, a_rpp, a_npp, CCN, pi0, pi1, level, a_ut, a_up, a_vt, a_vp, &
-         a_ncloudp, a_nprecpp, a_mprecpp, a_ri, a_nicep
+    USE grid, ONLY: nxp, nyp, nzp, zm, zt, dzt, dzm, dn0, iradtyp, a_rc,     &
+                    a_rflx, a_sflx, albedo, a_tt, a_tp, a_rt, a_rp, a_pexnr, a_temp,  &
+                    a_rv, a_rpp, a_npp, CCN, pi0, pi1, level, a_ut, a_up, a_vt, a_vp, &
+                    a_ncloudp, a_nprecpp, a_mprecpp, a_ri, a_nicep
 
     USE mo_submctl, ONLY : nspec,nprc,ira,fra
 
@@ -98,11 +98,11 @@ CONTAINS
           CALL smoke_rad(nzp, nxp, nyp, dn0, a_rflx, zm, dzt,a_tt,a_rp)
        CASE(2)
           CALL gcss_rad(nzp, nxp, nyp, xka, fr0, fr1, div, a_rc, dn0,     &
-               a_rflx, zt, zm, dzt, a_tt, a_tp, a_rt, a_rp)
+                        a_rflx, zt, zm, dzt, a_tt, a_tp, a_rt, a_rp)
 
        END SELECT
        IF (trim(case_name) == 'atex') CALL case_forcing(nzp, nxp, nyp,    &
-            zt, dzt, dzm, div, a_tp, a_rp, a_tt, a_rt)
+                                                        zt, dzt, dzm, div, a_tp, a_rp, a_tt, a_rt)
     CASE (3)
        ! Radiation + large-scale forcing
        ! -------------------------------------
@@ -116,9 +116,9 @@ CONTAINS
                 zrc(:,:,:) = zrc(:,:,:) + a_rpp(:,:,:)
              END IF
              CALL d4stream(nzp, nxp, nyp, cntlat, time_in, sst, sfc_albedo, &
-                  dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rv, zrc, znc, a_tt,  &
-                  a_rflx, a_sflx, albedo, radsounding=radsounding, &
-                  useMcICA=useMcICA, ConstPrs=RadConstPress)
+                           dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rv, zrc, znc, a_tt,  &
+                           a_rflx, a_sflx, albedo, radsounding=radsounding, &
+                           useMcICA=useMcICA, ConstPrs=RadConstPress)
 
           ELSE IF (level == 4) THEN
              znc(:,:,:) = SUM(a_ncloudp(:,:,:,:),DIM=4) ! Cloud droplets
@@ -129,9 +129,9 @@ CONTAINS
                 zrc(:,:,:) = zrc(:,:,:) + SUM(a_nprecpp(:,:,:,ira:min(RadPrecipBins,fra)),DIM=4)
              END IF
              CALL d4stream(nzp, nxp, nyp, cntlat, time_in, sst, sfc_albedo, &
-                  dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rp, zrc, znc, a_tt,  &
-                  a_rflx, a_sflx, albedo, radsounding=radsounding, &
-                  useMcICA=useMcICA, ConstPrs=RadConstPress)
+                           dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rp, zrc, znc, a_tt,  &
+                           a_rflx, a_sflx, albedo, radsounding=radsounding, &
+                           useMcICA=useMcICA, ConstPrs=RadConstPress)
 
           ELSE IF (level == 5) THEN
              znc(:,:,:) = SUM(a_ncloudp(:,:,:,:),DIM=4) ! Cloud droplets
@@ -144,9 +144,9 @@ CONTAINS
              zni(:,:,:) = SUM(a_nicep(:,:,:,:),DIM=4) ! Ice
              zri(:,:,:) = a_ri(:,:,:) ! Ice (no aerosol ice?)
              CALL d4stream(nzp, nxp, nyp, cntlat, time_in, sst, sfc_albedo, &
-                  dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rp, zrc, znc, a_tt,  &
-                  a_rflx, a_sflx, albedo, ice=zri,nice=zni,radsounding=radsounding, &
-                  useMcICA=useMcICA, ConstPrs=RadConstPress)
+                           dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rp, zrc, znc, a_tt,  &
+                           a_rflx, a_sflx, albedo, ice=zri,nice=zni,radsounding=radsounding, &
+                           useMcICA=useMcICA, ConstPrs=RadConstPress)
 
           END IF
 
@@ -159,8 +159,8 @@ CONTAINS
           CALL appl_abort(0)
        END IF
     CASE (4)
-       CALL bellon(nzp, nxp, nyp, a_rflx, a_sflx, zt, dzt, dzm, a_tt, a_tp&
-            ,a_rt, a_rp, a_ut, a_up, a_vt, a_vp)
+       CALL bellon(nzp, nxp, nyp, a_rflx, a_sflx, zt, dzt, dzm, a_tt, a_tp,&
+                   a_rt, a_rp, a_ut, a_up, a_vt, a_vp)
     END SELECT 
 
   END SUBROUTINE forcings
@@ -171,12 +171,12 @@ CONTAINS
   ! simultaneously update fields due to vertical motion as given by div
   !
   SUBROUTINE gcss_rad(n1,n2,n3,xka,fr0,fr1,div,rc,dn0,flx,zt,zm,dzt,   &
-       tt,tl,rtt,rt)
+                      tt,tl,rtt,rt)
 
     INTEGER, INTENT (in):: n1,n2, n3
     REAL, INTENT (in)   :: xka, fr0, fr1, div
     REAL, INTENT (in)   :: zt(n1),zm(n1),dzt(n1),dn0(n1),rc(n1,n2,n3),   &
-         tl(n1,n2,n3),rt(n1,n2,n3)
+                           tl(n1,n2,n3),rt(n1,n2,n3)
     REAL, INTENT (inout):: tt(n1,n2,n3),rtt(n1,n2,n3)
     REAL, INTENT (out)  :: flx(n1,n2,n3)
 
@@ -201,7 +201,7 @@ CONTAINS
              flx(k,i,j)=flx(k,i,j)+fr0*exp(-1.*xka*lwp(i,j))
              IF (zm(k) > zm(ki) .AND. ki > 1 .AND. fact > 0.) THEN
                 flx(k,i,j)=flx(k,i,j) + fact*(0.25*(zm(k)-zm(ki))**1.333 + &
-                  zm(ki)*(zm(k)-zm(ki))**0.333333)
+                           zm(ki)*(zm(k)-zm(ki))**0.333333)
              END IF
              tt(k,i,j) =tt(k,i,j)-(flx(k,i,j)-flx(km1,i,j))*dzt(k)/(dn0(k)*cp)
           END DO
@@ -212,9 +212,9 @@ CONTAINS
              DO k=2,n1-2
                 kp1 = k+1
                 tt(k,i,j) = tt(k,i,j) + &
-                        div*zt(k)*(tl(kp1,i,j)-tl(k,i,j))*dzt(k)
-                rtt(k,i,j)=rtt(k,i,j) + &
-                        div*zt(k)*(rt(kp1,i,j)-rt(k,i,j))*dzt(k)
+                            div*zt(k)*(tl(kp1,i,j)-tl(k,i,j))*dzt(k)
+                rtt(k,i,j)= rtt(k,i,j) + &
+                            div*zt(k)*(rt(kp1,i,j)-rt(k,i,j))*dzt(k)
              END DO
           END IF
        END DO
@@ -357,10 +357,10 @@ CONTAINS
                 kp1 = k+1
                 IF (zt(k) < 1500.) THEN
                    tt(k,i,j) = tt(k,i,j) - ( tl(kp1,i,j)-tl(k,i,j) )*sf(k) &
-                        - 2.315e-5
+                              - 2.315e-5
                 ELSE IF (zt(k) < 2000.) THEN
                    tt(k,i,j) = tt(k,i,j) - ( tl(kp1,i,j)-tl(k,i,j) )*sf(k) &
-                        - 2.315e-5*(1.- (zt(k)-1500.)*1.e-3)
+                              - 2.315e-5*(1.- (zt(k)-1500.)*1.e-3)
                 END IF
                 !
                 ! moisture advection
@@ -400,10 +400,10 @@ CONTAINS
                 kp1 = k+1
                 IF (zt(k) < zibar) THEN
                    tt(k,i,j) = tt(k,i,j) - ( tl(kp1,i,j)-tl(k,i,j) )*sf(k) &
-                        - 2.315e-5*(1. + (1.- zt(k)/zibar)/2.)
+                              - 2.315e-5*(1. + (1.- zt(k)/zibar)/2.)
                 ELSE IF (zt(k) < zibar+300.) THEN
                    tt(k,i,j) = tt(k,i,j) - ( tl(kp1,i,j)-tl(k,i,j) )*sf(k) &
-                        - 2.315e-5*(1.- (zt(k)-zibar)/300.)
+                              - 2.315e-5*(1.- (zt(k)-zibar)/300.)
                 END IF
                 !
                 ! moisture advection
@@ -503,12 +503,12 @@ CONTAINS
              flx(k,i,j)  = wk*((tl(kp1,i,j)-tl(k,i,j))*dzt(k)-grad)
              sflx(k,i,j) = wk*((rt(kp1,i,j)-rt(k,i,j))*dzt(k)-grad)
              tt(k,i,j) = tt(k,i,j) + flx(k,i,j)
-             rtt(k,i,j)=rtt(k,i,j) + &
-                  wk*(rt(kp1,i,j)-rt(k,i,j))*dzt(k)
+             rtt(k,i,j)= rtt(k,i,j) + &
+                         wk*(rt(kp1,i,j)-rt(k,i,j))*dzt(k)
              ut(k,i,j) =  ut(k,i,j) + &
-                  wk*(u(kp1,i,j)-u(k,i,j))*dzm(k)
+                          wk*(u(kp1,i,j)-u(k,i,j))*dzm(k)
              vt(k,i,j) =  vt(k,i,j) + &
-                  wk*(v(kp1,i,j)-v(k,i,j))*dzm(k)
+                          wk*(v(kp1,i,j)-v(k,i,j))*dzm(k)
           END DO
           flx(n1,  i,j)  = 0.
           flx(n1-1,i,j)  = 0.

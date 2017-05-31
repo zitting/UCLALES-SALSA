@@ -70,10 +70,10 @@ CONTAINS
    SUBROUTINE surface(sst)
 
       USE defs, ONLY: vonk, p00, rcp, g, cp, alvl, ep2
-      USE grid, ONLY: nzp, nxp, nyp, a_up, a_vp, a_theta, a_rv, a_rp, zt, dzt, psrf, th00  &
-         , umean, vmean, a_ustar, a_tstar, a_rstar, uw_sfc, vw_sfc, ww_sfc    &
-         , wt_sfc, wq_sfc, dn0, level,dtl, a_sflx, a_rflx, precip, a_dn,  &
-         W1,W2,W3, mc_ApVdom, dtlt
+      USE grid, ONLY: nzp, nxp, nyp, a_up, a_vp, a_theta, a_rv, a_rp, zt, dzt, psrf, th00,  &
+                      umean, vmean, a_ustar, a_tstar, a_rstar, uw_sfc, vw_sfc, ww_sfc,      &
+                      wt_sfc, wq_sfc, dn0, level,dtl, a_sflx, a_rflx, precip, a_dn,         &
+                      W1,W2,W3, mc_ApVdom, dtlt
       USE thrm, ONLY: rslf
       USE stat, ONLY: sfc_stat, sflg, mcflg, acc_massbudged
       USE mpi_interface, ONLY : nypg, nxpg, double_array_par_sum
@@ -81,8 +81,8 @@ CONTAINS
 
       IMPLICIT NONE
       REAL, OPTIONAL, INTENT (inout) :: sst
-      REAL :: dtdz(nxp,nyp), drdz(nxp,nyp), usfc(nxp,nyp), vsfc(nxp,nyp)       &
-         ,wspd(nxp,nyp), bfct(nxp,nyp)
+      REAL :: dtdz(nxp,nyp), drdz(nxp,nyp), usfc(nxp,nyp), vsfc(nxp,nyp),       &
+              wspd(nxp,nyp), bfct(nxp,nyp)
       REAL :: rx(nzp,nxp,nyp)
 
 
@@ -120,10 +120,10 @@ CONTAINS
                END DO
             END DO
             zs = zt(2)/zrough
-            CALL srfcscls(nxp,nyp,zt(2),zs,th00,wspd,dtdz,drdz,a_ustar,a_tstar     &
-               ,a_rstar)
-            CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar  &
-               ,uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
+            CALL srfcscls(nxp,nyp,zt(2),zs,th00,wspd,dtdz,drdz,a_ustar,a_tstar,     &
+                          a_rstar)
+            CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar,  &
+                         uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
 
             !
             ! get fluxes from profiles
@@ -142,10 +142,10 @@ CONTAINS
             usum = max(ubmin,usum/float((nxp-4)*(nyp-4)))
             zs = (zrough/100.)
             IF (zrough <= 0.) zs = max(0.0001,(0.016/g)*usum**2)
-            CALL srfcscls(nxp,nyp,zt(2),zs,th00,wspd,dtdz,drdz,a_ustar,a_tstar     &
-               ,a_rstar)
-            CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar  &
-               ,uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
+            CALL srfcscls(nxp,nyp,zt(2),zs,th00,wspd,dtdz,drdz,a_ustar,a_tstar,     &
+                          a_rstar)
+            CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar,  &
+                         uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
              !
              ! get fluxes from bulk formulae with coefficients given by dthcon and
              ! drtcon
@@ -166,8 +166,8 @@ CONTAINS
                   bfct(i,j) = g*zt(2)/(a_theta(2,i,j)*wspd(i,j)**2)
                END DO
             END DO
-            CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar  &
-               ,uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
+            CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar,  &
+                         uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
              !
              ! fix surface temperature to yield a constant surface buoyancy flux
              !
@@ -191,10 +191,10 @@ CONTAINS
 
             DO iterate=1,5
                bflx  = ((sst -bfg(1)) + bfg(1)*ep2*(rslf(psrf,sst) -bfg(2))) &
-                  * 0.5*(dn0(1)+dn0(2))*cp*Vbulk
+                        * 0.5*(dn0(1)+dn0(2))*cp*Vbulk
                sst1 = sst + 0.1
                bflx1 = ((sst1-bfg(1)) + bfg(1)*ep2*(rslf(psrf,sst1)-bfg(2))) &
-                  * 0.5*(dn0(1)+dn0(2))*cp*Vbulk
+                        * 0.5*(dn0(1)+dn0(2))*cp*Vbulk
                sst  = sst + 0.1* (dthcon - bflx) / (bflx1-bflx)
             END DO
 
@@ -203,13 +203,13 @@ CONTAINS
                   wt_sfc(i,j) = Vbulk * (sst -a_theta(2,i,j))
                   wq_sfc(i,j) = Vbulk * (rslf(psrf,sst) - rx(2,i,j)) ! Juha: rx
                   wspd(i,j)    = max(0.1,                                    &
-                     sqrt((a_up(2,i,j)+umean)**2+(a_vp(2,i,j)+vmean)**2))
+                                 sqrt((a_up(2,i,j)+umean)**2+(a_vp(2,i,j)+vmean)**2))
                   bflx         = wt_sfc(i,j)*g/bfg(1) + g*ep2*wq_sfc(i,j)
                   a_ustar(i,j) = diag_ustar(zt(2),zrough,bflx,wspd(i,j))
                   uw_sfc(i,j)  = -a_ustar(i,j)*a_ustar(i,j)                  &
-                     *(a_up(2,i,j)+umean)/wspd(i,j)
+                                 *(a_up(2,i,j)+umean)/wspd(i,j)
                   vw_sfc(i,j)  = -a_ustar(i,j)*a_ustar(i,j)                  &
-                     *(a_vp(2,i,j)+vmean)/wspd(i,j)
+                                 *(a_vp(2,i,j)+vmean)/wspd(i,j)
                   ww_sfc(i,j)  = 0.
                   a_rstar(i,j) = wq_sfc(i,j)/a_ustar(i,j)
                   a_tstar(i,j) = wt_sfc(i,j)/a_ustar(i,j)
@@ -305,15 +305,15 @@ CONTAINS
             usum = max(ubmin,usum/float((nxp-4)*(nyp-4)))
             zs = (zrough/100.)
             IF (zrough <= 0.) zs = max(0.0001,(0.016/g)*usum**2)
-            CALL srfcscls(nxp,nyp,zt(2),zs,th00,wspd,dtdz,drdz,a_ustar,a_tstar     &
-               ,a_rstar)
-            CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar  &
-               ,uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
+            CALL srfcscls(nxp,nyp,zt(2),zs,th00,wspd,dtdz,drdz,a_ustar,a_tstar,     &
+                          a_rstar)
+            CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar,  &
+                         uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
 
             !       WRITE(*,*) ww_sfc(3,10),a_ustar(3,10),'sflx'
 
             sst1 = sst1-(total_rw+total_la+total_se+((lambda*C_heat*7.27e-5/(2.0))**0.5*(SST1-280.0)))&
-               /(2.0e-2*C_heat+(lambda*C_heat/(2.0*7.27e-5))**0.5)*dtl
+                   /(2.0e-2*C_heat+(lambda*C_heat/(2.0*7.27e-5))**0.5)*dtl
 
             sst = sst1
          !
@@ -344,7 +344,7 @@ CONTAINS
                   wq_sfc(i,j)=wq_sfc(1,1)
 
                   wspd(i,j)    = max(0.1,                                    &
-                     sqrt((a_up(2,i,j)+umean)**2+(a_vp(2,i,j)+vmean)**2))
+                                 sqrt((a_up(2,i,j)+umean)**2+(a_vp(2,i,j)+vmean)**2))
                   IF (ubmin > 0.) THEN
                      bflx = g*wt_sfc(1,1)/th00
                      IF (level >= 2) bflx = bflx + g*ep2*wq_sfc(i,j)
@@ -369,7 +369,7 @@ CONTAINS
          ! Juha: Take moisture flux to mass budged statistics
          mctmp(:,:) = wq_sfc(:,:)*(0.5*(a_dn(1,:,:)+a_dn(2,:,:)))
          CALL acc_massbudged(nzp,nxp,nyp,2,dtlt,dzt,a_dn,       &
-            revap=mctmp,ApVdom=mc_ApVdom)
+                             revap=mctmp,ApVdom=mc_ApVdom)
          !
          !
       END IF !mcflg
@@ -591,11 +591,11 @@ CONTAINS
 
             x(i,j) = xx(i,j)*vk*ts(i,j)*(ubar(i,j)/us(i,j))**2
             x(i,j) = x(i,j)*sqrt(sqrt(1.-15.*min(0.,x(i,j)))) &
-               /(1.0+cc*max(0.,x(i,j)))
+                     /(1.0+cc*max(0.,x(i,j)))
             y(i,j) =sqrt((1.-2.86*x(i,j))/(1.+x(i,j)* &
-               (-5.39+x(i,j)*6.998 )))
+                    (-5.39+x(i,j)*6.998 )))
             ww(i,j)=(0.27*max(6.25*(1.-x(i,j))*y(i,j),eps)-&
-               1.18*x(i,j)*y(i,j))*us(i,j)**2
+                     1.18*x(i,j)*y(i,j))*us(i,j)**2
          END DO
       END DO
       RETURN

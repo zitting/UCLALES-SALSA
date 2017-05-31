@@ -34,9 +34,9 @@ CONTAINS
    !
    SUBROUTINE poisson
 
-      USE grid, ONLY : nxp, nyp, nzp, dtlt, dxi, dyi, dzm, dzt, a_up,       &
-         a_uc, a_ut, a_vp, a_vc, a_vt, a_wp, a_wc, a_wt, a_press, a_pexnr,&
-         th00, dn0, wsavex, wsavey
+      USE grid, ONLY : nxp, nyp, nzp, dtlt, dxi, dyi, dzm, dzt, a_up,                     &
+                       a_uc, a_ut, a_vp, a_vc, a_vt, a_wp, a_wc, a_wt, a_press, a_pexnr,  &
+                       th00, dn0, wsavex, wsavey
       USE stat, ONLY : fill_scalar, sflg
       USE util, ONLY : ae1mm
 
@@ -61,8 +61,8 @@ CONTAINS
       ! ------
       ! Pressure Solve
       !
-      CALL poiss(nzp,nxp,nyp,ix,iy,a_up,a_vp,a_wp,a_pexnr,a_press,dn0,th00,dzt &
-         ,dzm,dxi,dyi,dtlt,s1,wsavex,wsavey)
+      CALL poiss(nzp,nxp,nyp,ix,iy,a_up,a_vp,a_wp,a_pexnr,a_press,dn0,th00,dzt, &
+                 dzm,dxi,dyi,dtlt,s1,wsavex,wsavey)
       CALL ae1mm(nzp,nxp,nyp,a_wp,awpbar)
       !
       ! -------
@@ -75,11 +75,11 @@ CONTAINS
       CALL asselin(2)
       CALL velocity_bcs
       CALL get_diverg(nzp,nxp,nyp,ix,iy,s1,a_up,a_vp,a_wp,dn0,dzt,dxi,dyi,  &
-         dtlt,mxdiv)
+                      dtlt,mxdiv)
 
       IF (sflg) THEN
          CALL get_diverg(nzp,nxp,nyp,ix,iy,s1,a_up,a_vp,a_wp,dn0,dzt,dxi,dyi,  &
-            dtlt,mxdiv)
+                         dtlt,mxdiv)
          CALL fill_scalar(2,mxdiv)
          CALL prs_cor(nzp,nxp,nyp,a_pexnr,a_up,a_vp,a_wp,dzm,dxi,dyi,th00)
          CALL chk_tsplt(nzp,nxp,nyp,a_up,a_vp,a_wp,a_uc,a_vc,a_wc)
@@ -124,7 +124,7 @@ CONTAINS
    ! call to trdprs.  pp is filled with its diagnostic value in fll_prs
    !
    SUBROUTINE poiss(n1,n2,n3,ix,iy,u,v,w,pp,pc,dn0,th00,dzt,dzm,dx,dy,  &
-      dtlt,s1,wsvx,wsvy)
+                    dtlt,s1,wsvx,wsvy)
 
       USE util, ONLY  : vELSEt, get_fft_twodim
 
@@ -132,7 +132,7 @@ CONTAINS
       REAL    :: pp(n1,n2,n3),pc(n1,n2,n3),dmy
       REAL    :: u(n1,n2,n3),v(n1,n2,n3),w(n1,n2,n3)
       REAL    :: wsvx(1:),wsvy(1:),dn0(n1),dzt(n1),dzm(n1),dx,dy,dtlt,th00
-      COMPLEX:: s1(ix,iy,n1)
+      COMPLEX :: s1(ix,iy,n1)
 
       CALL get_diverg(n1,n2,n3,ix,iy,s1,u,v,w,dn0,dzt,dx,dy,dtlt,dmy)
       CALL get_fft_twodim(ix,iy,n1,s1,wsvx,wsvy,-1)
@@ -182,7 +182,7 @@ CONTAINS
                yf=dn0(k)*dy*dti
                zf=dti*dz(k)
                s1(l,m,k)=(wf1*w(k,i,j)-wf2*w(k-1,i,j))*zf                  &
-                  +(v(k,i,j)-v(k,i,j-1))*yf+(u(k,i,j)-u(k,i-1,j))*xf
+                         +(v(k,i,j)-v(k,i,j-1))*yf+(u(k,i,j)-u(k,i-1,j))*xf
             END DO
          END DO
       END DO
@@ -455,7 +455,7 @@ CONTAINS
    SUBROUTINE velocity_bcs
 
       USE grid, ONLY : a_up,a_vp,a_wp,a_uc,a_vc,a_wc,a_pexnr,a_press,           &
-         nxp, nyp, nzp, dzm
+                       nxp, nyp, nzp, dzm
       USE util, ONLY : vELSEt, sclrset
 
       CALL vELSEt(nzp,nxp,nyp,a_up,a_vp,a_wp)

@@ -33,17 +33,17 @@ CONTAINS
    SUBROUTINE ladvect
 
       USE grid, ONLY : a_uc, a_vc, a_wc, a_ut, a_vt, a_wt,      &
-         nxp, nyp, nzp, dzt, dzm, dxi, dyi, dn0
+                       nxp, nyp, nzp, dzt, dzm, dxi, dyi, dn0
       USE stat, ONLY : sflg, updtst, acc_tend
       USE util, ONLY : get_avg3
 
       REAL ::  v1da(nzp), v1db(nzp), v1dc(nzp), v1dd(nzp), v1de(nzp), &
-         a_tmp1(nzp,nxp,nyp), a_tmp2(nzp,nxp,nyp)
+               a_tmp1(nzp,nxp,nyp), a_tmp2(nzp,nxp,nyp)
       !
       ! prepare density weights for use vertical advection
       !
       IF (sflg) CALL acc_tend(nzp,nxp,nyp,a_uc,a_vc,a_wc,a_ut,a_vt,a_wt,        &
-         v1dc,v1dd,v1de,1,'adv')
+                              v1dc,v1dd,v1de,1,'adv')
 
       CALL advl_prep(nzp,nxp,nyp,a_wc,a_tmp1,dn0,dzt,dzm,v1da,v1db)
       !
@@ -82,7 +82,7 @@ CONTAINS
       END IF
 
       IF (sflg) CALL acc_tend(nzp,nxp,nyp,a_uc,a_vc,a_wc,a_ut,a_vt,a_wt,        &
-         v1dc,v1dd,v1de,2,'adv')
+                              v1dc,v1dd,v1de,2,'adv')
 
    END SUBROUTINE ladvect
    !
@@ -103,8 +103,8 @@ CONTAINS
       DO j=1,n3
          DO i=3,n2-1
             DO k=2,n1-1
-               flx(k,i,j)=(0.583333*(uc(k,i,j)+uc(k,i-1,j)) - 0.083333          &
-                  *(uc(k,i+1,j)+uc(k,i-2,j)))*.5*(uc(k,i,j)+uc(k,i-1,j))
+               flx(k,i,j)=(0.583333*(uc(k,i,j)+uc(k,i-1,j)) - 0.083333*          &
+                           (uc(k,i+1,j)+uc(k,i-2,j)))*.5*(uc(k,i,j)+uc(k,i-1,j))
             END DO
          END DO
 
@@ -134,8 +134,8 @@ CONTAINS
       DO j=2,n3-2
          DO i=1,n2-1
             DO k=2,n1-1
-               flx(k,i,j)=(0.583333*(uc(k,i,j)+uc(k,i,j+1)) - 0.083333          &
-                  *(uc(k,i,j-1)+uc(k,i,j+2)))*.5*(vc(k,i,j)+vc(k,i+1,j))
+               flx(k,i,j)=(0.583333*(uc(k,i,j)+uc(k,i,j+1)) - 0.083333*         &
+                           (uc(k,i,j-1)+uc(k,i,j+2)))*.5*(vc(k,i,j)+vc(k,i+1,j))
             END DO
          END DO
       END DO
@@ -168,8 +168,8 @@ CONTAINS
          DO i=1,n2-1
             flx(1,i,j)=0.
             DO k=2,n1-2
-               flx(k,i,j)=(0.583333*(uc(k,i,j)+uc(k+1,i,j)) - 0.083333          &
-                  *(uc(k-1,i,j)+uc(k+2,i,j)))*.5*(wm(k,i,j)+wm(k,i+1,j))
+               flx(k,i,j)=(0.583333*(uc(k,i,j)+uc(k+1,i,j)) - 0.083333*          &
+                           (uc(k-1,i,j)+uc(k+2,i,j)))*.5*(wm(k,i,j)+wm(k,i+1,j))
             END DO
             flx(n1-1,i,j)=0.
             flx(n1,i,j)=0.
@@ -201,8 +201,8 @@ CONTAINS
       DO j=1,n3-1
          DO i=2,n2-2
             DO k=2,n1-1
-               flx(k,i,j)=(0.583333*(vc(k,i,j)+vc(k,i+1,j)) - 0.083333          &
-                  *(vc(k,i-1,j)+vc(k,i+2,j)))*.5*(uc(k,i,j)+uc(k,i,j+1))
+               flx(k,i,j)=(0.583333*(vc(k,i,j)+vc(k,i+1,j)) - 0.083333*          &
+                           (vc(k,i-1,j)+vc(k,i+2,j)))*.5*(uc(k,i,j)+uc(k,i,j+1))
             END DO
          END DO
 
@@ -232,8 +232,8 @@ CONTAINS
       DO j=3,n3-1
          DO i=1,n2
             DO k=2,n1-1
-               flx(k,i,j)=(0.583333*(vc(k,i,j)+vc(k,i,j-1))-0.083333           &
-                  *(vc(k,i,j+1)+vc(k,i,j-2)))*.5*(vc(k,i,j)+vc(k,i,j-1))
+               flx(k,i,j)=(0.583333*(vc(k,i,j)+vc(k,i,j-1))-0.083333*           &
+                           (vc(k,i,j+1)+vc(k,i,j-2)))*.5*(vc(k,i,j)+vc(k,i,j-1))
             END DO
          END DO
       END DO
@@ -266,8 +266,8 @@ CONTAINS
          DO i=1,n2
             flx(1,i,j)=0.
             DO k=2,n1-2
-               flx(k,i,j)=(0.583333*(vc(k,i,j)+vc(k+1,i,j))-0.083333            &
-                  *(vc(k-1,i,j)+vc(k+2,i,j)))*.5*(wm(k,i,j)+wm(k,i,j+1))
+               flx(k,i,j)=(0.583333*(vc(k,i,j)+vc(k+1,i,j))-0.083333*            &
+                           (vc(k-1,i,j)+vc(k+2,i,j)))*.5*(wm(k,i,j)+wm(k,i,j+1))
             END DO
             flx(n1-1,i,j)=0.
             flx(n1,i,j)=0.
@@ -300,7 +300,7 @@ CONTAINS
          DO i=2,n2-2
             DO k=2,n1-2
                flx(k,i,j)=(0.583333*(wc(k,i,j)+wc(k,i+1,j))-0.083333*          &
-                  (wc(k,i-1,j)+wc(k,i+2,j)))*.5*(uc(k,i,j)+uc(k+1,i,j))
+                           (wc(k,i-1,j)+wc(k,i+2,j)))*.5*(uc(k,i,j)+uc(k+1,i,j))
             END DO
          END DO
 
@@ -330,8 +330,8 @@ CONTAINS
       DO j=2,n3-2
          DO i=1,n2
             DO k=2,n1-2
-               flx(k,i,j)=(0.583333*(wc(k,i,j)+wc(k,i,j+1))-0.083333            &
-                  *(wc(k,i,j-1)+wc(k,i,j+2)))*.5*(vm(k,i,j)+vm(k+1,i,j))
+               flx(k,i,j)=(0.583333*(wc(k,i,j)+wc(k,i,j+1))-0.083333*            &
+                           (wc(k,i,j-1)+wc(k,i,j+2)))*.5*(vm(k,i,j)+vm(k+1,i,j))
             END DO
          END DO
       END DO
@@ -365,8 +365,8 @@ CONTAINS
             flx(1,i,j)=0.
             flx(2,i,j)=wm(2,i,j)*.5*(0.583333*(wc(2,i,j))-0.083333*(wc(3,i,j)))
             DO k=3,n1-1
-               flx(k,i,j)=(0.583333*(wc(k,i,j)+wc(k-1,i,j))-0.083333            &
-                  *(wc(k+1,i,j)+wc(k-2,i,j)))*.5*(wm(k,i,j)+wm(k-1,i,j))
+               flx(k,i,j)=(0.583333*(wc(k,i,j)+wc(k-1,i,j))-0.083333*            &
+                           (wc(k+1,i,j)+wc(k-2,i,j)))*.5*(wm(k,i,j)+wm(k-1,i,j))
             END DO
             flx(n1,i,j)=0.
 

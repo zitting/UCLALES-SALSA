@@ -67,7 +67,7 @@ CONTAINS
          in2a, fn2a,  & !     - " -       2a
          in2b, fn2b,  & !     - " -       2b
          nbin2, nbin3,& !
-         nbins,  &
+         nbins,       &
          aerobins
 
       USE mo_salsa_driver, ONLY : &
@@ -101,7 +101,7 @@ CONTAINS
                aero(ii,jj,cc)%vlolim = pi6*(reglim(1)*ratio**(REAL(cc-1)/nbin(1)))**3
                aero(ii,jj,cc)%vhilim = pi6*(reglim(1)*ratio**(REAL(cc)/nbin(1)))**3
                aero(ii,jj,cc)%dmid = ( (aero(ii,jj,cc)%vhilim + aero(ii,jj,cc)%vlolim) /  &
-                  (2.*pi6) )**(1./3.)
+                                      (2.*pi6) )**(1./3.)
                aero(ii,jj,cc)%vratiohi = aero(ii,jj,cc)%vhilim/(pi6*aero(ii,jj,cc)%dmid**3)
                aero(ii,jj,cc)%vratiolo = aero(ii,jj,cc)%vlolim/(pi6*aero(ii,jj,cc)%dmid**3)
             END DO
@@ -118,7 +118,7 @@ CONTAINS
                aero(ii,jj,dd)%vlolim = pi6*(reglim(2)*ratio**(REAL(cc)/nbin2))**3
                aero(ii,jj,dd)%vhilim = pi6*(reglim(2)*ratio**(REAL(cc+1)/nbin2))**3
                aero(ii,jj,dd)%dmid = ( (aero(ii,jj,dd)%vhilim + aero(ii,jj,dd)%vlolim) /  &
-                  (2.*pi6) )**(1./3.)
+                                      (2.*pi6) )**(1./3.)
                aero(ii,jj,dd)%vratiohi = aero(ii,jj,dd)%vhilim/(pi6*aero(ii,jj,dd)%dmid**3)
                aero(ii,jj,dd)%vratiolo = aero(ii,jj,dd)%vlolim/(pi6*aero(ii,jj,dd)%dmid**3)
             END DO
@@ -133,7 +133,7 @@ CONTAINS
                aero(ii,jj,dd)%vlolim = pi6*(reglim(3)*ratio**(REAL(cc)/nbin3))**3
                aero(ii,jj,dd)%vhilim = pi6*(reglim(3)*ratio**(REAL(cc+1)/nbin3))**3
                aero(ii,jj,dd)%dmid = ( (aero(ii,jj,dd)%vhilim + aero(ii,jj,dd)%vlolim) /  &
-                  (2.*pi6) )**(1./3.)
+                                      (2.*pi6) )**(1./3.)
                aero(ii,jj,dd)%vratiohi = aero(ii,jj,dd)%vhilim/(pi6*aero(ii,jj,dd)%dmid**3)
                aero(ii,jj,dd)%vratiolo = aero(ii,jj,dd)%vlolim/(pi6*aero(ii,jj,dd)%dmid**3)
             END DO
@@ -184,7 +184,7 @@ CONTAINS
          ica,icb,         &
          fca,fcb,         &
          ira,fra,         &
-         ncld,nprc,        &
+         ncld,nprc,       &
          ncldbin,         &
          dmincld,         &
          in1a,fn2a,       &
@@ -192,7 +192,7 @@ CONTAINS
          cloudbins,       &
          precpbins
       USE mo_salsa_driver, ONLY : kbdim, klev, &
-         cloud,precp,aero
+                                  cloud,precp,aero
 
       IMPLICIT NONE
 
@@ -300,7 +300,7 @@ CONTAINS
                precp(ii,jj,bb)%vhilim = pi6*tmphilim(bb)**3
                precp(ii,jj,bb)%vlolim = pi6*tmplolim(bb)**3
                precp(ii,jj,bb)%dmid = ( (precp(ii,jj,bb)%vlolim + precp(ii,jj,bb)%vhilim) /  &
-                  (2.*pi6) )**(1./3.)
+                                       (2.*pi6) )**(1./3.)
                precp(ii,jj,bb)%vratiohi = precp(ii,jj,bb)%vhilim / ( pi6*precp(ii,jj,bb)%dmid**3 )
                precp(ii,jj,bb)%vratiolo = precp(ii,jj,bb)%vlolim / ( pi6*precp(ii,jj,bb)%dmid**3 )
 
@@ -349,7 +349,7 @@ CONTAINS
          iia,iib,         &
          fia,fib,         &
          isa,fsa,         &
-         nice,nsnw,        &
+         nice,nsnw,       &
          nicebin,         &
          dminice,         &
          in1a,fn2a,       &
@@ -357,7 +357,7 @@ CONTAINS
          icebins,         &
          snowbins
       USE mo_salsa_driver, ONLY : kbdim, klev, &
-         ice,snow,aero
+                                  ice,snow,aero
 
       IMPLICIT NONE
 
@@ -469,7 +469,7 @@ CONTAINS
                snow(ii,jj,bb)%vhilim = pi6*tmphilim(bb)**3
                snow(ii,jj,bb)%vlolim = pi6*tmplolim(bb)**3
                snow(ii,jj,bb)%dmid = ( (snow(ii,jj,bb)%vlolim + snow(ii,jj,bb)%vhilim) /  &
-                  (2.*pi6) )**(1./3.)
+                                      (2.*pi6) )**(1./3.)
                snow(ii,jj,bb)%vratiohi = snow(ii,jj,bb)%vhilim / ( pi6*snow(ii,jj,bb)%dmid**3 )
                snow(ii,jj,bb)%vratiolo = snow(ii,jj,bb)%vlolim / ( pi6*snow(ii,jj,bb)%dmid**3 )
 
@@ -531,7 +531,7 @@ CONTAINS
          nlauto,nlautosnow,     &
          nlactiv,               &
          nlactintst,            &
-         nlactbase,            &
+         nlactbase,             &
          nlichom,               &
          nlichet,               &
          nlicimmers,            &
@@ -603,7 +603,7 @@ CONTAINS
 
          ! ------------
          ! -- Juha: These should eventually be replaced with physical processing !!!! Dont use for liquid clouds!
-         initliqice,  & ! initialize ice and liquid cloud particles from aerosol bins
+         initliqice,    & ! initialize ice and liquid cloud particles from aerosol bins
          liqFracA,      & ! fraction of aerosols that are activated to liquid cloud droplets in A bins
          iceFracA,      & ! fraction of aerosols that are activated to ice cloud particles in A bins
          liqFracB,      & ! fraction of aerosols that are activated to liquid cloud droplets  in B bins
@@ -643,9 +643,9 @@ CONTAINS
       !-------------------------------------------------------------------------------
 
       USE mo_submctl, ONLY : nbin, nbin2, nbin3,     &
-         in1a,fn1a,in2a,fn2a,in2b,fn2b,  &
-         nbins, &
-         massacc
+                             in1a,fn1a,in2a,fn2a,in2b,fn2b,  &
+                             nbins, &
+                             massacc
 
       IMPLICIT NONE
 

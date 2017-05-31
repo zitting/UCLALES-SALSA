@@ -56,13 +56,13 @@ CONTAINS
       USE mpi_interface, ONLY : myid, double_scalar_par_max
 
       USE grid, ONLY : dtl, dzt, zt, zm, nzp, dn0, u0, v0, a_up, a_vp, a_wp, &
-         a_uc, a_vc, a_wc, write_hist, write_anal, close_anal, dtlt,  &
-         dtlv, dtlong, nzp, nyp, nxp, level,                          &
-         ! For mass budged
-         a_rp, a_rc, a_srp, a_dn
+                       a_uc, a_vc, a_wc, write_hist, write_anal, close_anal, dtlt,  &
+                       dtlv, dtlong, nzp, nyp, nxp, level,                          &
+                       ! For mass budged
+                       a_rp, a_rc, a_srp, a_dn
 
       USE stat, ONLY : sflg, savg_intvl, ssam_intvl, write_ps, close_stat, mcflg, acc_massbudged,  &
-         write_massbudged
+                       write_massbudged
       USE thrm, ONLY : thermo
 
       LOGICAL, PARAMETER :: StopOnCFLViolation = .FALSE.
@@ -96,7 +96,7 @@ CONTAINS
 
          IF (cflmax > cfl_upper .OR. cflmax < cfl_lower) THEN
             CALL tstep_reset(nzp,nxp,nyp,a_up,a_vp,a_wp,a_uc,a_vc,a_wc,     &
-               dtl,dtlong,cflmax,cfl_upper,cfl_lower)
+                             dtl,dtlong,cflmax,cfl_upper,cfl_lower)
             dtlv=2.*dtl
             dtlt=dtl
          END IF
@@ -139,7 +139,7 @@ CONTAINS
          ! Juha:
          ! Get the final statistics of atmospheric water for mass budged
          CALL acc_massbudged(nzp,nxp,nyp,1,dtlt,dzt,a_dn,    &
-            rv=a_rp,rc=a_rc,prc=a_srp)
+                             rv=a_rp,rc=a_rc,prc=a_srp)
 
          CALL write_massbudged
 
@@ -191,18 +191,16 @@ CONTAINS
    !
    SUBROUTINE t_step(cflflg,cflmax)
 
-      USE grid, ONLY : level, dtl, dtlt, Tspinup,                            &
-         ! Added parameters for interfacing with SALSA
-         nxp, nyp, nzp, a_press, a_temp, a_rsl,                             &
-         a_rc, a_wp, a_rp, a_rt, a_rh,                                      &
-         a_naerop, a_naerot, a_ncloudp, a_ncloudt, a_nprecpp, a_nprecpt,    &
-         a_maerop, a_maerot, a_mcloudp, a_mcloudt, a_mprecpp, a_mprecpt,    &
-         a_nicep,  a_nicet,  a_micep,  a_micet,                             &
-         a_nsnowp, a_nsnowt, a_msnowp, a_msnowt,                            &
-         a_gaerop, a_gaerot, a_dn,  a_nactd,  a_vactd,   prtcl,             &
-         a_Radry,  a_Rawet,  a_Rcdry,   a_Rcwet,   a_Rpdry,   a_Rpwet,      &
-         a_Ridry,  a_Riwet,  a_Rsdry,   a_Rswet,                            &
-         sst, a_rsi, a_temp0
+      USE grid, ONLY : level, dtl, dtlt, Tspinup,                                         &
+                       ! Added parameters for interfacing with SALSA
+                       nxp, nyp, nzp, a_press, a_temp, a_rsl,                             &
+                       a_rc, a_wp, a_rp, a_rt, a_rh,                                      &
+                       a_naerop, a_naerot, a_ncloudp, a_ncloudt, a_nprecpp, a_nprecpt,    &
+                       a_maerop, a_maerot, a_mcloudp, a_mcloudt, a_mprecpp, a_mprecpt,    &
+                       a_nicep,  a_nicet,  a_micep,  a_micet,                             &
+                       a_nsnowp, a_nsnowt, a_msnowp, a_msnowt,                            &
+                       a_gaerop, a_gaerot, a_dn,  a_nactd,  a_vactd,   prtcl,             &
+                       sst, a_rsi, a_temp0
 
 
       USE stat, ONLY : sflg, statistics, acc_massbudged
@@ -286,31 +284,23 @@ CONTAINS
             IF ( nxp ==5 .AND. nyp == 5 ) THEN
                ! 1D -runs
                CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,zwp,a_dn,  &
-                  a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
-                  a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
-                  a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
-                  a_nicep,   a_nicet,   a_micep,   a_micet,    &
-                  a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
-                  a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
-                  a_Radry,   a_Rcdry,   a_Rpdry,               &
-                  a_Ridry,   a_Rsdry,                          &
-                  a_Rawet,   a_Rcwet,   a_Rpwet,               &
-                  a_Riwet,   a_Rswet,                          &
-                  zrm, prtcl, dtlt, level  )
+                              a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
+                              a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
+                              a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
+                              a_nicep,   a_nicet,   a_micep,   a_micet,    &
+                              a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
+                              a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
+                              zrm, prtcl, dtlt, level  )
             ELSE
                !! for 2D or 3D runs
                CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,a_wp,a_dn,  &
-                  a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
-                  a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
-                  a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
-                  a_nicep,   a_nicet,   a_micep,   a_micet,    &
-                  a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
-                  a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
-                  a_Radry,   a_Rcdry,   a_Rpdry,               &
-                  a_Ridry,   a_Rsdry,                          &
-                  a_Rawet,   a_Rcwet,   a_Rpwet,               &
-                  a_Riwet,   a_Rswet,                          &
-                  zrm, prtcl, dtlt, level  )
+                              a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
+                              a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
+                              a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
+                              a_nicep,   a_nicet,   a_micep,   a_micet,    &
+                              a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
+                              a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
+                              zrm, prtcl, dtlt, level  )
              
             END IF !nxp==5 and nyp == 5
           
@@ -341,8 +331,8 @@ CONTAINS
 
       ! Mask for cloud base activation
       IF (level >= 4)  CALL maskactiv(zactmask,nxp,nyp,nzp,nbins,2,prtcl,a_rh,              &
-         rc = a_rc,pa_naerop = a_naerop, pa_maerop = a_maerop, &
-         pt = a_temp, w=a_wp)
+                                      rc = a_rc,pa_naerop = a_naerop, pa_maerop = a_maerop, &
+                                      pt = a_temp, w=a_wp)
       ! Get tendencies from cloud base activation
       IF (level >= 4) CALL newdroplet(zactmask)
 
@@ -407,9 +397,9 @@ CONTAINS
    SUBROUTINE nudging(time)
 
       USE grid, ONLY : level, dtlt, nxp, nyp, nzp, &
-         zt, a_rp, a_rt, a_rpp, a_rc, a_srp, a_ri, a_srs, &
-         a_naerop, a_naerot, a_ncloudp, a_nicep, &
-         a_tp, a_tt, a_up, a_ut, a_vp, a_vt
+                       zt, a_rp, a_rt, a_rpp, a_rc, a_srp, a_ri, a_srs, &
+                       a_naerop, a_naerot, a_ncloudp, a_nicep, &
+                       a_tp, a_tt, a_up, a_ut, a_vp, a_vt
       USE mo_submctl, ONLY : nbins, ncld, nice, in2a, fn2b
 
       IMPLICIT NONE
@@ -604,12 +594,12 @@ CONTAINS
    SUBROUTINE tend_constrain(nn)
 
       USE grid, ONLY : a_naerop, a_naerot, a_ncloudp, a_ncloudt, a_nprecpp, a_nprecpt,   &
-         a_maerop, a_maerot, a_mcloudp, a_mcloudt, a_mprecpp, a_mprecpt,   &
-         a_nicep,  a_nicet, a_nsnowp, a_nsnowt,                            & ! ice'n'snow
-         a_micep,  a_micet, a_msnowp, a_msnowt,                            & ! 'ice'n'snow
-         dtlt, nxp,nyp,nzp
+                       a_maerop, a_maerot, a_mcloudp, a_mcloudt, a_mprecpp, a_mprecpt,   &
+                       a_nicep,  a_nicet, a_nsnowp, a_nsnowt,                            & ! ice'n'snow
+                       a_micep,  a_micet, a_msnowp, a_msnowt,                            & ! ice'n'snow
+                       dtlt, nxp,nyp,nzp
       USE mo_submctl, ONLY : nbins, ncld, nprc, &
-         nice, nsnw          !ice'n'snow
+                             nice, nsnw          !ice'n'snow
 
       INTEGER, INTENT(in) :: nn
 
@@ -629,7 +619,7 @@ CONTAINS
                      a_naerot(kk,ii,jj,cc) = MAX(((1.e-10-1.0)*a_naerop(kk,ii,jj,cc))/dtlt,a_naerot(kk,ii,jj,cc))
                      DO ni = 1,nn
                         a_maerot(kk,ii,jj,(ni-1)*nbins+cc) = MAX( ((1.e-10-1.0)*a_maerop(kk,ii,jj,(ni-1)*nbins+cc))/dtlt,  &
-                           a_maerot(kk,ii,jj,(ni-1)*nbins+cc) )
+                                                                 a_maerot(kk,ii,jj,(ni-1)*nbins+cc) )
                      END DO
 
                   END IF
@@ -644,7 +634,7 @@ CONTAINS
                      a_ncloudt(kk,ii,jj,cc) = MAX(((1.e-10-1.0)*a_ncloudp(kk,ii,jj,cc))/dtlt,a_ncloudt(kk,ii,jj,cc))
                      DO ni = 1,nn
                         a_mcloudt(kk,ii,jj,(ni-1)*ncld+cc) = MAX( ((1.e-10-1.0)*a_mcloudp(kk,ii,jj,(ni-1)*ncld+cc))/dtlt,  &
-                           a_mcloudt(kk,ii,jj,(ni-1)*ncld+cc) )
+                                                                 a_mcloudt(kk,ii,jj,(ni-1)*ncld+cc) )
                      END DO
 
                   END IF
@@ -659,7 +649,7 @@ CONTAINS
                      a_nprecpt(kk,ii,jj,cc) = MAX(((1.e-10-1.0)*a_nprecpp(kk,ii,jj,cc))/dtlt,a_nprecpt(kk,ii,jj,cc))
                      DO ni = 1,nn
                         a_mprecpt(kk,ii,jj,(ni-1)*nprc+cc) = MAX( ((1.e-10-1.0)*a_mprecpp(kk,ii,jj,(ni-1)*nprc+cc))/dtlt,  &
-                           a_mprecpt(kk,ii,jj,(ni-1)*nprc+cc) )
+                                                                 a_mprecpt(kk,ii,jj,(ni-1)*nprc+cc) )
                      END DO
 
                   END IF
@@ -674,7 +664,7 @@ CONTAINS
                      a_nicet(kk,ii,jj,cc) = MAX(((1.e-10-1.0)*a_nicep(kk,ii,jj,cc))/dtlt,a_nicet(kk,ii,jj,cc))
                      DO ni = 1,nn
                         a_micet(kk,ii,jj,(ni-1)*ncld+cc) = MAX( ((1.e-10-1.0)*a_micep(kk,ii,jj,(ni-1)*nice+cc))/dtlt,  &
-                           a_micet(kk,ii,jj,(ni-1)*nice+cc) )
+                                                               a_micet(kk,ii,jj,(ni-1)*nice+cc) )
                      END DO
 
                   END IF
@@ -689,7 +679,7 @@ CONTAINS
                      a_nsnowt(kk,ii,jj,cc) = MAX(((1.e-10-1.0)*a_nsnowp(kk,ii,jj,cc))/dtlt,a_nsnowt(kk,ii,jj,cc))
                      DO ni = 1,nn
                         a_msnowt(kk,ii,jj,(ni-1)*nprc+cc) = MAX( ((1.e-10-1.0)*a_msnowp(kk,ii,jj,(ni-1)*nsnw+cc))/dtlt,  &
-                           a_msnowt(kk,ii,jj,(ni-1)*nsnw+cc) )
+                                                                a_msnowt(kk,ii,jj,(ni-1)*nsnw+cc) )
                      END DO
 
                   END IF
@@ -740,7 +730,7 @@ CONTAINS
          DO i=3,n2-2
             DO k=1,n1
                cfll=max(cfll, dtlt*2.* max(abs(u(k,i,j)*dxi),             &
-                  abs(v(k,i,j)*dyi), abs(w(k,i,j)*dzt(k))))
+                        abs(v(k,i,j)*dyi), abs(w(k,i,j)*dzt(k))))
             END DO
          END DO
       END DO
@@ -754,7 +744,7 @@ CONTAINS
    SUBROUTINE update_sclrs
 
       USE grid, ONLY : a_sp, a_st, a_qp, nscl, nxyzp, nxp, nyp, nzp, dzt, &
-         dtlt, newsclr, isgstyp
+                       dtlt, newsclr, isgstyp
       USE sgsm, ONLY : tkeinit
       USE util, ONLY : sclrset
 
@@ -798,7 +788,7 @@ CONTAINS
    SUBROUTINE buoyancy
 
       USE grid, ONLY : a_uc, a_vc, a_wc, a_wt, a_rv, a_rc, a_theta, &
-         a_rp, nxp, nyp, nzp, dzm, th00, level, pi1
+                       a_rp, nxp, nyp, nzp, dzm, th00, level, pi1
       USE stat, ONLY : sflg, comp_tke
       USE util, ONLY : ae1mm
       USE thrm, ONLY : update_pi1
@@ -827,7 +817,7 @@ CONTAINS
 
       INTEGER, INTENT(in) :: n1,n2,n3,level
       REAL, INTENT(in)    :: th00,th(n1,n2,n3),  &
-         rt(n1,n2,n3)  ! This is total water mix rat for level < 4
+                             rt(n1,n2,n3)  ! This is total water mix rat for level < 4
                                            ! and water vapour mix rat for level = 4
       REAL, INTENT(in)    :: rx(n1,n2,n3)  ! This should be water vapour mix rat for level < 4
                                            ! and cloud liquid water mix rat for level = 4 (including rain??)
@@ -844,12 +834,12 @@ CONTAINS
             IF (level >= 2 .AND. level < 4) THEN
                DO k=1,n1
                   scr(k,i,j)=gover2*((th(k,i,j)*(1.+ep2*rx(k,i,j))-th00)       &
-                     /th00-(rt(k,i,j)-rx(k,i,j)))
+                                      /th00-(rt(k,i,j)-rx(k,i,j)))
                END DO
             ELSE IF (level >= 4) THEN
                DO k=1,n1
                   scr(k,i,j)=gover2*((th(k,i,j)*(1.+ep2*rt(k,i,j))-th00)       &
-                     /th00-(rx(k,i,j)))
+                                      /th00-(rx(k,i,j)))
                END DO
             ELSE
                DO k=1,n1
@@ -886,9 +876,9 @@ CONTAINS
             DO i=3,nxp-2
                DO k=2,nzp
                   a_ut(k,i,j)=a_ut(k,i,j) - fcor*(v0(k)-0.25*                   &
-                     (a_vc(k,i,j)+a_vc(k,i+1,j)+a_vc(k,i,j-1)+a_vc(k,i+1,j-1)))
+                              (a_vc(k,i,j)+a_vc(k,i+1,j)+a_vc(k,i,j-1)+a_vc(k,i+1,j-1)))
                   a_vt(k,i,j)=a_vt(k,i,j) + fcor*(u0(k)-0.25*                   &
-                     (a_uc(k,i,j)+a_uc(k,i-1,j)+a_uc(k,i,j+1)+a_uc(k,i-1,j+1)))
+                              (a_uc(k,i,j)+a_uc(k,i-1,j)+a_uc(k,i,j+1)+a_uc(k,i-1,j+1)))
                END DO
             END DO
          END DO
@@ -918,7 +908,7 @@ CONTAINS
                   kk = k+1-(nzp-nfpt)
                   IF (isponge == 0) THEN
                      a_tt(k,i,j)=a_tt(k,i,j) - spng_tfct(kk)*                   &
-                        (a_tp(k,i,j)-th0(k)+th00)
+                                 (a_tp(k,i,j)-th0(k)+th00)
                   ELSE
                      a_ut(k,i,j)=a_ut(k,i,j) - spng_tfct(kk)*(a_up(k,i,j)-u0(k))
                      a_vt(k,i,j)=a_vt(k,i,j) - spng_tfct(kk)*(a_vp(k,i,j)-v0(k))
@@ -945,33 +935,30 @@ CONTAINS
 
    SUBROUTINE SALSA_diagnostics
       USE grid, ONLY : nxp,nyp,nzp,    &
-         a_naerop,a_maerop,a_ncloudp,a_mcloudp,a_nprecpp,a_mprecpp,      &
-         a_gaerop, a_Radry, a_Rcdry, a_Rpdry, a_Rawet, a_Rcwet, a_Rpwet, &
-         a_rc, a_srp,a_snrp, binMixrat, prtcl,   &
-         a_rh, a_temp, a_ri,a_srs,a_snrs,a_rhi,                                      &
-         a_nicep,a_micep,a_nsnowp,a_msnowp,a_Ridry,a_Riwet,a_Rswet,a_Rsdry !! ice'n'snow
+                       a_naerop,a_maerop,a_ncloudp,a_mcloudp,a_nprecpp,a_mprecpp,a_gaerop, &
+                       a_rc, a_srp,a_snrp, binMixrat, prtcl,   &
+                       a_rh, a_temp, a_ri,a_srs,a_snrs,a_rhi,                                      &
+                       a_nicep,a_micep,a_nsnowp,a_msnowp    !! ice'n'snow
       USE mo_submctl, ONLY : nbins,ncld,nprc,ica,fca,icb,fcb,ira,fra,              &
-         in1a,fn2a,fn2b,                        &
-         nice,nsnw,iia,fia,iib,fib,isa,fsa,                    & !! ice'n'snow
-         rhosu,rhooc,rhono,rhonh,rhoss,rhowa,rhoic,rhosn,      &  !! Jaakko: rhoic added
-         msu,moc,mno,mnh,mss,mwa,avog,pi6,                     &
-         surfw0,surfi0, rg, nlim, prlim, pi, &
-         lscndgas
+                             in1a,fn2a,fn2b,                        &
+                             nice,nsnw,iia,fia,iib,fib,isa,fsa,                    & !! ice'n'snow
+                             rhosu,rhooc,rhono,rhonh,rhoss,rhowa,rhoic,rhosn,      &  !! Jaakko: rhoic added
+                             msu,moc,mno,mnh,mss,mwa,avog,pi6,                     &
+                             surfw0,surfi0, rg, nlim, prlim, pi, &
+                             lscndgas
       USE class_ComponentIndex, ONLY : GetIndex, GetNcomp, IsUsed
 
 
       IMPLICIT NONE
 
-      INTEGER :: i,j,k,bc,ba,s,sc,sa,str,end,nc,c,nn
+      INTEGER :: i,j,k,bc,ba,s,sc,sa,str,end,nc,c,nn,iba
 
-      REAL :: zvol
+      REAL :: zvol,zvola,zvolnew
       REAL, PARAMETER :: rempty = 1.e-10
       REAL :: zdh2o,zddry
-      REAL :: zdiff(fn2a)
       REAL :: ns, bb, aa ! Number of moles, Raoult effect, Kelvin effect; For calculating the critical radius
       REAL :: cdcld(nzp,nxp,nyp,ncld),cdprc(nzp,nxp,nyp,nprc),  & ! Critical diameter for cloud droplets and precipitation
          cdice(nzp,nxp,nyp,nice),cdsnw(nzp,nxp,nyp,nsnw)   ! Critical diameter for cloud droplets and precipitation
-      LOGICAL :: zclosest(fn2a)
       REAL :: vsum
 
       ! Remove negative values
@@ -1275,20 +1262,26 @@ CONTAINS
                      IF ( zdh2o < MAX(0.02*cdprc(k,i,j,bc),2.e-6)  ) THEN
 
                         ! Move evaporating rain drops to a soluble aerosol bin with
-                        ! the closest match in dry particle radius. Ain't perfect but
+                        ! the closest match in dry particle mass. Ain't perfect but
                         ! the bin update subroutine in SALSA will take care of the rest.
-                        zvol = 0.
-                        zclosest = .FALSE.
                         CALL binMixrat('precp','dry',bc,i,j,k,zvol)
-                        zvol = zvol/rhosu
-                        zddry = (zvol/a_nprecpp(k,i,j,bc)/pi6)**(1./3.)
-                        zdiff(in1a:fn2a) = ABS(2.*a_Radry(k,i,j,in1a:fn2a) - zddry)
-                        zclosest(in1a:fn2a) = ( zdiff(in1a:fn2a) == MINVAL(zdiff(in1a:fn2a)) )
-                        IF (ALL(zclosest .EQV. .FALSE.)) STOP 'FAIL: zclosest based on NANs'
-                        ba = 1
-                        DO WHILE( .NOT. zclosest(ba))
-                           ba = ba + 1
+
+                        zvol=zvol/a_nprecpp(k,i,j,bc)
+
+                        ba=0
+                        zvola=-1.
+                        DO iba=in1a,fn2a
+                           IF (a_naerop(k,i,j,iba)>nlim) THEN
+                              CALL binMixrat('aerosol','dry',iba,i,j,k,zvolnew)
+                              zvolnew=zvolnew/a_naerop(k,i,j,iba)
+                              IF (abs(zvolnew-zvol)<abs(zvola-zvol)) THEN
+                                 ! New closest match
+                                 ba=iba
+                                 zvola=zvolnew
+                              END IF
+                           END IF
                         END DO
+                        IF (ba==0) STOP 'FAIL: no sink for evaporating rain drops'
 
                         ! Move the number of particles from cloud to aerosol bins
                         a_naerop(k,i,j,ba) = a_naerop(k,i,j,ba) + a_nprecpp(k,i,j,bc)
@@ -1355,20 +1348,26 @@ CONTAINS
                      ! Loose the droplets if smaller than critical radius !! a_rhi ice'n'snow
                      IF ( zdh2o < MAX(0.02*cdsnw(k,i,j,bc),2.e-6) ) THEN
 
-                        ! Move evaporating rain drops to a soluble aerosol bin with
-                        ! the closest match in dry particle radius. Ain't perfect but
+                        ! Move evaporating snow drops to a soluble aerosol bin with
+                        ! the closest match in dry particle mass. Ain't perfect but
                         ! the bin update subroutine in SALSA will take care of the rest.
-                        zclosest = .FALSE.
                         CALL binMixrat('snow','dry',bc,i,j,k,zvol)
-                        zvol = zvol/rhosu
-                        zddry = (zvol/a_nsnowp(k,i,j,bc)/pi6)**(1./3.)
-                        zdiff(in1a:fn2a) = ABS(2.*a_Radry(k,i,j,in1a:fn2a) - zddry)
-                        zclosest(in1a:fn2a) = ( zdiff(in1a:fn2a) == MINVAL(zdiff(in1a:fn2a)) )
-                        IF (ALL(zclosest .EQV. .FALSE.)) STOP 'FAIL: zclosest based on NANs'
-                        ba = 1
-                        DO WHILE( .NOT. zclosest(ba))
-                           ba = ba + 1
+                        zvol=zvol/a_nsnowp(k,i,j,bc)
+
+                        ba=0
+                        zvola=-1.
+                        DO iba=in1a,fn2a
+                           IF (a_naerop(k,i,j,iba)>nlim) THEN
+                              CALL binMixrat('aerosol','dry',iba,i,j,k,zvolnew)
+                              zvolnew=zvolnew/a_naerop(k,i,j,iba)
+                              IF (abs(zvolnew-zvol)<abs(zvola-zvol)) THEN
+                                 ! New closest match
+                                 ba=iba
+                                 zvola=zvolnew
+                              END IF
+                           END IF
                         END DO
+                        IF (ba==0) STOP 'FAIL: no sink for evaporating snow'
 
                         ! Move the number of particles from cloud to aerosol bins
                         a_naerop(k,i,j,ba) = a_naerop(k,i,j,ba) + a_nsnowp(k,i,j,bc)
@@ -1388,12 +1387,7 @@ CONTAINS
 
                END DO ! bc
 
-
-               !!!!!!!!!!!!!!!!!!!!!!!
-               ! Update particle radiae
-               !!!!!!!!!!!!!!!!!!!!!!!
-
-               ! Aerosols
+               ! Loop over aerosol bins
                DO ba = 1,nbins
                   IF (a_naerop(k,i,j,ba) > nlim) THEN
                      CALL binMixrat('aerosol','dry',ba,i,j,k,zvol)
@@ -1428,75 +1422,7 @@ CONTAINS
                         a_maerop(k,i,j,ba:(nn-1)*nbins+ba:nbins) = 0.
                         a_naerop(k,i,j,ba) = 0.
                         zvol=0.
-                     END IF ! Rdry
-
-                     a_Radry(k,i,j,ba) = 0.5*(zvol/a_naerop(k,i,j,ba)/pi6)**(1./3.)
-                     CALL binMixrat('aerosol','wet',ba,i,j,k,zvol)
-                     zvol = zvol/1500.  ! Why 1500 and not rhowa?
-                     a_Rawet(k,i,j,ba) = 0.5*(zvol/a_naerop(k,i,j,ba)/pi6)**(1./3.)
-                  ELSE
-                     a_Radry(k,i,j,ba) = rempty
-                     a_Rawet(k,i,j,ba) = rempty
-                  END IF
-               END DO
-
-               ! Cloud droplets
-               DO bc = 1,ncld
-                  IF (a_ncloudp(k,i,j,bc) > nlim) THEN
-                     CALL binMixrat('cloud','dry',bc,i,j,k,zvol)
-                     zvol = zvol/rhosu
-                     a_Rcdry(k,i,j,bc) = 0.5*(zvol/a_ncloudp(k,i,j,bc)/pi6)**(1./3.)
-                     CALL binMixrat('cloud','wet',bc,i,j,k,zvol)
-                     zvol = zvol/rhowa
-                     a_Rcwet(k,i,j,bc) = 0.5*(zvol/a_ncloudp(k,i,j,bc)/pi6)**(1./3.)
-                  ELSE
-                     a_Rcdry(k,i,j,bc) = rempty
-                     a_Rcwet(k,i,j,bc) = rempty
-                  END IF
-               END DO
-
-               ! Precipitation
-               DO bc = 1,nprc
-                  IF (a_nprecpp(k,i,j,bc) > prlim) THEN
-                     CALL binMixrat('precp','dry',bc,i,j,k,zvol)
-                     zvol = zvol/rhosu
-                     a_Rpdry(k,i,j,bc) = 0.5*(zvol/a_nprecpp(k,i,j,bc)/pi6)**(1./3.)
-                     CALL binMixrat('precp','wet',bc,i,j,k,zvol)
-                     zvol = zvol/rhowa
-                     a_Rpwet(k,i,j,bc) = 0.5*(zvol/a_nprecpp(k,i,j,bc)/pi6)**(1./3.)
-                  ELSE
-                     a_Rpdry(k,i,j,bc) = rempty
-                     a_Rpwet(k,i,j,bc) = rempty
-                  END IF
-               END DO
-
-               ! Ice
-               DO bc = 1,nice
-                  IF (a_nicep(k,i,j,bc) > prlim) THEN
-                     CALL binMixrat('ice','dry',bc,i,j,k,zvol)
-                     zvol = zvol/rhosu
-                     a_Ridry(k,i,j,bc) = 0.5*(zvol/a_nicep(k,i,j,bc)/pi6)**(1./3.)
-                     CALL binMixrat('ice','wet',bc,i,j,k,zvol)
-                     zvol = zvol/rhoic
-                     a_Riwet(k,i,j,bc) = 0.5*(zvol/a_nicep(k,i,j,bc)/pi6)**(1./3.)
-                  ELSE
-                     a_Ridry(k,i,j,bc) = rempty
-                     a_Riwet(k,i,j,bc) = rempty
-                  END IF
-               END DO
-
-               ! Snow
-               DO bc = 1,nsnw
-                  IF (a_nsnowp(k,i,j,bc) > prlim) THEN
-                     CALL binMixrat('snow','dry',bc,i,j,k,zvol)
-                     zvol = zvol/rhosu
-                     a_Rsdry(k,i,j,bc) = 0.5*(zvol/a_nsnowp(k,i,j,bc)/pi6)**(1./3.)
-                     CALL binMixrat('snow','wet',bc,i,j,k,zvol)
-                     zvol = zvol/rhosn
-                     a_Rswet(k,i,j,bc) = 0.5*(zvol/a_nsnowp(k,i,j,bc)/pi6)**(1./3.)
-                  ELSE
-                     a_Rsdry(k,i,j,bc) = rempty
-                     a_Rswet(k,i,j,bc) = rempty
+                     END IF
                   END IF
                END DO
 

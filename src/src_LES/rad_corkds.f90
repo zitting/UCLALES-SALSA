@@ -47,9 +47,9 @@ MODULE ckd
    TYPE (band_properties), ALLOCATABLE :: band(:), solar_bands(:), ir_bands(:)
 
    PUBLIC :: band_properties, bllmx, brlmn, &
-      band, solar_bands, ir_bands, &
-      init_ckd, gases, &
-      kg, llimit, rlimit, center, power, gPointWeight, isSolar
+             band, solar_bands, ir_bands,   &
+             init_ckd, gases,               &
+             kg, llimit, rlimit, center, power, gPointWeight, isSolar
 CONTAINS
    !
    ! ---------------------------------------------------------------------------
@@ -181,15 +181,15 @@ CONTAINS
       Initialized = .TRUE.
 
 600   FORMAT ('-----------------------------------------------------------', &
-         /3x,'Computing with file: ',A20,' containing ',I3,' gases',   &
-         /3x,'Number of Bands (Total/Solar/IR): ',I3,'/',I3,'/',I3     &
-         /3x,'Total Power in Solar Bands: ',F8.2)
+              /3x,'Computing with file: ',A20,' containing ',I3,' gases',   &
+              /3x,'Number of Bands (Total/Solar/IR): ',I3,'/',I3,'/',I3     &
+              /3x,'Total Power in Solar Bands: ',F8.2)
 601   FORMAT ('                                                -----------', &
-         /3x,'Reading Gas: ',A5,', Band ',I3,', Overlap Type ',I1,     &
-         /3x,'# of g-points/ P Levels/ T Coeffs :',3I3)
+              /3x,'Reading Gas: ',A5,', Band ',I3,', Overlap Type ',I1,     &
+              /3x,'# of g-points/ P Levels/ T Coeffs :',3I3)
 602   FORMAT ('-----------                                                ', &
-         /3x,'Band: ',I3,': ',F8.2,' Wm^-2',', between ',F6.0,' and ',F6.0,&
-         ' cm^-1',/3x,I3,' gase(s): and ',I3,' g-points')
+              /3x,'Band: ',I3,': ',F8.2,' Wm^-2',', between ',F6.0,' and ',F6.0,&
+              ' cm^-1',/3x,I3,' gase(s): and ',I3,' g-points')
 604   FORMAT ('---------------------------------------- Finished band init ')
 
    END SUBROUTINE init_ckd
@@ -230,9 +230,9 @@ CONTAINS
             CASE (1)
                igg=min(ig,gas(n)%ng)
                CALL qk (gas(n)%nt, gas(n)%np, gas(n)%sp, gas(n)%tbase,            &
-                  gas(n)%xk(1,1,igg,1), pp, pt, fkg )
+                        gas(n)%xk(1,1,igg,1), pp, pt, fkg )
                CALL select_gas(gas(n)%name, gas(n)%default_conc, gas(n)%mweight,  &
-                  pp, ph, po, pq)
+                               pp, ph, po, pq)
                xfct = (2.24e4/gas(n)%mweight) * 10./9.81
                DO k = 1, nv
                   tg(k) = tg(k) + fkg(k)*pq(k)*(pp(k+1)-pp(k))*xfct
@@ -240,16 +240,16 @@ CONTAINS
 
             CASE (2)
                CALL qk (gas(n)%nt, gas(n)%np, gas(n)%sp, gas(n)%tbase,            &
-                  gas(n)%xk(1,1,igg,1), pp, pt, fkga )
+                        gas(n)%xk(1,1,igg,1), pp, pt, fkga )
                CALL qk (gas(n)%nt, gas(n)%np, gas(n)%sp, gas(n)%tbase,            &
-                  gas(n)%xk(1,1,igg,2), pp, pt, fkgb )
+                        gas(n)%xk(1,1,igg,2), pp, pt, fkgb )
                CALL select_gas(gas(n)%name, gas(n)%default_conc, gas(n)%mweight,  &
-                  pp, ph, po, pq)
+                               pp, ph, po, pq)
                DO k = 1, nv
                   fkg(k) = fkga(k) + pq(k) * fkgb(k)
                END DO
                CALL select_gas('  CO2', gas(n)%default_conc, gas(n)%mweight,       &
-                  pp, ph, po, pq)
+                               pp, ph, po, pq)
                xfct = (2.24e4/gas(n)%mweight) * 10./9.81
                DO k = 1, nv
                   tg(k) = tg(k) + fkg(k)*pq(k)*(pp(k+1)-pp(k))*xfct

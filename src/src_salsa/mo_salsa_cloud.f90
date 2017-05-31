@@ -24,12 +24,12 @@ MODULE mo_salsa_cloud
 CONTAINS
 
    SUBROUTINE cloud_activation(kbdim, klev,   &
-      temp,   pres,  rv,     &
-      rs,     w,     paero,  &
-      pcloud, pactd          )
+                               temp,   pres,  rv,     &
+                               rs,     w,     paero,  &
+                               pcloud, pactd          )
 
       USE mo_submctl, ONLY : t_section, fn2b, ncld, &
-         lsactintst, lsactbase
+                             lsactintst, lsactbase
 
       IMPLICIT NONE
 
@@ -91,13 +91,13 @@ CONTAINS
    !
    SUBROUTINE getSolute(kbdim,klev,paero,pns)
       USE mo_submctl, ONLY : t_section,nlim,       &
-         fn2b,            &
-         rhosu, rhooc, rhobc,  &
-         rhonh, rhono, rhodu,  &
-         rhoss,                &
-         msu, moc, mbc,        &
-         mnh, mno, mdu,        &
-         mss
+                             fn2b,            &
+                             rhosu, rhooc, rhobc,  &
+                             rhonh, rhono, rhodu,  &
+                             rhoss,                &
+                             msu, moc, mbc,        &
+                             mnh, mno, mdu,        &
+                             mss
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: kbdim,klev
@@ -122,11 +122,11 @@ CONTAINS
                   !   SS or NaCl produces 2 ions
                   !   SO or H2SO4 produces 3 ions
                   pns(ii,jj,kk) = (3.*paero(ii,jj,kk)%volc(1)*rhosu/msu  +   &
-                     paero(ii,jj,kk)%volc(2) * rhooc/moc +                    &
-                     paero(ii,jj,kk)%volc(6) * rhono/mno +                    &
-                     paero(ii,jj,kk)%volc(7) * rhonh/mnh +                    &
-                     2.*paero(ii,jj,kk)%volc(5) * rhoss/mss)/              &
-                     paero(ii,jj,kk)%numc
+                                  paero(ii,jj,kk)%volc(2) * rhooc/moc +      &
+                                  paero(ii,jj,kk)%volc(6) * rhono/mno +      &
+                                  paero(ii,jj,kk)%volc(7) * rhonh/mnh +      &
+                                  2.*paero(ii,jj,kk)%volc(5) * rhoss/mss)/   &
+                                  paero(ii,jj,kk)%numc
 
                END IF
             END DO
@@ -275,15 +275,15 @@ CONTAINS
             !-- saturation vapor pressure of water [Pa]
             a1    = 1.-(373.15/temp(ii,jj))
             ps    = 101325.*                                                 &
-               exp(13.3185*a1-1.976*a1**2-0.6445*a1**3-0.1299*a1**4)
+                    exp(13.3185*a1-1.976*a1**2-0.6445*a1**3-0.1299*a1**4)
 
             !-- part 1, eq (11)
             alpha = grav*mwa*L/(cpa*rg*temp(ii,jj)**2)-                            &
-               grav*mair/(rg*temp(ii,jj))
+                    grav*mair/(rg*temp(ii,jj))
 
             !-- part 1, eq (12)
             gamma = rg*temp(ii,jj)/(ps*mwa) &
-               + mwa*L**2/(cpa*pres(ii,jj)*mair*temp(ii,jj))
+                   + mwa*L**2/(cpa*pres(ii,jj)*mair*temp(ii,jj))
 
             !-- diffusivity [m2/s], Seinfeld and Pandis (15.65)
             x1 = pres(ii,jj) / 101325.
@@ -298,7 +298,7 @@ CONTAINS
             !-- (note: here uncorrected diffusivities and conductivities are used
             !    based on personal communication with H. Abdul-Razzak, 2007)
             Gc = 1./(rhowa*rg*temp(ii,jj)/(ps*dv1*mwa) +                      &
-               L*rhowa/(ka1*temp(ii,jj)) * (L*mwa/(temp(ii,jj)*rg)-1.))
+                 L*rhowa/(ka1*temp(ii,jj)) * (L*mwa/(temp(ii,jj)*rg)-1.))
 
             !-- effective critical supersaturation: part 3, eq (8)
             s_eff = (ntot/sum1)**(3./2.)
@@ -312,7 +312,7 @@ CONTAINS
 
             !-- maximum supersaturation of the air parcel: part 3, equation (9)
             s_max = s_eff / SQRT(0.5*(khi/theta)**(3./2.)              &
-               + ((s_eff**2)/(theta+3.*khi))**(3./4.))
+                   + ((s_eff**2)/(theta+3.*khi))**(3./4.))
 
             !-- Juha: Get the critical diameter corresponding to the maximum supersaturation
             zdcstar = 2.*aa/(3.*s_max)
@@ -365,7 +365,7 @@ CONTAINS
       END DO ! jj
 
       CALL activate3(kbdim,klev,paero,bcrita,  &
-         zdcrit, zdcrlo, zdcrhi, zdcstar, pactd  )
+                     zdcrit, zdcrlo, zdcrhi, zdcstar, pactd  )
 
    END SUBROUTINE ActCloudBase
 
@@ -395,7 +395,7 @@ CONTAINS
 
       INTEGER, INTENT(IN) :: kbdim,klev
       TYPE(t_section), INTENT(INOUT) :: paero(kbdim,klev,nbins),  &
-         pcloud(kbdim,klev,ncld)
+                                        pcloud(kbdim,klev,ncld)
       REAL, INTENT(IN) :: prv(kbdim,klev),prs(kbdim,klev)  ! Water vapour and saturation mixin ratios
       REAL, INTENT(in) :: temp(kbdim,klev)  ! Absolute temperature
 
@@ -634,12 +634,12 @@ CONTAINS
    ! ----------------------------------------------
 
    SUBROUTINE activate3(kbdim,klev,paero,pbcrita, &
-      pdcrit, pdcrlo, pdcrhi, pdcstar, pactd   )
+                        pdcrit, pdcrlo, pdcrhi, pdcstar, pactd   )
       !
       ! Gets the number and mass activated in the critical aerosol size bin
       !
       USE mo_submctl, ONLY : t_section, pi6, nlim, fn2b, ncld,  &
-         in1a,fn2a, ica, fca, icb, fcb, in2b, fn2b
+                             in1a,fn2a, ica, fca, icb, fcb, in2b, fn2b
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: kbdim,klev
@@ -647,8 +647,8 @@ CONTAINS
       INTEGER, INTENT(IN) :: pbcrita(kbdim,klev)          ! Index of the critical aerosol bin in regime a
 
       REAL, INTENT(IN) :: pdcrit(kbdim,klev,fn2b),    & ! Bin middle critical diameter
-         pdcrlo(kbdim,klev,fn2b),    & ! Critical diameter at low limit
-         pdcrhi(kbdim,klev,fn2b)       ! Critical diameter at high limit
+                          pdcrlo(kbdim,klev,fn2b),    & ! Critical diameter at low limit
+                          pdcrhi(kbdim,klev,fn2b)       ! Critical diameter at high limit
       REAL, INTENT(IN) :: pdcstar(kbdim,klev)           ! Critical diameter corresponding to Smax
       TYPE(t_section), INTENT(OUT) :: pactd(kbdim,klev,ncld) ! Properties of the maximum amount of newly activated droplets
 
@@ -686,13 +686,13 @@ CONTAINS
 
             IF ( pdcstar(ii,jj) >= pdcrit(ii,jj,pbcrita(ii,jj)) ) THEN
                zhlp = ( pi6*pdcstar(ii,jj)**3 - pi6*pdcrit(ii,jj,pbcrita(ii,jj))**3 ) / &
-                  MAX( epsilon(1.0), pi6*pdcrhi(ii,jj,pbcrita(ii,jj))**3 - pi6*pdcrit(ii,jj,pbcrita(ii,jj))**3 )
+                      MAX( epsilon(1.0), pi6*pdcrhi(ii,jj,pbcrita(ii,jj))**3 - pi6*pdcrit(ii,jj,pbcrita(ii,jj))**3 )
 
                zvcstar = Vmid + zhlp*(Vhi-Vmid)
             ELSE IF (pdcstar(ii,jj) < pdcrit(ii,jj,pbcrita(ii,jj)) ) THEN
 
                zhlp = ( pi6*pdcrit(ii,jj,pbcrita(ii,jj))**3 - pi6*pdcstar(ii,jj)**3 ) / &
-                  MAX( epsilon(1.0), pi6*pdcrit(ii,jj,pbcrita(ii,jj))**3 - pi6*pdcrlo(ii,jj,pbcrita(ii,jj))**3 )
+                      MAX( epsilon(1.0), pi6*pdcrit(ii,jj,pbcrita(ii,jj))**3 - pi6*pdcrlo(ii,jj,pbcrita(ii,jj))**3 )
 
                zvcstar = Vmid - zhlp*(Vmid-Vlo)
             END IF
@@ -802,7 +802,7 @@ CONTAINS
                ! "Artificially" adjust the wet size of newly activated a little bit to prevent them from being
                ! evaporated immediately
                pactd(ii,jj,cb)%volc(8) = pactd(ii,jj,cb)%numc*pi6*(pdcrit(ii,jj,ab)**3) *  &
-                  MIN(2.,(3.e-6/max(epsilon(1.0),pdcrit(ii,jj,ab)))**2)
+                                         MIN(2.,(3.e-6/max(epsilon(1.0),pdcrit(ii,jj,ab)))**2)
 
             END DO ! cb
 
@@ -832,7 +832,7 @@ CONTAINS
 
    !-----------------------------------------
    SUBROUTINE autoconv2(kbdim,klev,   &
-      pcloud,pprecp         )
+                        pcloud,pprecp         )
       !
       ! Uses a more straightforward method for converting cloud droplets to drizzle.
       ! Assume a lognormal cloud droplet distribution for each bin. Sigma_g is an adjustable
@@ -840,11 +840,11 @@ CONTAINS
       !
     
       USE mo_submctl, ONLY : t_section,   &
-         ncld,        &
-         nprc,        &
-         rhowa,       &
-         pi6,         &
-         nlim, prlim
+                             ncld,        &
+                             nprc,        &
+                             rhowa,       &
+                             pi6,         &
+                             nlim, prlim
       IMPLICIT NONE
 
       INTEGER, INTENT(in) :: kbdim,klev
@@ -911,38 +911,38 @@ CONTAINS
    !***********************************************
 
    SUBROUTINE ice_het_nucl(kbdim,klev,   &
-      pcloud,pice,paero, &
-      ptemp,prv,prs,ptstep )
+                           pcloud,pice,paero, &
+                           ptemp,prv,prs,ptstep )
 
     
       USE mo_submctl, ONLY : t_section,   &
-         fn2b,   &
-         ncld,        &
-         nice,        &
-         rhowa,       &
-         rhoic,       &
-         planck,      &
-         pi,          &
-         nlim,        &
-         prlim,       &
-         rd, alf, avog
+                             fn2b,        &
+                             ncld,        &
+                             nice,        &
+                             rhowa,       &
+                             rhoic,       &
+                             planck,      &
+                             pi,          &
+                             nlim,        &
+                             prlim,       &
+                             rd, alf, avog
 
       IMPLICIT NONE
 
       INTEGER, INTENT(in) :: kbdim,klev
       REAL, INTENT(in) :: ptstep
       REAL, INTENT(in) :: ptemp(kbdim,klev),  &
-         prv(kbdim,klev),    &
-         prs(kbdim,klev)
+                          prv(kbdim,klev),    &
+                          prs(kbdim,klev)
 
       TYPE(t_section), INTENT(inout) :: pcloud(kbdim,klev,ncld), &
-         pice(kbdim,klev,nice),  &
-         paero(kbdim,klev,fn2b)
+                                        pice(kbdim,klev,nice),  &
+                                        paero(kbdim,klev,fn2b)
 
       INTEGER :: ii,jj,kk,ss
       REAL :: phf = 0., & ! probability of homogeneous freezing of a wet aerosol particle
-         rn, & !radius of the insoluble portion of the aerosol
-         rdry,qv,jcf
+              rn, & !radius of the insoluble portion of the aerosol
+              rdry,qv,jcf
       REAL :: Vtot, Ntot, frac
 
       DO ii = 1,kbdim
@@ -1012,19 +1012,19 @@ CONTAINS
    !
    !***********************************************
    SUBROUTINE ice_hom_nucl(kbdim,klev,   &
-      pcloud,pice,paero, &
-      ptemp,ptstep )
+                           pcloud,pice,paero, &
+                           ptemp,ptstep )
 
       USE mo_submctl, ONLY : t_section,   &
-         ncld,        &
-         nice,        &
-         fn2b,        &
-         rhowa,       &
-         rhoic,       &
-         pi6,         &
-         pi,          &
-         nlim, prlim,  &
-         rd, alf, avog
+                             ncld,        &
+                             nice,        &
+                             fn2b,        &
+                             rhowa,       &
+                             rhoic,       &
+                             pi6,         &
+                             pi,          &
+                             nlim, prlim, &
+                             rd, alf, avog
 
       IMPLICIT NONE
 
@@ -1033,12 +1033,12 @@ CONTAINS
       REAL, INTENT(in) :: ptemp(kbdim,klev)
 
       TYPE(t_section), INTENT(inout) :: pcloud(kbdim,klev,ncld), &
-         pice(kbdim,klev,nice),  &
-         paero(kbdim,klev,fn2b)
+                                        pice(kbdim,klev,nice),   &
+                                        paero(kbdim,klev,fn2b)
 
       INTEGER :: ii,jj,kk,ss
-      REAL :: phf,jhf, & ! probability of homogeneous freezing of a wet aerosol particle
-         rn, rw          ! Cube of the insoluble and wet radius
+      REAL :: phf,jhf, &      ! probability of homogeneous freezing of a wet aerosol particle
+              rn, rw          ! Cube of the insoluble and wet radius
 
       REAL :: frac
 
@@ -1105,37 +1105,37 @@ CONTAINS
    ! as of referenced as [Mor05]
    !
    !***********************************************
-   SUBROUTINE ice_immers_nucl(kbdim,klev,   &
-      pcloud,pice, &
-      ptemp,ptt,ptstep )
+   SUBROUTINE ice_immers_nucl(kbdim,klev,  &
+                              pcloud,pice, &
+                              ptemp,ptt,ptstep )
 
       USE mo_submctl, ONLY : t_section,   &
-         ncld,        &
-         nice,        &
-         rhowa,       &
-         rhoic,       &
-         planck,      &
-         pi,          &
-         nlim, prlim, &
-         rd, alf, avog
+                             ncld,        &
+                             nice,        &
+                             rhowa,       &
+                             rhoic,       &
+                             planck,      &
+                             pi,          &
+                             nlim, prlim, &
+                             rd, alf, avog
 
       IMPLICIT NONE
 
       INTEGER, INTENT(in) :: kbdim,klev
       REAL, INTENT(in) :: ptstep
       REAL, INTENT(in) :: ptemp(kbdim,klev),  &
-         ptt(kbdim,klev)
+                          ptt(kbdim,klev)
 
 
       TYPE(t_section), INTENT(inout) :: pcloud(kbdim,klev,ncld), &
-         pice(kbdim,klev,nice)
+                                        pice(kbdim,klev,nice)
 
       INTEGER :: ii,jj,kk,ss
       REAL :: frac,              &
-         Ts
+              Ts
       REAL :: Vtot, Ntot, &
-         a_kiehl, B_kiehl, nucl_rate, &
-         Nicetot, Vicetot, Vinsolub,Temp_tend
+              a_kiehl, B_kiehl, nucl_rate, &
+              Nicetot, Vicetot, Vinsolub,Temp_tend
 
       B_kiehl=1.0e-6
       a_kiehl=1.0
@@ -1170,7 +1170,7 @@ CONTAINS
 
                DO ss = 1,8
                   pice(ii,jj,kk)%volc(ss) = max(0., pice(ii,jj,kk)%volc(ss) + &
-                     pcloud(ii,jj,kk)%volc(ss)*frac)
+                                            pcloud(ii,jj,kk)%volc(ss)*frac)
 
                   pcloud(ii,jj,kk)%volc(ss) = max(0., pcloud(ii,jj,kk)%volc(ss)*(1. - frac))
                END DO
@@ -1192,12 +1192,12 @@ CONTAINS
       USE mo_submctl, ONLY : boltz, planck,pi
       IMPLICIT NONE
       REAL, INTENT(in) :: rn,  &
-         temp, prv,prs
+                          temp, prv,prs
       REAL :: c_1s, psi
       psi = 1.
       c_1s = 1.e19 !! 10**15 cm^-2 !! concentration of water molecules adsorbed on 1 cm^-2 of surface
       calc_JCF= boltz*temp/planck*psi*c_1s*4.*pi*rn**2*&
-         exp((-calc_act_energy(temp,'het')-calc_crit_energy(rn,prv,prs,temp))/(boltz*temp))
+                exp((-calc_act_energy(temp,'het')-calc_crit_energy(rn,prv,prs,temp))/(boltz*temp))
 
    END FUNCTION calc_JCF
 
@@ -1208,7 +1208,7 @@ CONTAINS
       USE mo_submctl, ONLY : boltz, planck,surfi0,pi
       IMPLICIT NONE
       REAL, INTENT(in) :: NL, & !  number of water molecules per unit volume of the liquid
-         temp
+                          temp
       REAL :: r_cr
 
       r_cr = calc_r_cr(temp)
@@ -1347,18 +1347,18 @@ CONTAINS
    ! ------------------------------------------------------------
 
    SUBROUTINE ice_melt(kbdim,klev,   &
-      pcloud,pice,pprecp,psnow, &
-      ptemp )
+                       pcloud,pice,pprecp,psnow, &
+                       ptemp )
 
       USE mo_submctl, ONLY : t_section,   &
-         ncld,        &
-         nice,        &
-         nsnw,        &
-         nprc,        &
-         rhowa, rhoic, rhosn,      &
-         pi6,         &
-         nlim, prlim,  &
-         rd
+                             ncld,        &
+                             nice,        &
+                             nsnw,        &
+                             nprc,        &
+                             rhowa, rhoic, rhosn,      &
+                             pi6,         &
+                             nlim, prlim,  &
+                             rd
 
       IMPLICIT NONE
 
@@ -1366,9 +1366,9 @@ CONTAINS
       REAL, INTENT(in) :: ptemp(kbdim,klev)
 
       TYPE(t_section), INTENT(inout) :: pcloud(kbdim,klev,ncld), &
-         pice(kbdim,klev,nice),   &
-         psnow(kbdim,klev,nsnw),  &
-         pprecp(kbdim,klev,nprc)
+                                        pice(kbdim,klev,nice),   &
+                                        psnow(kbdim,klev,nsnw),  &
+                                        pprecp(kbdim,klev,nprc)
 
       INTEGER :: ii,jj,kk,ss
 
@@ -1414,7 +1414,7 @@ CONTAINS
 
 
    SUBROUTINE autosnow(kbdim,klev,   &
-      pice,psnow         )
+                       pice,psnow         )
       !
       ! Uses a more straightforward method for converting cloud droplets to drizzle.
       ! Assume a lognormal cloud droplet distribution for each bin. Sigma_g is an adjustable
@@ -1422,11 +1422,11 @@ CONTAINS
       !
     
       USE mo_submctl, ONLY : t_section,   &
-         nice,        &
-         nsnw,        &
-         rhosn, rhoic,       &
-         prlim,          &
-         rd
+                             nice,        &
+                             nsnw,        &
+                             rhosn, rhoic,       &
+                             prlim,          &
+                             rd
       IMPLICIT NONE
 
       INTEGER, INTENT(in) :: kbdim,klev

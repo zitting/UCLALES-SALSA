@@ -17,11 +17,11 @@ MODULE mo_salsa
 CONTAINS
 
    SUBROUTINE salsa(kbdim,    klev,           &
-      ppres,    prv, prs, prsi,    ptemp, ptt, ptstep,     &
-      pc_h2so4, pc_ocnv,  pc_ocsv, pc_hno3,    &
-      pc_nh3,   paero,    pcloud,  pprecp,     &
-      pice, psnow,                             &
-      pactd,    pw,    prtcl,level      )
+                    ppres,    prv, prs, prsi,    ptemp, ptt, ptstep,     &
+                    pc_h2so4, pc_ocnv,  pc_ocsv, pc_hno3,    &
+                    pc_nh3,   paero,    pcloud,  pprecp,     &
+                    pice, psnow,                             &
+                    pactd,    pw,    prtcl,level      )
 
       USE mo_salsa_dynamics, ONLY : coagulation, condensation
       USE mo_salsa_update, ONLY : distr_update
@@ -30,7 +30,7 @@ CONTAINS
          autosnow
 
       USE mo_submctl, ONLY :      &
-         fn2b,               & ! size section and composition indices
+         fn2b,                      & ! size section and composition indices
          t_section,                 & ! For cloud bins
          ncld,                      &
          nprc,                      &
@@ -53,7 +53,7 @@ CONTAINS
       IMPLICIT NONE
 
       !-- Input parameters and variables --------------------------------------------------
-      INTEGER, INTENT(in) ::          &
+      INTEGER, INTENT(in) ::      &
          kbdim,                     & ! dimension for arrays (='kbdim')
          klev                         ! number of vertical levels (='klev')
 
@@ -103,63 +103,63 @@ CONTAINS
       ! Coagulation
       IF (lscoag) &
          CALL coagulation( kbdim,  klev,                   &
-         paero,  pcloud, pprecp, pice, psnow,    &
-         ptstep, ptemp,  ppres                   )
+                           paero,  pcloud, pprecp, pice, psnow,    &
+                           ptstep, ptemp,  ppres                   )
 
       ! Condensation
       IF (lscnd) &
          CALL condensation(kbdim,    klev,               &
-         paero,   pcloud,   pprecp,             &
-         pice,    psnow,                        &
-         pc_h2so4, pc_ocnv, pc_ocsv,  pc_hno3,  &
-         pc_nh3, prv, prs, prsi, ptemp, ppres,  &
-         ptstep, zpbl, prtcl                    )
+                           paero,   pcloud,   pprecp,             &
+                           pice,    psnow,                        &
+                           pc_h2so4, pc_ocnv, pc_ocsv,  pc_hno3,  &
+                           pc_nh3, prv, prs, prsi, ptemp, ppres,  &
+                           ptstep, zpbl, prtcl                    )
 
       ! Autoconversion (liquid)
       IF (lsauto) &
          CALL autoconv2(kbdim,klev, &
-         pcloud, pprecp     )
+                        pcloud, pprecp     )
 
       ! Cloud activation
       IF (lsactiv )  &
          CALL cloud_activation(kbdim, klev,   &
-         ptemp,  ppres, prv,    &
-         prs,    pw,    paero,  &
-         pcloud, pactd          )
+                               ptemp,  ppres, prv,    &
+                               prs,    pw,    paero,  &
+                               pcloud, pactd          )
 
       ! Immersion freezing
       IF (lsicimmers) &
          CALL ice_immers_nucl(kbdim,klev,            &
-         pcloud,pice,            &
-         ptemp,ptt,ptstep )
+                              pcloud,pice,            &
+                              ptemp,ptt,ptstep )
 
       ! Homogenous nucleation Morrison et al. 2005 eq. (25)
       IF (lsichom) &
          CALL ice_hom_nucl(kbdim,klev,       &
-         pcloud,pice,paero, &
-         ptemp,ptstep)
+                           pcloud,pice,paero, &
+                           ptemp,ptstep)
 
       !! heterogenous nucleation Morrison et al. 2005 eq. (27)
       IF (lsichet) &
          CALL ice_het_nucl(kbdim,klev,       &
-         pcloud,pice,paero, &
-         ptemp,prv,prs,ptstep)
+                           pcloud,pice,paero, &
+                           ptemp,prv,prs,ptstep)
     
       ! Melting of ice
       IF (lsicmelt) &
          CALL ice_melt(kbdim,klev,              &
-         pcloud,pice,pprecp,psnow, ptemp)
+                       pcloud,pice,pprecp,psnow, ptemp)
 
       ! Snow formation ~ autoconversion for ice
       IF (lsautosnow) &
          CALL autosnow(kbdim,klev, &
-         pice, psnow        )
+                       pice, psnow        )
 
       ! Size distribution bin update
       IF (lsdistupdate ) &
          CALL distr_update(kbdim, klev,     &
-         paero,  pcloud, pprecp,  &
-         pice, psnow, level       )
+                           paero,  pcloud, pprecp,  &
+                           pice, psnow, level       )
 
    END SUBROUTINE salsa
 
