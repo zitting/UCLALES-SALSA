@@ -84,22 +84,30 @@ contains
           n4 = GetNcomp(prtcl) + 1 ! Aerosol compoenents + water
 
           IF ( nxp == 5 .and. nyp == 5 ) THEN
-             CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,zwp,a_dn, &
+             CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_scr1,ztkt,a_rp,a_rt,a_scr2,a_rsi,zwp,a_dn, &
                   a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
                   a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
                   a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
                   a_nicep,   a_nicet,   a_micep,   a_micet,    &
                   a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
                   a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
+                  a_Radry,   a_Rcdry,   a_Rpdry,               &
+                  a_Ridry,   a_Rsdry,                          &
+                  a_Rawet,   a_Rcwet,   a_Rpwet,               &
+                  a_Riwet,   a_Rswet,                          &
                   1, prtcl, dtlt, .false., 0., level   )
           ELSE
-             CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,a_wp,a_dn, &
+             CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_scr1,ztkt,a_rp,a_rt,a_scr2,a_rsi,a_wp,a_dn, &
                   a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
                   a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
                   a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
                   a_nicep,   a_nicet,   a_micep,   a_micet,    &
                   a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
                   a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
+                  a_Radry,   a_Rcdry,   a_Rpdry,               &
+                  a_Ridry,   a_Rsdry,                          &
+                  a_Rawet,   a_Rcwet,   a_Rpwet,               &
+                  a_Riwet,   a_Rswet,                          &
                   1, prtcl, dtlt, .false., 0., level   )
 
           END IF
@@ -210,9 +218,8 @@ contains
           end if
 
        CASE(4,5)
-          ! Condensation will be calculated by the initial call of SALSA, so use the
-          ! saturation adjustment method to estimate the amount of liquid water,
-          ! which is needed for theta_l
+          ! Condensation will be calculated by the initial call of SALSA
+          ! Assume no condensation at this point
           DO j = 1,nyp
              DO i = 1,nxp
                 DO k = 1,nzp
@@ -220,14 +227,12 @@ contains
                    pres  = p00 * (exner)**cpr
                    IF (itsflg == 0) THEN
                       tk = th0(k)*exner
-                      rc  = max(0.,a_rp(k,i,j)-rslf(pres,tk))
-                      a_tp(k,i,j) = a_theta(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
+                      a_tp(k,i,j) = a_theta(k,i,j) - th00
                    END IF
                    IF (itsflg == 2) THEN
                       tk = th0(k)
                       a_theta(k,i,j) = tk/exner
-                      rc  = max(0.,a_rp(k,i,j)-rslf(pres,tk))
-                      a_tp(k,i,j) = a_theta(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
+                      a_tp(k,i,j) = a_theta(k,i,j) - th00
                    END IF
                 END DO !k
              END DO !i
@@ -236,7 +241,7 @@ contains
     END SELECT
 
     k=1
-    do while( zt(k+1) <= zrand .and. k+1 < nzp)
+    do while( zt(k+1) <= zrand .and. k < nzp)
        k=k+1
        xran(k) = 0.2*(zrand - zt(k))/zrand
     end do
@@ -244,7 +249,7 @@ contains
 
     if (associated(a_rp)) then
        k=1
-       do while( zt(k+1) <= zrand .and. k+1 < nzp)
+       do while( zt(k+1) <= zrand .and. k < nzp)
           k=k+1
           xran(k) = 5.0e-5*(zrand - zt(k))/zrand
        end do
@@ -367,13 +372,8 @@ contains
              hs(ns) = ps(ns)
              zold1=zold2
              zold2=ps(ns)
-             IF ( itsflg==0 .OR. itsflg==1) THEN
-                ! ts=potential or liquid water potential temperature (condensation not included here)
-                tavg=0.5*(ts(ns)*xs(ns)+ts(ns-1)*xs(ns-1))*((p00/ps(ns-1))**rcp)
-             ELSE
-                ! ts=T [K]
-                tavg=0.5*(ts(ns)*xs(ns)+ts(ns-1)*xs(ns-1))
-             ENDIF
+             tavg=(ts(ns)*xs(ns)+ts(ns-1)*xs(ns-1)*(p00**rcp)             &
+                  /ps(ns-1)**rcp)*.5
              ps(ns)=(ps(ns-1)**rcp-g*(zold2-zold1)*(p00**rcp)/(cp*tavg))**cpr
           end if
        end select
@@ -698,9 +698,9 @@ contains
   !
   SUBROUTINE SALSAInit
     USE mo_submctl, ONLY : ncld,nbins,nice
-    USE class_componentIndex, ONLY : GetIndex
     IMPLICIT NONE
-    INTEGER :: k,i,j,bb,nc
+
+    INTEGER :: k,i,j,bb
 
     DO j=1,nyp
        DO i=1,nxp
@@ -724,21 +724,20 @@ contains
        END DO
     END DO
 
-    nc = GetIndex(prtcl,'H2O')
     ! Activation + diagnostic array initialization
     ! Clouds and aerosols
     a_rc(:,:,:) = 0.
     DO bb = 1, ncld
-       a_rc(:,:,:) = a_rc(:,:,:) + a_mcloudp(:,:,:,(nc-1)*ncld+bb)
+       CALL DiagInitCloud(bb)
     END DO
     DO bb = 1,nbins
-       a_rc(:,:,:) = a_rc(:,:,:) + a_maerop(:,:,:,(nc-1)*nbins+bb)
+       CALL DiagInitAero(bb)
     END DO
 
     ! Ice
     a_ri(:,:,:) = 0.
     do bb = 1,nice
-        a_ri(:,:,:) = a_ri(:,:,:) + a_micep(:,:,:,(nc-1)*nice + bb)
+        call DiagInitIce(bb)
     end do
 
   END SUBROUTINE SALSAInit
@@ -794,8 +793,117 @@ contains
     END DO
 
   END SUBROUTINE ActInit
-    !------------------------------------------
+  !------------------------------------------
+  SUBROUTINE DiagInitCloud(b)
+    USE mo_submctl, ONLY : ncld, pi6, rhowa, rhosu, nlim
+    USE class_componentIndex, ONLY : GetIndex
+    IMPLICIT NONE
 
+    INTEGER, INTENT(in) :: b
+
+    INTEGER :: str,k,i,j,nc
+    REAL :: zvol
+
+    nc = GetIndex(prtcl,'H2O')
+    str = (nc-1)*ncld+b
+
+       DO j = 1,nyp
+          DO i = 1,nxp
+             DO k = 1,nzp
+
+                IF (a_ncloudp(k,i,j,b)  > nlim) THEN
+                   CALL binMixrat('cloud','dry',b,i,j,k,zvol)
+                   zvol = zvol/rhosu
+                   a_Rcdry(k,i,j,b) = 0.5*( zvol/(pi6*a_ncloudp(k,i,j,b)) )**(1./3.)
+                   CALL binMixrat('cloud','wet',b,i,j,k,zvol)
+                   zvol = zvol/rhowa
+                   a_Rcwet(k,i,j,b) = 0.5*( zvol/(pi6*a_ncloudp(k,i,j,b)) )**(1./3.)
+                ELSE
+                   a_Rcdry(k,i,j,b) = 1.e-10
+                   a_Rcwet(k,i,j,b) = 1.e-10
+                END IF
+
+                ! Cloud water
+                a_rc(k,i,j) = a_rc(k,i,j) + a_mcloudp(k,i,j,str)
+
+             END DO ! k
+          END DO ! i
+       END DO ! j
+  END SUBROUTINE DiagInitCloud
+    !------------------------------------------
+  SUBROUTINE DiagInitIce(b)
+    USE mo_submctl, ONLY : nice, pi6, rhosu,rhoic, prlim
+    USE class_componentIndex, ONLY : IsUsed, GetIndex
+    IMPLICIT NONE
+
+    INTEGER, INTENT(in) :: b
+
+    INTEGER :: str,k,i,j,nc
+    REAL :: zvol
+
+    nc = GetIndex(prtcl,'H2O')
+    str = (nc-1)*nice + b
+
+       DO j = 1,nyp
+          DO i = 1,nxp
+             DO k = 1,nzp
+
+                IF (a_nicep(k,i,j,b)  > prlim) THEN
+                   CALL binMixrat('ice','dry',b,i,j,k,zvol)
+                    zvol = zvol/rhosu
+                   a_Ridry(k,i,j,b) = 0.5*( zvol/(pi6*a_nicep(k,i,j,b)) )**(1./3.)
+                   CALL binMixrat('ice','wet',b,i,j,k,zvol)
+                    zvol = zvol/rhoic
+                   a_Riwet(k,i,j,b) = 0.5*( zvol/(pi6*a_nicep(k,i,j,b)) )**(1./3.)
+                ELSE
+                   a_Ridry(k,i,j,b) = 1.e-10
+                   a_Riwet(k,i,j,b) = 1.e-10
+                END IF
+
+                ! Cloud ice
+                a_ri(k,i,j) = a_ri(k,i,j) + a_micep(k,i,j,str)
+
+             END DO ! k
+          END DO ! i
+       END DO ! j
+  END SUBROUTINE DiagInitIce
+    !------------------------------------------
+  SUBROUTINE DiagInitAero(b)
+    USE mo_submctl, ONLY : nbins, pi6, rhowa, nlim
+    USE class_componentIndex, ONLY : IsUsed, GetIndex
+    IMPLICIT NONE
+
+    INTEGER, INTENT(in) :: b
+
+    INTEGER :: k,i,j,nc, str
+    REAL :: zvol
+
+    nc = GetIndex(prtcl,'H2O')
+    str = (nc-1)*nbins+b
+
+       DO j = 1,nyp
+          DO i = 1,nxp
+             DO k = 1,nzp
+
+                IF (a_naerop(k,i,j,b) > nlim) THEN
+                   CALL binMixrat('aerosol','dry',b,i,j,k,zvol)
+                   a_Radry(k,i,j,b) = 0.5*( zvol/(pi6*a_naerop(k,i,j,b)) )**(1./3.)
+                   CALL binMixrat('aerosol','wet',b,i,j,k,zvol)
+                   a_Rawet(k,i,j,b) = 0.5*( zvol/(pi6*a_naerop(k,i,j,b)) )**(1./3.)
+                ELSE
+                   a_Radry(k,i,j,b) = 1.e-10
+                   a_Rawet(k,i,j,b) = 1.e-10
+                END IF
+
+                ! To cloud water
+                a_rc(k,i,j) = a_rc(k,i,j) + a_maerop(k,i,j,str)
+
+             END DO ! k
+          END DO ! i
+       END DO ! j
+  END SUBROUTINE DiagInitAero
+
+    !
   ! --------------------------------------------------------------------------------------------------
   ! Replacement for SUBROUTINE init_aero_sizedist (init.f90): initilize altitude-dependent aerosol
   ! size distributions and compositions.
@@ -1057,7 +1165,7 @@ contains
         DO k = 2,nzp  ! DONT PUT STUFF INSIDE THE GROUND
            DO j = 1,nyp
               DO i = 1,nxp
-                 IF (a_rh(k,i,j)<1.0  .or. a_temp(k,i,j) > 273.15) CYCLE
+                 IF (a_rh(k,i,j)<1.0  .or. a_scr1(k,i,j) > 273.15) CYCLE
                  zumA=sum(a_naerop(k,i,j,in2a:fn2a))
                  zumB=sum(a_naerop(k,i,j,in2b:fn2b))
 
@@ -1069,7 +1177,7 @@ contains
 
                  DO bb=fn2a,in2a,-1
 
-                    IF(a_temp(k,i,j) < 273.15 .and. zumCumIce<iceFracA*zumA .and. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice if it is cold enough
+                    IF(a_scr1(k,i,j) < 273.15 .and. zumCumIce<iceFracA*zumA .and. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice if it is cold enough
 
                        excessIce =min(abs(zumCumIce-iceFracA*zumA),a_naerop(k,i,j,bb))
                        a_nicep(k,i,j,bb-3) = a_nicep(k,i,j,bb-3) + excessIce
@@ -1117,7 +1225,7 @@ contains
                 excessFracIce = 1.0
                 excessFracLiq = 1.0
                 DO bb=fn2b,in2b,-1
-                   IF(a_temp(k,i,j) < 273.15 .and. zumCumIce<iceFracB*zumB  .and. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice if it is cold enough
+                   IF(a_scr1(k,i,j) < 273.15 .and. zumCumIce<iceFracB*zumB  .and. a_naerop(k,i,j,bb)>10e-10) THEN !initialize ice if it is cold enough
 
                       excessIce =min(abs(zumCumIce-iceFracB*zumB),a_naerop(k,i,j,bb))
                       a_nicep(k,i,j,bb-3) = a_nicep(k,i,j,bb-3) + excessIce
