@@ -434,7 +434,7 @@ CONTAINS
                DO ss = 1, nbins
                   IF (aero(1,1,ss)%numc > nlim) THEN
                      aero(1,1,ss)%core = SUM(aero(1,1,ss)%volc(1:7))/aero(1,1,ss)%numc
-                     aero(1,1,ss)%dwet = ( SUM(aero(1,1,ss)%volc(:))/aero(1,1,ss)%numc/pi6 )**(1./3.)
+                     aero(1,1,ss)%dwet = ( SUM(aero(1,1,ss)%volc(:))/aero(1,1,ss)%numc/pi6 )**0.33333333333
                   ELSE
                      aero(1,1,ss)%dwet = aero(1,1,ss)%dmid
                      aero(1,1,ss)%core = pi6*(aero(1,1,ss)%dwet)**3
@@ -446,7 +446,7 @@ CONTAINS
                DO ss = 1, ncld
                   IF (cloud(1,1,ss)%numc > nlim) THEN
                      cloud(1,1,ss)%core = SUM(cloud(1,1,ss)%volc(1:7))/cloud(1,1,ss)%numc
-                     cloud(1,1,ss)%dwet = ( SUM(cloud(1,1,ss)%volc(:))/cloud(1,1,ss)%numc/pi6 )**(1./3.)
+                     cloud(1,1,ss)%dwet = ( SUM(cloud(1,1,ss)%volc(:))/cloud(1,1,ss)%numc/pi6 )**0.33333333333
                   ELSE
                      cloud(1,1,ss)%dwet = cloud(1,1,ss)%dmid
                      cloud(1,1,ss)%core = pi6*(cloud(1,1,ss)%dwet)**3
@@ -458,7 +458,7 @@ CONTAINS
                DO ss = 1, nprc
                   IF (precp(1,1,ss)%numc > prlim) THEN
                      precp(1,1,ss)%core = SUM(precp(1,1,ss)%volc(1:7))/precp(1,1,ss)%numc
-                     precp(1,1,ss)%dwet = ( SUM(precp(1,1,ss)%volc(:))/precp(1,1,ss)%numc/pi6 )**(1./3.)
+                     precp(1,1,ss)%dwet = ( SUM(precp(1,1,ss)%volc(:))/precp(1,1,ss)%numc/pi6 )**0.33333333333
                   ELSE
                      precp(1,1,ss)%dwet = precp(1,1,ss)%dmid
                      precp(1,1,ss)%core = pi6*(precp(1,1,ss)%dwet)**3
@@ -470,7 +470,7 @@ CONTAINS
                DO ss = 1, nice
                   IF (ice(1,1,ss)%numc > prlim) THEN
                      ice(1,1,ss)%core = SUM(ice(1,1,ss)%volc(1:7))/ice(1,1,ss)%numc
-                     ice(1,1,ss)%dwet = ( SUM(ice(1,1,ss)%volc(:))/ice(1,1,ss)%numc/pi6 )**(1./3.)
+                     ice(1,1,ss)%dwet = ( SUM(ice(1,1,ss)%volc(:))/ice(1,1,ss)%numc/pi6 )**0.33333333333
                   ELSE
                      ice(1,1,ss)%dwet = ice(1,1,ss)%dmid
                      ice(1,1,ss)%core = pi6*(ice(1,1,ss)%dwet)**3
@@ -482,7 +482,7 @@ CONTAINS
                DO ss = 1, nsnw
                   IF (snow(1,1,ss)%numc > prlim) THEN
                      snow(1,1,ss)%core = SUM(snow(1,1,ss)%volc(1:7))/snow(1,1,ss)%numc
-                     snow(1,1,ss)%dwet = ( SUM(snow(1,1,ss)%volc(:))/snow(1,1,ss)%numc/pi6 )**(1./3.)
+                     snow(1,1,ss)%dwet = ( SUM(snow(1,1,ss)%volc(:))/snow(1,1,ss)%numc/pi6 )**0.33333333333
                   ELSE
                      snow(1,1,ss)%dwet = snow(1,1,ss)%dmid
                      snow(1,1,ss)%core = pi6*(snow(1,1,ss)%dwet)**3
@@ -515,8 +515,7 @@ CONTAINS
                           zgso4,  zgocnv, zgocsv, zghno3,        &
                           zgnh3,  aero,   cloud,  precp,         &
                           ice,    snow,                          &
-                          actd,   in_w,  prtcl,  level)
-
+                          actd,   in_w,  prtcl,  level, pnx, pny, pnz, ii,jj,kk)
 
                ! Calculate tendencies (convert back to #/kg or kg/kg)
                pa_naerot(kk,ii,jj,1:nbins) = pa_naerot(kk,ii,jj,1:nbins) + &

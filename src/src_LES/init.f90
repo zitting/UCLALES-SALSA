@@ -42,12 +42,12 @@ CONTAINS
    SUBROUTINE initialize
 
       USE step, ONLY : time, outflg
-      USE stat, ONLY : init_stat, mcflg, acc_massbudged
+      USE stat, ONLY : init_stat, mcflg, acc_massbudged, salsa_b_bins
       USE sgsm, ONLY : tkeinit
       USE mpi_interface, ONLY : appl_abort, myid
       USE thrm, ONLY : thermo
       USE mo_salsa_driver, ONLY : run_SALSA
-      USE mo_submctl, ONLY : nbins ! Would be better if not needed
+      USE mo_submctl, ONLY : nbins, in2b, fn2b, iib, fib, nlim, prlim ! Would be better if not needed
       USE util, ONLY : maskactiv
       USE class_ComponentIndex, ONLY : GetNcomp
 
@@ -116,6 +116,15 @@ CONTAINS
          CALL appl_abort(0)
       END IF ! runtype
 
+     ! When SALSA b-bin outputs are needed?
+     !   -level >= 4
+     !   -outputs are forced (salsa_b_bins=.true.)
+     !   -b-bins initialized with non-zero concentration
+     !   -nucleation set to produce particles to b bins (currently only a bins)
+
+     IF (level >= 4 .and. (.not. salsa_b_bins)) &
+        salsa_b_bins=any( a_naerop(:,:,:,in2b:fn2b)>nlim ) .OR. any( a_nicep(:,:,:,iib%cur:fib%cur)>prlim )
+
       CALL sponge_init
       CALL init_stat(time+dtl,filprf,expnme,nzp)
       !
@@ -135,11 +144,11 @@ CONTAINS
       IF (outflg) THEN
          IF (runtype == 'INITIAL') THEN
             CALL write_hist(1, time)
-            CALL init_anal(time)
+            CALL init_anal(time,salsa_b_bins)
             CALL thermo(level)
             CALL write_anal(time)
          ELSE
-            CALL init_anal(time+dtl)
+            CALL init_anal(time+dtl,salsa_b_bins)
             CALL write_hist(0, time)
          END IF
       END IF !outflg

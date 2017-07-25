@@ -21,7 +21,7 @@ CONTAINS
                     pc_h2so4, pc_ocnv,  pc_ocsv, pc_hno3,    &
                     pc_nh3,   paero,    pcloud,  pprecp,     &
                     pice, psnow,                             &
-                    pactd,    pw,    prtcl,level      )
+                    pactd,    pw,    prtcl,level, pnx, pny, pnz, ii,jj,kk      )
 
       USE mo_salsa_dynamics, ONLY : coagulation, condensation
       USE mo_salsa_update,   ONLY : distr_update
@@ -69,6 +69,9 @@ CONTAINS
       REAL, INTENT(in) ::            & ! Vertical velocity
          pw(kbdim,klev)
 
+      INTEGER, INTENT(in) ::  &
+         pnx,pny,pnz,ii,jj,kk
+
       !-- Input variables that are changed within --------------------------------------
       REAL, INTENT(inout) ::      & ! gas phase concentrations at each grid point [#/m3]
          pc_h2so4(kbdim,klev),      & ! sulphuric acid
@@ -104,7 +107,7 @@ CONTAINS
       IF (lscoag) &
          CALL coagulation( kbdim,  klev,                   &
                            paero,  pcloud, pprecp, pice, psnow,    &
-                           ptstep, ptemp,  ppres                   )
+                           ptstep, ptemp,  ppres,pnx,pny,pnz,ii,jj,kk    )
 
       ! Condensation
       IF (lscnd) &

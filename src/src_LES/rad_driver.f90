@@ -147,7 +147,7 @@ MODULE radiation
                ! Cloud water
                IF ((rc(k,i,j) > 0.) .AND. (nc(k,i,j) > eps)) THEN
                   plwc(kk) = 1000.*dn0(k)*rc(k,i,j)
-                  pre(kk)  = 1.e6*(plwc(kk)/(1000.*prw*nc(k,i,j)*dn0(k)))**(1./3.)
+                  pre(kk)  = 1.e6*(plwc(kk)/(1000.*prw*nc(k,i,j)*dn0(k)))**(0.33333333333)
                   pre(kk) = min(max(pre(kk),4.18),31.23)
                ELSE
                   pre(kk) = 0.
@@ -163,7 +163,7 @@ MODULE radiation
                IF (present(ice)) THEN
                   IF ((ice(k,i,j) > 0.).AND.(nice(k,i,j) > eps)) THEN
                      piwc(kk) = 1000.*dn0(k)*ice(k,i,j)
-                     pde(kk)  = 1.e6*(piwc(kk)/(1000.*pri*nice(k,i,j)*dn0(k)))**(1./3.)
+                     pde(kk)  = 1.e6*(piwc(kk)/(1000.*pri*nice(k,i,j)*dn0(k)))**(0.33333333333)
                      pde(kk) = min(max(pde(kk),20.),180.)
                   ELSE
                      piwc(kk) = 0.0

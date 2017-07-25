@@ -330,9 +330,9 @@ CONTAINS
       CALL tend0(.TRUE.)
 
       ! Mask for cloud base activation
-      IF (level >= 4)  CALL maskactiv(zactmask,nxp,nyp,nzp,nbins,2,prtcl,a_rh,              &
-                                      rc = a_rc,pa_naerop = a_naerop, pa_maerop = a_maerop, &
-                                      pt = a_temp, w=a_wp)
+      IF (level >= 4) CALL maskactiv(zactmask,nxp,nyp,nzp,nbins,2,prtcl,a_rh,              &
+                                     rc = a_rc,pa_naerop = a_naerop, pa_maerop = a_maerop, &
+                                     pt = a_temp, w=a_wp)
       ! Get tendencies from cloud base activation
       IF (level >= 4) CALL newdroplet(zactmask)
 
@@ -1042,7 +1042,7 @@ CONTAINS
                      END IF
                      ns = ns/a_ncloudp(k,i,j,c)
 
-                     bb = 3.*mwa*ns/(4.*pi*rhowa)
+                     bb = 6.*mwa*ns/(pi*rhowa)
                      aa = 4.*mwa*surfw0/(rg*rhowa*a_temp(k,i,j))
                      cdcld(k,i,j,c) = SQRT(3.*bb/aa)
                   ELSE
@@ -1092,7 +1092,7 @@ CONTAINS
                      END IF
                      ns = ns/a_nprecpp(k,i,j,c)
 
-                     bb = 3.*mwa*ns/(4.*pi*rhowa)
+                     bb = 6.*mwa*ns/(pi*rhowa)
                      aa = 4.*mwa*surfw0/(rg*rhowa*a_temp(k,i,j))
                      cdprc(k,i,j,c) = SQRT(3.*bb/aa)
                   ELSE
@@ -1226,7 +1226,7 @@ CONTAINS
 
                      CALL binMixrat('cloud','wet',bc,i,j,k,zvol)
                      zvol = zvol/rhowa
-                     zdh2o = (zvol/a_ncloudp(k,i,j,bc)/pi6)**(1./3.)
+                     zdh2o = (zvol/a_ncloudp(k,i,j,bc)/pi6)**(0.33333333333)
 
                      ! Loose the droplets if smaller than the critical size
                      IF ( zdh2o < MAX(0.2*cdcld(k,i,j,bc),2.e-6) ) THEN
@@ -1260,7 +1260,7 @@ CONTAINS
 
                      CALL binMixrat('precp','wet',bc,i,j,k,zvol)
                      zvol = zvol/rhowa
-                     zdh2o = (zvol/a_nprecpp(k,i,j,bc)/pi6)**(1./3.)
+                     zdh2o = (zvol/a_nprecpp(k,i,j,bc)/pi6)**(0.33333333333)
 
                      ! Loose the droplets if smaller than critical radius
                      IF ( zdh2o < MAX(0.02*cdprc(k,i,j,bc),2.e-6)  ) THEN
@@ -1312,7 +1312,7 @@ CONTAINS
 
                      CALL binMixrat('ice','wet',bc,i,j,k,zvol)
                      zvol = zvol/rhoic
-                     zdh2o = (zvol/a_nicep(k,i,j,bc)/pi6)**(1./3.)
+                     zdh2o = (zvol/a_nicep(k,i,j,bc)/pi6)**(0.33333333333)
 
                      ! Loose the droplets if smaller than the critical size !! ice'n'snow
                      IF ( zdh2o < MAX(0.2*cdice(k,i,j,bc),2.e-6) ) THEN
@@ -1347,7 +1347,7 @@ CONTAINS
 
                      CALL binMixrat('snow','wet',bc,i,j,k,zvol)
                      zvol = zvol/rhosn
-                     zdh2o = (zvol/a_nsnowp(k,i,j,bc)/pi6)**(1./3.)
+                     zdh2o = (zvol/a_nsnowp(k,i,j,bc)/pi6)**(0.33333333333)
 
                      ! Loose the droplets if smaller than critical radius !! a_rhi ice'n'snow
                      IF ( zdh2o < MAX(0.02*cdsnw(k,i,j,bc),2.e-6) ) THEN
@@ -1398,7 +1398,7 @@ CONTAINS
                      zvol = zvol/rhosu
 
                      ! Particles smaller than 0.1 nm diameter are set to zero
-                     zddry = (zvol/a_naerop(k,i,j,ba)/pi6)**(1./3.)
+                     zddry = (zvol/a_naerop(k,i,j,ba)/pi6)**(0.33333333333)
                      IF ( zddry < 1.e-10 ) THEN
                         ! Volatile species to the gas phase
                         IF (IsUsed(prtcl,'SO4') .AND. lscndgas) THEN

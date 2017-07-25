@@ -444,8 +444,9 @@ CONTAINS
          a = 1;
          b = -1*(ions(4)+ions(1)+((water_total*18.0e-3)/(99*act_product)));
          c = ions(4)*ions(1);
-         root1 = ((-1*b)+(((b**2)-4*a*c)**(0.5)))/(2*a)
-         root2 = ((-1*b)-(((b**2)-4*a*c)**(0.5)))/(2*a)
+         root1 = ( (-1*b) + ( ( sqrt( b**2-4*a*c ) ) ) ) /(2*a)
+
+         root2 = ( (-1*b) - ( ( sqrt( b**2-4*a*c ) ) ) ) /(2*a)
 
 
          IF (root1 > ions(1) .OR. root1 < 0.0e0) THEN

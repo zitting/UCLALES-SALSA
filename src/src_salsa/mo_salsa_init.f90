@@ -101,7 +101,7 @@ CONTAINS
                aero(ii,jj,cc)%vlolim = pi6*(reglim(1)*ratio**(REAL(cc-1)/nbin(1)))**3
                aero(ii,jj,cc)%vhilim = pi6*(reglim(1)*ratio**(REAL(cc)/nbin(1)))**3
                aero(ii,jj,cc)%dmid = ( (aero(ii,jj,cc)%vhilim + aero(ii,jj,cc)%vlolim) /  &
-                                      (2.*pi6) )**(1./3.)
+                                      (2.*pi6) )**0.33333333333
                aero(ii,jj,cc)%vratiohi = aero(ii,jj,cc)%vhilim/(pi6*aero(ii,jj,cc)%dmid**3)
                aero(ii,jj,cc)%vratiolo = aero(ii,jj,cc)%vlolim/(pi6*aero(ii,jj,cc)%dmid**3)
             END DO
@@ -118,7 +118,7 @@ CONTAINS
                aero(ii,jj,dd)%vlolim = pi6*(reglim(2)*ratio**(REAL(cc)/nbin2))**3
                aero(ii,jj,dd)%vhilim = pi6*(reglim(2)*ratio**(REAL(cc+1)/nbin2))**3
                aero(ii,jj,dd)%dmid   = ( (aero(ii,jj,dd)%vhilim + aero(ii,jj,dd)%vlolim) /  &
-                                       (2.*pi6) )**(1./3.)
+                                       (2.*pi6) )**0.33333333333
                aero(ii,jj,dd)%vratiohi = aero(ii,jj,dd)%vhilim/(pi6*aero(ii,jj,dd)%dmid**3)
                aero(ii,jj,dd)%vratiolo = aero(ii,jj,dd)%vlolim/(pi6*aero(ii,jj,dd)%dmid**3)
             END DO
@@ -133,7 +133,7 @@ CONTAINS
                aero(ii,jj,dd)%vlolim = pi6*(reglim(3)*ratio**(REAL(cc)/nbin3))**3
                aero(ii,jj,dd)%vhilim = pi6*(reglim(3)*ratio**(REAL(cc+1)/nbin3))**3
                aero(ii,jj,dd)%dmid = ( (aero(ii,jj,dd)%vhilim + aero(ii,jj,dd)%vlolim) /  &
-                                      (2.*pi6) )**(1./3.)
+                                      (2.*pi6) )**0.33333333333
                aero(ii,jj,dd)%vratiohi = aero(ii,jj,dd)%vhilim/(pi6*aero(ii,jj,dd)%dmid**3)
                aero(ii,jj,dd)%vratiolo = aero(ii,jj,dd)%vlolim/(pi6*aero(ii,jj,dd)%dmid**3)
             END DO
@@ -161,7 +161,7 @@ CONTAINS
       ! Save bin limits to be delivered e.g. to host model if needed
       ALLOCATE(aerobins(nbins))
       DO cc = 1, nbins
-         aerobins(cc) = (aero(1,1,cc)%vlolim/pi6)**(1./3.)
+         aerobins(cc) = (aero(1,1,cc)%vlolim/pi6)**0.33333333333
       END DO
       aerobins = 0.5*aerobins ! to radius
 
@@ -300,7 +300,7 @@ CONTAINS
                precp(ii,jj,bb)%vhilim = pi6*tmphilim(bb)**3
                precp(ii,jj,bb)%vlolim = pi6*tmplolim(bb)**3
                precp(ii,jj,bb)%dmid = ( (precp(ii,jj,bb)%vlolim + precp(ii,jj,bb)%vhilim) /  &
-                                       (2.*pi6) )**(1./3.)
+                                       (2.*pi6) )**0.33333333333
                precp(ii,jj,bb)%vratiohi = precp(ii,jj,bb)%vhilim / ( pi6*precp(ii,jj,bb)%dmid**3 )
                precp(ii,jj,bb)%vratiolo = precp(ii,jj,bb)%vlolim / ( pi6*precp(ii,jj,bb)%dmid**3 )
 
@@ -322,12 +322,12 @@ CONTAINS
       ! Save bin limits to be delivered e.g. to host model if needed
       ALLOCATE(cloudbins(ncld))
       DO bb = 1, ncld
-         cloudbins(bb) = (cloud(1,1,bb)%vlolim/pi6)**(1./3.)
+         cloudbins(bb) = (cloud(1,1,bb)%vlolim/pi6)**0.33333333333
       END DO
       cloudbins = 0.5*cloudbins ! To radius
       ALLOCATE(precpbins(nprc))
       DO bb = 1, nprc
-         precpbins(bb) = (precp(1,1,bb)%vlolim/pi6)**(1./3.)
+         precpbins(bb) = (precp(1,1,bb)%vlolim/pi6)**0.33333333333
       END DO
       precpbins = 0.5*precpbins ! To radius
 
@@ -469,7 +469,7 @@ CONTAINS
                snow(ii,jj,bb)%vhilim = pi6*tmphilim(bb)**3
                snow(ii,jj,bb)%vlolim = pi6*tmplolim(bb)**3
                snow(ii,jj,bb)%dmid = ( (snow(ii,jj,bb)%vlolim + snow(ii,jj,bb)%vhilim) /  &
-                                      (2.*pi6) )**(1./3.)
+                                      (2.*pi6) )**0.33333333333
                snow(ii,jj,bb)%vratiohi = snow(ii,jj,bb)%vhilim / ( pi6*snow(ii,jj,bb)%dmid**3 )
                snow(ii,jj,bb)%vratiolo = snow(ii,jj,bb)%vlolim / ( pi6*snow(ii,jj,bb)%dmid**3 )
 
@@ -491,12 +491,12 @@ CONTAINS
       ! Save bin limits to be delivered e.g. to host model if needed
       ALLOCATE(icebins(nice))
       DO bb = 1, nice
-         icebins(bb) = (ice(1,1,bb)%vlolim/pi6)**(1./3.)
+         icebins(bb) = (ice(1,1,bb)%vlolim/pi6)**0.33333333333
       END DO
       icebins = 0.5*icebins ! To radius
       ALLOCATE(snowbins(nsnw))
       DO bb = 1, nsnw
-         snowbins(bb) = (snow(1,1,bb)%vlolim/pi6)**(1./3.)
+         snowbins(bb) = (snow(1,1,bb)%vlolim/pi6)**0.33333333333
       END DO
       snowbins = 0.5*snowbins ! To radius
 

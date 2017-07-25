@@ -181,7 +181,7 @@ CONTAINS
                IF (rp(k,i,j) > rl(k,i,j)) THEN
                   Xp = rp(k,i,j)/ (np(k,i,j)+eps0)
                   Xp = MIN(MAX(Xp,X_bnd),X_max)
-                  Dp = ( Xp / prw )**(1./3.)
+                  Dp = ( Xp / prw )**(0.33333333333)
 
                   G = 1. / (1. / (dn0(k)*rs(k,i,j)*Dv) + &
                       alvl*(alvl/(Rm*tk(k,i,j))-1.) / (Kt*tk(k,i,j)))
@@ -251,7 +251,7 @@ CONTAINS
                   ! Khairoutdinov and Kogan
                   !
                   IF (khairoutdinov) THEN
-                     Dc = ( Xc / prw )**(1./3.)
+                     Dc = ( Xc / prw )**(0.33333333333)
                      au = Cau * (Dc * mmt / 2.)**Eau
                   END IF
 
@@ -362,9 +362,9 @@ CONTAINS
                !
                ! Adjust Dm and mu-Dm and Dp=1/lambda following Milbrandt & Yau
                !
-               Dm = ( 6. / (rowt*pi) * Xp )**(1./3.)
+               Dm = ( 6. / (rowt*pi) * Xp )**(0.33333333333)
                mu = cmur1*(1.+tanh(cmur2*(Dm-cmur3)))
-               Dp = (Dm**3/((mu+3.)*(mu+2.)*(mu+1.)))**(1./3.)
+               Dp = (Dm**3/((mu+3.)*(mu+2.)*(mu+1.)))**(0.33333333333)
 
                vn(k) = sqrt(dn0(k)/1.2)*(a2 - b2*(1.+c2*Dp)**(-(1.+mu)))
                vr(k) = sqrt(dn0(k)/1.2)*(a2 - b2*(1.+c2*Dp)**(-(4.+mu)))
@@ -485,7 +485,7 @@ CONTAINS
             rfl(n1) = 0.
             DO k = n1-1, 2, -1
                Xc = rc(k,i,j) / (CCN+eps0)
-               Dc = ( Xc / prw )**(1./3.)
+               Dc = ( Xc / prw )**(0.33333333333)
                Dc = MIN(MAX(Dc,D_min),D_bnd)
                vc = min(c*(Dc*0.5)**2 * exp(4.5*(log(sgg))**2),1./(dzt(k)*dtlt))
                rfl(k) = - rc(k,i,j) * vc
@@ -617,15 +617,16 @@ CONTAINS
 
          remaer(:,:,:) = amdep(:,:,:)
 
-         ! Account for changes in in liquid water pot temperature
+         ! Account for changes in liquid water pot temperature
          nc = GetIndex(prtcl,'H2O')
          istr = (nc-1)*nbins+1
          iend = nc*nbins
          DO j = 3, n3-2
             DO i = 3, n2-2
-               DO k = 1, n1
+               DO k = 2, n1
                   tlt(k,i,j) = tlt(k,i,j) + SUM(amdiv(k,i,j,istr:iend))*(alvl/cp)*th(k,i,j)/tk(k,i,j)
                END DO
+                  tlt(2,i,j) = tlt(2,i,j) + SUM(amdep(i,j,istr:iend))*(alvl/cp)*th(2,i,j)/tk(2,i,j)
             END DO
          END DO
 
@@ -644,15 +645,16 @@ CONTAINS
 
          remcld(:,:,:) = cmdep(:,:,:)
 
-         ! Account for changes in in liquid water pot temperature
+         ! Account for changes in liquid water pot temperature
          nc = GetIndex(prtcl,'H2O')
          istr = (nc-1)*ncld+1
          iend = nc*ncld
          DO j = 3, n3-2
             DO i = 3, n2-2
-               DO k = 1, n1
+               DO k = 2, n1
                   tlt(k,i,j) = tlt(k,i,j) + SUM(cmdiv(k,i,j,istr:iend))*(alvl/cp)*th(k,i,j)/tk(k,i,j)
                END DO
+                  tlt(2,i,j) = tlt(2,i,j) + SUM(cmdep(i,j,istr:iend))*(alvl/cp)*th(2,i,j)/tk(2,i,j)
             END DO
          END DO
 
@@ -671,15 +673,16 @@ CONTAINS
 
          remice(:,:,:) = imdep(:,:,:)
 
-         ! Account for changes in in liquid water pot temperature
+         ! Account for changes in liquid water pot temperature
          nc = GetIndex(prtcl,'H2O')
          istr = (nc-1)*nice+1
          iend = nc*nice
          DO j = 3, n3-2
             DO i = 3, n2-2
-               DO k = 1, n1
+               DO k = 2, n1
                   tlt(k,i,j) = tlt(k,i,j) + SUM(imdiv(k,i,j,istr:iend))*(alvi/cp)*th(k,i,j)/tk(k,i,j)
                END DO
+                  tlt(2,i,j) = tlt(2,i,j) + SUM(imdep(i,j,istr:iend))*(alvi/cp)*th(2,i,j)/tk(2,i,j)
             END DO
          END DO
 
@@ -809,7 +812,7 @@ CONTAINS
                kp1 = k+1
 
                ! atm modelling Eq.4.54
-               avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*(tk(k,i,j)/296.16)**1.5
+               avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*sqrt((tk(k,i,j)/296.16)**3)
                kvis = avis/adn(k,i,j) !actual density ???
                va = sqrt(8*kb*tk(k,i,j)/(pi*M)) ! thermal speed of air molecule
                lambda = 2*avis/(adn(k,i,j)*va) !mean free path
@@ -901,7 +904,7 @@ CONTAINS
          DO i = 3, n2-2
 
             ! atm modelling Eq.4.54
-            avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*(tk(k,i,j)/296.16)**1.5
+            avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*sqrt((tk(k,i,j)/296.16)**3)
             kvis = avis/adn(k,i,j) !actual density ???
             va = sqrt(8*kb*tk(k,i,j)/(pi*M)) ! thermal speed of air molecule
             lambda = 2*avis/(adn(k,i,j)*va) !mean free path
@@ -930,7 +933,7 @@ CONTAINS
                Sc = kvis/mdiff
                St = vc*ustar(i,j)**2/g*kvis !changed exponent
                IF (St < 0.01) St = 0.01
-               rt = 1.0/MAX(epsilon(1.0),(ustar(i,j)*(Sc**(-2.0/3.0)+10**(-3.0/St)))) ! atm chem&phy eq19.18
+               rt = 1.0/MAX(epsilon(1.0),(ustar(i,j)*(Sc**(-0.66666666666)+10**(-3.0/St)))) ! atm chem&phy eq19.18
 
                vd = (1./rt) + vc
     
@@ -1010,12 +1013,12 @@ CONTAINS
             DO k = n1-1, 2, -1
           
                ! atm modelling Eq.4.54
-               avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*(tk(k,i,j)/296.16)**1.5
+               avis = 1.8325e-5*(416.16/(tk(k,i,j)+120.0))*sqrt((tk(k,i,j)/296.16)**3)
                kvis = avis/adn(k,i,j) !actual density ???
                va = sqrt(8.*kb*tk(k,i,j)/(pi*M)) ! thermal speed of air molecule
                lambda = 2.*avis/(adn(k,i,j)*va) !mean free path
-
                ! Precipitation bin loop
+
                DO bin = 1, nn
                   IF (numc(k,i,j,bin) < clim) CYCLE
              
@@ -1027,7 +1030,9 @@ CONTAINS
 
                   ! Terminal velocity
                   Kn = lambda/rwet
-                  GG = 1.+ Kn*(A+B*exp(-C/Kn))
+                 ! GG = 1 + Kn*A
+                 ! IF(C/Kn < 300) GG = 1.+ Kn*(A+B*exp(-C/Kn)) !fix? AZ
+                 GG = 1.+ Kn*(A+B*exp(-C/Kn))
                   vc = terminal_vel(rwet,pdn,adn(k,i,j),avis,GG)
 
                   ! Rain rate statistics: removal of water from the current bin is accounted for
@@ -1044,6 +1049,7 @@ CONTAINS
                   fd = 0.
                   fi = 0
                   prcdep = .FALSE. ! deposition flag
+
                   DO WHILE ( fd < fdmax )
                      fd = fd + ( 1./dzt(k-fi) )
                      fi = fi + 1

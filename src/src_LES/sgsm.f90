@@ -174,6 +174,8 @@ CONTAINS
        IF ( associated(a_tp,a_sp) ) sxy2 = wt_sfc
        IF ( associated(a_rp,a_sp) ) sxy1 = wq_sfc
 
+       WHERE(abs(a_sp)<1.e-40) a_sp=0.
+
        IF (sflg) a_tmp1 = 0.
        IF ( isgstyp <= 1) THEN
           CALL diffsclr(nzp,nxp,nyp,dtlt,dxi,dyi,dzm,dzt,dn0,sxy1,sxy2,   &
@@ -415,7 +417,7 @@ CONTAINS
              IF (sflg) THEN
                 sz6(k) = sz6(k) + lm
                 sz5(k) = sz5(k) + lm*ch
-                sz4(k) = sz4(k) + (tke(k,i,j)**1.5)/xx(k,i,j)
+                sz4(k) = sz4(k) + (sqrt(tke(k,i,j)**3))/xx(k,i,j)
              END IF
           END DO
        END DO
@@ -808,11 +810,11 @@ CONTAINS
                       flx)
 
     INTEGER, INTENT(in) :: n1,n2,n3
-    REAL, INTENT(in)    :: xkh(n1,n2,n3),scp(n1,n2,n3)
+    REAL, INTENT(in)    :: xkh(n1,n2,n3)
     REAL, INTENT(in)    :: sflx(n2,n3),tflx(n2,n3),dn0(n1)
     REAL, INTENT(in)    :: dxi,dyi,dzm(n1),dzt(n1),dtlt
 
-    REAL, INTENT(out)   :: flx(n1,n2,n3),sct(n1,n2,n3)
+    REAL, INTENT(out)   :: flx(n1,n2,n3),sct(n1,n2,n3),scp(n1,n2,n3)
     !
     ! compute vertical diffusion matrix coefficients for scalars,
     ! Coefficients need only be calculated once and can be used repeatedly
@@ -822,10 +824,11 @@ CONTAINS
     DO k = 1, n1
        sz7(k)   = 0.
     END DO
-
     DO j = 3, n3-2
        DO i = 2, n2-2
           DO k = 2, n1-1
+             !IF (abs(scp(k,i+1,j))<1e-100) scp(k,i+1,j) = 0. !stop denormal, also made scp inout AZ
+             !IF (abs(scp(k,i,j))<1e-100) scp(k,i,j) = 0.
              szx1(k,i) = -(scp(k,i+1,j)-scp(k,i,j))*dxi*.25*(xkh(k,i,j)  +     &
                          xkh(k,i+1,j)+xkh(k-1,i,j)+xkh(k-1,i+1,j))
           END DO
@@ -848,7 +851,6 @@ CONTAINS
           sxz4(indh,n1-1) = scp(n1-1,i,j)*dn0(n1-1)                            &
                             - tflx(i,j)*(dn0(n1-1)+dn0(n1))*.5   *dtlt*dzt(n1-1)
        END DO
-
        CALL tridiff(n2,n1-1,indh,sxz1,sxz3,sxz2,sxz4,sxz5,sxz6)
        !
        ! compute scalar tendency in addition to vertical flux

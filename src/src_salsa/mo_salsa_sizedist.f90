@@ -46,11 +46,11 @@ CONTAINS
             DO kk = in1a, fn2b
                naero(ii,jj,kk) = 0.0
 
-               d1 = (aero(ii,jj,kk)%vlolim/pi6)**(1./3.)
-               d2 = (aero(ii,jj,kk)%vhilim/pi6)**(1./3.)
+               d1 = (aero(ii,jj,kk)%vlolim/pi6)**0.33333333333
+               d2 = (aero(ii,jj,kk)%vhilim/pi6)**0.33333333333
                delta_d = (d2-d1)/10
                DO ib = 1, 10
-                  d1 = (aero(ii,jj,kk)%vlolim/pi6)**(1./3.)+(ib-1.)*delta_d
+                  d1 = (aero(ii,jj,kk)%vlolim/pi6)**0.33333333333+(ib-1.)*delta_d
                   d2 = d1+delta_d
                   dmid = (d1+d2)/2
                   deltadp = log(d2/d1)

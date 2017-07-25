@@ -96,7 +96,7 @@ CONTAINS
 
    SUBROUTINE coagulation(kbdim,  klev,    &
                           paero,  pcloud, pprecp, pice, psnow,  &
-                          ptstep, ptemp,  ppres     )
+                          ptstep, ptemp,  ppres, pnx,pny,pnz,iii,jjj,kkk     )
 
       USE mo_submctl, ONLY:        &
          t_parallelbin, t_section,   & ! Datatypes for the cloud bin representation
@@ -125,7 +125,8 @@ CONTAINS
       !-- Input and output variables -------------
       INTEGER, INTENT(IN) ::          &
          kbdim,                     & ! dimension for arrays
-         klev                         ! number of vertical klev
+         klev,&                         ! number of vertical klev
+	 kkk,iii,jjj,pnx,pny,pnz
 
       TYPE(t_section), INTENT(inout) :: &
          pcloud(kbdim,klev,ncld),     &  ! Hydrometeor properties
@@ -142,7 +143,8 @@ CONTAINS
       INTEGER ::                      &
          ii,jj,kk,ll,mm,nn,cc,      & ! loop indices
          index_2a, index_2b        ! corresponding bin in regime 2a/2b
-
+	 
+      INTEGER, SAVE :: ipsu = 0
       REAL ::                     &
          zcc(fn2b,fn2b),            & ! updated coagulation coefficients [m3/s]
          zcccc(ncld,ncld),          & ! - '' - for collision-coalescence [m3/s]
@@ -175,7 +177,7 @@ CONTAINS
          zdice(nice),     & ! diameter for ice particles [kg] !!
          zdsnow(nsnw)     ! diameter for snow particles [kg] !!
 
-      REAL :: temppi,pressi
+      REAL :: temppi,pressi,r
 
       LOGICAL :: any_cloud, any_precp, any_ice, any_snow
 
@@ -191,6 +193,10 @@ CONTAINS
 
       DO jj = 1, klev      ! vertical grid
          DO ii = 1, kbdim ! horizontal kproma in the slab
+
+!IF(kkk == 79 .and. iii == 3 .and. jjj == 3 .and. ipsu == 1) call random_number(r)   
+
+
             ! Which species are included
             any_cloud = ANY(pcloud(ii,jj,:)%numc > nlim)
             any_precp = ANY(pprecp(ii,jj,:)%numc > prlim)
@@ -262,6 +268,10 @@ CONTAINS
                   END DO
                END DO
             END IF
+!DO mm = 1,7
+!IF(kkk==38 .and. iii==3 .and. jjj==3 ) write(*,*) zcccc(mm,1:7)
+!END DO
+
             ! Self-collection of rain drops
             IF (lscgpp .AND. any_precp) THEN
                DO mm = 1, nprc
@@ -923,6 +933,8 @@ CONTAINS
          END DO ! kbdim
       END DO ! klev
 
+   if (iii==4 .and. jjj==4 .and. kkk==2) ipsu = 1
+
    END SUBROUTINE coagulation
 
    ! -------------------------------------------
@@ -941,7 +953,7 @@ CONTAINS
       dia(:) = 2.e-10
       DO i = 1, n
          IF (ppart(i)%numc > lim) &
-            dia(i) = (SUM(ppart(i)%volc(:))/ppart(i)%numc/pi6)**(1./3.)
+            dia(i) = (SUM(ppart(i)%volc(:))/ppart(i)%numc/pi6)**0.33333333333
       END DO
 
    END SUBROUTINE CalcWetDia
@@ -1264,7 +1276,7 @@ CONTAINS
             zdvoloc = 0.
 
             !-- 1) Properties of air and condensing gases --------------------
-            zvisc  = (7.44523e-3*ptemp(ii,jj)**1.5)/(5093.*(ptemp(ii,jj)+110.4))      ! viscosity of air [kg/(m s)]
+            zvisc  = (7.44523e-3*sqrt(ptemp(ii,jj)**3))/(5093.*(ptemp(ii,jj)+110.4))      ! viscosity of air [kg/(m s)]
             zdfvap = 5.1111e-10*ptemp(ii,jj)**1.75*pstand/ppres(ii,jj)                ! diffusion coefficient [m2/s]
             zmfp   = 3.*zdfvap*sqrt(pi*msu/(8.*rg*ptemp(ii,jj)))                      ! mean free path [m]
 
@@ -1641,7 +1653,7 @@ CONTAINS
                IF (pcloud(ii,jj,cc)%numc > nlim .AND. lscndh2ocl) THEN
 
                   ! Wet diameter
-                  dwet = ( SUM(pcloud(ii,jj,cc)%volc(:))/pcloud(ii,jj,cc)%numc/pi6 )**(1./3.)
+                  dwet = ( SUM(pcloud(ii,jj,cc)%volc(:))/pcloud(ii,jj,cc)%numc/pi6 )**0.33333333333
 
                   ! Activity + Kelvin effect
                   zact = acth2o(pcloud(ii,jj,cc))
@@ -1674,7 +1686,7 @@ CONTAINS
             DO cc = 1, nprc
                IF (pprecp(ii,jj,cc)%numc > prlim .AND. lscndh2ocl) THEN
                   ! Wet diameter
-                  dwet = ( SUM(pprecp(ii,jj,cc)%volc(:))/pprecp(ii,jj,cc)%numc/pi6 )**(1./3.)
+                  dwet = ( SUM(pprecp(ii,jj,cc)%volc(:))/pprecp(ii,jj,cc)%numc/pi6 )**0.33333333333
 
                   ! Activity + Kelvin effect
                   zact = acth2o(pprecp(ii,jj,cc))
@@ -1707,7 +1719,7 @@ CONTAINS
             DO cc = 1, nice
                IF (pice(ii,jj,cc)%numc > prlim .AND. lscndh2oic) THEN
                   ! Wet diameter
-                  dwet = ( SUM(pice(ii,jj,cc)%volc(:))/pice(ii,jj,cc)%numc/pi6 )**(1./3.)
+                  dwet = ( SUM(pice(ii,jj,cc)%volc(:))/pice(ii,jj,cc)%numc/pi6 )**0.33333333333
 
                   ! Activity + Kelvin effect
                   zact = acth2o(pice(ii,jj,cc))
@@ -1740,7 +1752,7 @@ CONTAINS
             DO cc = 1, nsnw
                IF (psnow(ii,jj,cc)%numc > prlim .AND. lscndh2oic) THEN
                   ! Wet diameter
-                  dwet = ( SUM(psnow(ii,jj,cc)%volc(:))/psnow(ii,jj,cc)%numc/pi6 )**(1./3.)
+                  dwet = ( SUM(psnow(ii,jj,cc)%volc(:))/psnow(ii,jj,cc)%numc/pi6 )**0.33333333333
 
                   ! Activity + Kelvin effect
                   zact = acth2o(psnow(ii,jj,cc))
@@ -1773,7 +1785,7 @@ CONTAINS
             DO cc = 1, nbins
                IF (paero(ii,jj,cc)%numc > nlim .AND. zrh(ii,jj) > 0.98 .AND. lscndh2oae) THEN
                   ! Wet diameter
-                  dwet = ( SUM(paero(ii,jj,cc)%volc(:))/paero(ii,jj,cc)%numc/pi6 )**(1./3.)
+                  dwet = ( SUM(paero(ii,jj,cc)%volc(:))/paero(ii,jj,cc)%numc/pi6 )**0.33333333333
 
                   ! Water activity + Kelvin effect
                   zact = acth2o(paero(ii,jj,cc))
@@ -2562,6 +2574,7 @@ CONTAINS
       psat = za0 + za1*zt + za2*zt**2 + za3*zt**3 +   &
              za4*zt**4 + za5*zt**5 + za6*zt**6
 
+
       ! To Pascals
       psat = psat*100.
 
@@ -2657,15 +2670,14 @@ CONTAINS
       diam  = (/ diam1, diam2 /)       ! particle diameters [m]
       mpart = (/ mass1, mass2 /)       ! particle masses [kg]
 
-      visc = (7.44523e-3*temp**1.5)/(5093.*(temp+110.4)) ! viscosity of air [kg/(m s)]
+      visc = (7.44523e-3*sqrt(temp**3))/(5093.*(temp+110.4)) ! viscosity of air [kg/(m s)]
 
       mfp = (1.656e-10*temp+1.828e-8)*pstand/pres ! mean free path of air [m]
 
-
       !-- 2) Slip correction factor for small particles -------------------------
-
       knud = 2.*mfp/diam                                    ! Knudsen number
       beta = 1.+knud*(1.142+0.558*exp(-0.999/knud))! Cunningham correction factor
+
       ! (Allen and Raabe, Aerosol Sci. Tech. 4, 269)
 
       !-- 3) Particle properties ------------------------------------------------
@@ -2727,22 +2739,27 @@ CONTAINS
 
             ! Convective enhancement
             IF (reyn(lrg) <= 1.) THEN
-               zbrconv = 0.45*zbrown*( reyn(lrg)**(1./3.) )*( schm(sml)**(1./3.) )
+               zbrconv = 0.45*zbrown*( (reyn(lrg)*schm(sml))**0.33333333333 )
             ELSE IF (reyn(lrg) > 1.) THEN
-               zbrconv = 0.45*zbrown*SQRT(reyn(lrg))*( schm(sml)**(1./3.) )
+               zbrconv = 0.45*zbrown*SQRT(reyn(lrg))*( schm(sml)**0.33333333333 )
             END IF
 
             ! Turbulent Shear
             eddy_dis = 10.e-4 ! Values suggested by Sami - could be taken from the LES model?
-            ztshear = (8.*pi*eddy_dis/(15.*vkin))**(1./2.)*(0.5*(diam(1)+diam(2)))**3
-            zturbinert = pi*eddy_dis**(3./4.)/(grav*vkin**(1./4.)) &
+            !ztshear = (8.*pi*eddy_dis/(15.*vkin))**(1./2.)*(0.5*(diam(1)+diam(2)))**3
+	     ztshear = sqrt(8.*pi*eddy_dis/(15.*vkin))*(0.5*(diam(1)+diam(2)))**3
+
+            !zturbinert = pi*eddy_dis**(3./4.)/(grav*vkin**(1./4.)) &    !Here AZ
+            !   *(0.5*(diam(1)+diam(2)))**2* ABS(termv(1)-termv(2))
+
+            zturbinert = pi*eddy_dis**(0.75) /(grav* ( vkin )**(0.25) ) &
                          *(0.5*(diam(1)+diam(2)))**2* ABS(termv(1)-termv(2))
 
             ! gravitational collection
             zea = stok**2/( stok + 0.5 )**2
             IF (stok > 1.214) THEN
                zev = 0.75*LOG(2.*stok)/(stok - 1.214)
-               zev = (1. + zev)**(-2.)
+               zev = (1. + zev)**(-2)
             ELSE IF (stok <= 1.214) THEN
                zev = 0.
             END IF
@@ -2752,7 +2769,7 @@ CONTAINS
             zgrav = zgrav * ABS(termv(1)-termv(2))
 
             ! Total coagulation kernel
-            coagc = zbrown  + zbrconv + (zgrav**2+ ztshear**2+ zturbinert**2)**(1./2.)
+            coagc = zbrown  + zbrconv + sqrt(zgrav**2+ ztshear**2+ zturbinert**2)
 
       END SELECT
 

@@ -113,6 +113,7 @@ CONTAINS
 
     CALL rad_ir(pts, ee, pp, pt, ph, po, fdir, fuir, McICA, &
                  plwc, pre, piwc, pde, pgwc )
+
     CALL rad_vis(as, u0, ss, pp, pt, ph, po, fds, fus, McICA, &
                  plwc, pre, piwc, pde, pgwc )
 

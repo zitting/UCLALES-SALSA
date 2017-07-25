@@ -447,7 +447,7 @@ CONTAINS
                          *(zdmean/150.)**0.048 &
                          *(ptemp(ii,jj)/293.)**(-0.75)*(rhosu/1000.)**(-0.33)
                 ! [nm2*m2/h] (22)
-                zeta = min(zgamma*zcsink/zGRclust, zdcrit(ii,jj)*1e11)! [nm] (11)
+                zeta = min(zgamma*zcsink/zGRclust, zdcrit(ii,jj)*1.e11)! [nm] (11)
              END IF
 
              !-- Number conc. of clusters surviving to 3 nm in a time step
@@ -508,15 +508,31 @@ CONTAINS
              zgammaF_x = 8.*zDc_x/pi/zcv_x    ! [m]
              zgammaF_2 = 8.*zDc_2/pi/zcv_2    ! [m]
 
-             zomega_c = ((zRc2+zgammaF_c)**3-(zRc2**2+zgammaF_c)**(3./2.))/&
+
+             !zomega_c = ((zRc2+zgammaF_c)**3-(zRc2**2+zgammaF_c)**(3./2.))/&
+             !           (3.*zRc2*zgammaF_c)-zRc2
+             zomega_c = ((zRc2+zgammaF_c)**3-sqrt((zRc2**2+zgammaF_c)**3))/&
                         (3.*zRc2*zgammaF_c)-zRc2 ! zomega1, [m]
-             zomega_x = ((zRx2+zgammaF_x)**3-(zRx2**2+zgammaF_x)**(3./2.))/&
+
+
+             !zomega_x = ((zRx2+zgammaF_x)**3-(zRx2**2+zgammaF_x)**(3./2.))/&
+             !           (3.*zRx2*zgammaF_x)-zRx2
+             zomega_x = ((zRx2+zgammaF_x)**3-sqrt((zRx2**2+zgammaF_x)**3))/&
                         (3.*zRx2*zgammaF_x)-zRx2 ! zomega1
 
-             zomega_2c = ((zRc2+zgammaF_2)**3-(zRc2**2+zgammaF_2)**(3./2.))/&
+
+             !  zomega_2c = ((zRc2+zgammaF_2)**3-(zRc2**2+zgammaF_2)**(3./2.))/&
+                         !  (3.*zRc2*zgammaF_2)-zRc2 ! zomega2
+             zomega_2c = ((zRc2+zgammaF_2)**3-sqrt((zRc2**2+zgammaF_2)**3))/&
                          (3.*zRc2*zgammaF_2)-zRc2 ! zomega2
-             zomega_2x = ((zRx2+zgammaF_2)**3-(zRx2**2+zgammaF_2)**(3./2.))/&
+
+
+             !  zomega_2x = ((zRx2+zgammaF_2)**3-(zRx2**2+zgammaF_2)**(3./2.))/&
+                         !  (3.*zRx2*zgammaF_2)-zRx2 ! zomega
+             zomega_2x = ((zRx2+zgammaF_2)**3-sqrt((zRx2**2+zgammaF_2)**3))/&
                          (3.*zRx2*zgammaF_2)-zRx2 ! zomega2
+
+
 
              zsigma_c2 = SQRT(zomega_c**2+zomega_2c**2) ! zigma12, [m]
              zsigma_x2 = SQRT(zomega_x**2+zomega_2x**2) ! zigma12
@@ -902,9 +918,9 @@ CONTAINS
                 zv2 = zv1
 
                 zcoll = zpcsa*zpcsa* &
-                        (3.*pi/4.)**(1./6.) * &
+                        (3.*pi/4.)**0.16666666666 * &
                         SQRT(6.*rg*zt/zm1+6.*rg*zt/zm2) * &
-                        (zv1**(1./3.) + zv2**(1./3.))**2 * &
+                        (zv1**0.33333333333 + zv2**0.33333333333)**2 * &
                         1.e+6        ! m3 -> cm3
 
                 zcoll = MIN(zcoll,1.e10)

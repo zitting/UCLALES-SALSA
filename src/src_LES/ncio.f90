@@ -327,7 +327,7 @@ CONTAINS
  END SUBROUTINE define_nc
  !
  ! ----------------------------------------------------------------------
- ! Subroutine define_nc_cs: Defines the structure of a new column statistics nc file
+ ! Subroutine define_nc_cs: Defines the structure of a column statistics nc file
  !
  SUBROUTINE define_nc_cs(ncID, nRec, n2, n3, level, rad_level, spec_list, nspec )
     INTEGER, INTENT (in)    :: ncID, n2, n3, level, rad_level, nspec
@@ -437,6 +437,13 @@ CONTAINS
              iret = nf90_put_att(ncID,VarID,'longname',ncinfo(0,nam))
              iret = nf90_put_att(ncID,VarID,'units',ncinfo(1,nam))
           END DO
+
+          ELSE IF (level==3) THEN
+           ! Surface precipitation for levels 3
+           iret=nf90_def_var(ncID,'prcp',NF90_FLOAT,dim_ttt,VarID)
+           iret=nf90_put_att(ncID,VarID,'longname',ncinfo(0,'prcp'))
+           iret=nf90_put_att(ncID,VarID,'units',ncinfo(1,'prcp'))
+
        END IF
 
        iret = nf90_enddef(ncID)
@@ -553,7 +560,7 @@ CONTAINS
           IF (itype == 1) ncinfo = 'm/s'
           IF (itype == 2) ncinfo = 'ttmt'
        CASE('t')
-          IF (itype == 0) ncinfo = 'Potential temperature'
+          IF (itype == 0) ncinfo = 'Liquid water potential temperature'
           IF (itype == 1) ncinfo = 'K'
           IF (itype == 2) ncinfo = 'tttt'
        CASE('p')
@@ -712,7 +719,7 @@ CONTAINS
           IF (itype == 1) ncinfo = 'kg^-1'
           IF (itype == 2) ncinfo = 'time'
        CASE('Na_int')
-          IF (itype == 0) ncinfo = 'In-cloud intersitial aerosol number concentration'
+          IF (itype == 0) ncinfo = 'In-cloud interstitial aerosol number concentration'
           IF (itype == 1) ncinfo = 'kg^-1'
           IF (itype == 2) ncinfo = 'time'
        CASE('SO4_ic')
@@ -977,7 +984,7 @@ CONTAINS
           IF (itype == 1) ncinfo = 'm^2/s^2'
           IF (itype == 2) ncinfo = 'ttmt'
        CASE('t_2')
-          IF (itype == 0) ncinfo = 'Variance of theta'
+          IF (itype == 0) ncinfo = 'Variance of theta_1'
           IF (itype == 1) ncinfo = 'K^2'
           IF (itype == 2) ncinfo = 'tttt'
        CASE('w_3')
@@ -985,7 +992,7 @@ CONTAINS
           IF (itype == 1) ncinfo = 'm^3/s^3'
           IF (itype == 2) ncinfo = 'ttmt'
        CASE('t_3')
-          IF (itype == 0) ncinfo = 'Third moment of theta'
+          IF (itype == 0) ncinfo = 'Third moment of theta_1'
           IF (itype == 1) ncinfo = 'K^3'
           IF (itype == 2) ncinfo = 'tttt'
        CASE('tot_tw')
@@ -1730,6 +1737,30 @@ CONTAINS
           IF (itype == 0) ncinfo = 'Level 4 relative humidity'
           IF (itype == 1) ncinfo = '%'
           IF (itype == 2) ncinfo = 'tttt'
+       CASE('P_Na_c')
+          IF (itype==0) ncinfo = 'Aerosol number concentration in cloudy columns'
+          IF (itype==1) ncinfo = 'kg^-1'
+          IF (itype==2) ncinfo = 'tttt'
+       CASE('P_Nc_c')
+          IF (itype==0) ncinfo = 'Cloud droplet number concentration in cloudy columns'
+          IF (itype==1) ncinfo = 'kg^-1'
+          IF (itype==2) ncinfo = 'tttt'
+       CASE('P_Np_c')
+          IF (itype==0) ncinfo = 'Rain drop number concentration in cloudy columns'
+          IF (itype==1) ncinfo = 'kg^-1'
+          IF (itype==2) ncinfo = 'tttt'
+       CASE('P_cfrac')
+          IF (itype==0) ncinfo = 'Fraction of cloudy columns'
+          IF (itype==1) ncinfo = ''
+          IF (itype==2) ncinfo = 'tttt'
+       CASE('P_clw_c')
+          IF (itype==0) ncinfo = 'Cloud liquid water in cloudy columns'
+          IF (itype==1) ncinfo = 'kg/kg'
+          IF (itype==2) ncinfo = 'tttt'
+       CASE('P_thl_c')
+          IF (itype==0) ncinfo = 'Liquid water potential temperature in cloudy columns'
+          IF (itype==1) ncinfo = 'K'
+          IF (itype==2) ncinfo = 'tttt'
        CASE('P_Naba')
           IF (itype == 0) ncinfo = 'Aerosol number concentration in size bins A'
           IF (itype == 1) ncinfo = 'kg^-1'

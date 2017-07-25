@@ -312,8 +312,8 @@ CONTAINS
 
             !       WRITE(*,*) ww_sfc(3,10),a_ustar(3,10),'sflx'
 
-            sst1 = sst1-(total_rw+total_la+total_se+((lambda*C_heat*7.27e-5/(2.0))**0.5*(SST1-280.0)))&
-                   /(2.0e-2*C_heat+(lambda*C_heat/(2.0*7.27e-5))**0.5)*dtl
+            sst1 = sst1-(total_rw+total_la+total_se+( sqrt(lambda*C_heat*7.27e-5/(2.0)) *(SST1-280.0)))&
+                   /(2.0e-2*C_heat+ sqrt( lambda*C_heat/(2.0*7.27e-5)) )*dtl
 
             sst = sst1
          !
@@ -424,7 +424,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      REAL, PARAMETER   :: am  =  4.8   !   "          "         "
+      REAL, PARAMETER   :: am  = 4.8    !   "          "         "
       REAL, PARAMETER   :: bm  = 19.3   !   "          "         "
       REAL, PARAMETER   :: eps = 1.e-10 ! non-zero, small number
 
@@ -448,7 +448,7 @@ CONTAINS
             IF (zeta > 0.) THEN
                ustar = vonk*wnd / (lnz + am*zeta)
             ELSE
-               x     = sqrt( sqrt( 1.0 - bm*zeta ) )
+               x     = ( 1.0 - bm*zeta )**(0.25)
                psi1  = 2.*log(1.0+x) + log(1.0+x*x) - 2.*atan(x) + c1
                ustar = wnd*vonk/(lnz - psi1)
             END IF
@@ -546,7 +546,7 @@ CONTAINS
                DO iterate = 1, 3
                   lmo  = betg*ustar(i,j)**2/(vonk*tstar(i,j))
                   zeta = z/lmo
-                  x    = sqrt( sqrt( 1.0 - bm*zeta ) )
+                  x    = ( 1.0 - bm*zeta  )**(0.25)
                   psi1 = 2.*log(1.0+x) + log(1.0+x*x) - 2.*atan(x) + cnst1
                   y    = sqrt(1.0 - bh*zeta)
                   psi2 = log(1.0 + y) + cnst2
@@ -590,7 +590,7 @@ CONTAINS
             rw(i,j) = -rs(i,j)*us(i,j)
 
             x(i,j) = xx(i,j)*vk*ts(i,j)*(ubar(i,j)/us(i,j))**2
-            x(i,j) = x(i,j)*sqrt(sqrt(1.-15.*min(0.,x(i,j)))) &
+            x(i,j) = x(i,j)*(1.-15.*min(0.,x(i,j)))**(0.25) &
                      /(1.0+cc*max(0.,x(i,j)))
             y(i,j) = sqrt((1.-2.86*x(i,j))/(1.+x(i,j)* &
                      (-5.39+x(i,j)*6.998 )))

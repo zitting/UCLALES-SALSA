@@ -264,7 +264,7 @@ CONTAINS
 
             !-- sums in equation (8), part 3
             ntot = SUM(paero(ii,jj,in1a:fn2b)%numc)
-            sum1 = SUM(paero(ii,jj,in1a:fn2b)%numc/scrit(in1a:fn2b)**(2./3.))
+            sum1 = SUM(paero(ii,jj,in1a:fn2b)%numc/scrit(in1a:fn2b)**0.66666666666)
 
             IF(ntot < nlim) CYCLE
             V = w(ii,jj)
@@ -301,22 +301,28 @@ CONTAINS
                  L*rhowa/(ka1*temp(ii,jj)) * (L*mwa/(temp(ii,jj)*rg)-1.))
 
             !-- effective critical supersaturation: part 3, eq (8)
-            s_eff = (ntot/sum1)**(3./2.)
+
+            !            s_eff = (ntot/sum1)**(3./2.)
+            s_eff = sqrt( (ntot/sum1) **3)
 
             !-- part 3, equation (5)
 
-            theta = ((alpha*V/Gc)**(3./2.))/(2.*pi*rhowa*gamma*ntot)
+!            theta = ( (alpha*V/Gc)**(3./2.) ) / (2.*pi*rhowa*gamma*ntot)
+            theta = ( sqrt( (alpha*V/Gc)**3 ) ) /(2.*pi*rhowa*gamma*ntot)
 
             !-- part 3, equation (6)
             khi = (2./3.)*aa*SQRT(alpha*V/Gc)
 
             !-- maximum supersaturation of the air parcel: part 3, equation (9)
-            s_max = s_eff / SQRT(0.5*(khi/theta)**(3./2.)              &
-                    + ((s_eff**2)/(theta+3.*khi))**(3./4.))
+
+            !            s_max = s_eff / SQRT(0.5* (khi/theta) **(3./2.)              &
+!                    + ((s_eff**2)/(theta+3.*khi))**(3./4.))
+
+            s_max = s_eff / SQRT(  0.5*sqrt( (khi/theta)**3 ) &
+                    +  ((s_eff**2)/(theta+3.*khi))**(0.75)  )
 
             !-- Juha: Get the critical diameter corresponding to the maximum supersaturation
             zdcstar = 2.*aa/(3.*s_max)
-
 
             DO kk = in1a, fn2b
 
@@ -828,7 +834,7 @@ CONTAINS
     
       IMPLICIT NONE
       REAL, INTENT(in) :: ikk,icc,ilow,ihigh
-      intgV = (1./3.)*ikk*MAX(ihigh**3 - ilow**3,0.) + 0.5*icc*MAX(ihigh**2 - ilow**2,0.)
+      intgV = 0.33333333333*ikk*MAX(ihigh**3 - ilow**3,0.) + 0.5*icc*MAX(ihigh**2 - ilow**2,0.)
 
    END FUNCTION intgV
 
@@ -874,7 +880,7 @@ CONTAINS
                IF ( Ntot > nlim .AND. Vtot > 0. ) THEN
 
                   ! Volume geometric mean diameter
-                  dvg = ((Vtot/Ntot/pi6)**(1./3.))*EXP( (3.*LOG(sigmag)**2)/2. )
+                  dvg = ((Vtot/Ntot/pi6)**0.33333333333)*EXP( (3.*LOG(sigmag)**2)/2. )
                   dg = dvg*EXP( -3.*LOG(sigmag)**2 )
 
                   Vrem = Vtot*( 1. - cumlognorm(dvg,sigmag,zd0) )
@@ -956,9 +962,9 @@ CONTAINS
             DO kk = 1, ncld
                IF (pcloud(ii,jj,kk)%numc < nlim) CYCLE
 
-               rdry = (3.*sum(pcloud(ii,jj,kk)%volc) /pcloud(ii,jj,kk)%numc/4./pi)**(1./3.)
+               rdry = (3.*sum(pcloud(ii,jj,kk)%volc) /pcloud(ii,jj,kk)%numc/4./pi)**0.33333333333
                qv = (1.-sum( pcloud(ii,jj,kk)%volc(3:4) ))/(1. - sum(pcloud(ii,jj,kk)%volc(1:7))) ! Not correct?
-               rn = rdry*(1.-qv)**(1./3.)  ! Not correct?
+               rn = rdry*(1.-qv)**0.33333333333  ! Not correct?
                jcf = calc_JCF( rn,ptemp(ii,jj), prv(ii,jj), prs(ii,jj) )
                phf = 1. - exp( -jcf*ptstep )
                Ntot = pcloud(ii,jj,kk)%numc
@@ -983,9 +989,9 @@ CONTAINS
             DO kk = 1, fn2b
                IF (paero(ii,jj,kk)%numc < nlim) CYCLE
 
-               rdry = (3.*sum(paero(ii,jj,kk)%volc) / paero(ii,jj,kk)%numc/4./pi)**(1./3.)
+               rdry = (3.*sum(paero(ii,jj,kk)%volc) / paero(ii,jj,kk)%numc/4./pi)**0.33333333333
                qv = (1.-sum( paero(ii,jj,kk)%volc(3:4) )) / (1. - sum(paero(ii,jj,kk)%volc(1:7))) ! Not correct?
-               rn = rdry*(1.-qv)**(1./3.)  ! Not correct?
+               rn = rdry*(1.-qv)**0.33333333333  ! Not correct?
                jcf = calc_JCF( rn,ptemp(ii,jj), prv(ii,jj), prs(ii,jj) )
                phf = 1. - exp( -jcf*ptstep )
                Ntot = paero(ii,jj,kk)%numc
@@ -1277,7 +1283,7 @@ CONTAINS
     
       REAL, INTENT(IN) :: m,x
       REAL :: psi,fii
-      fii = (1.-2.*m*x+x**2)**(0.5)
+      fii = sqrt(1.-2.*m*x+x**2)
       psi = (x-m)/fii
 
       calc_shapefactor = 1. + ( ( 1.-m*x)/fii)**3 + (2.-3.*psi-psi**3)*x**3 + 3.*m*(psi-1.)*x**2
