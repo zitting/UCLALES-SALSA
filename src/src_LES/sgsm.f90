@@ -95,11 +95,11 @@ CONTAINS
 
     SELECT CASE(level)
        CASE(1,2,3)
-          rx = a_rv
-          rxt = a_rp
+          rx = a_rv%data
+          rxt = a_rp%data
        CASE(4,5)
-          rx = a_rp
-          rxt = a_rp + a_rc
+          rx = a_rp%data
+          rxt = a_rp%data + a_rc%data
     END SELECT
 
 
@@ -108,9 +108,9 @@ CONTAINS
     ! ----------
     ! Calculate Deformation and stability for SGS calculations
     !
-    CALL fll_tkrs(nzp,nxp,nyp,a_theta,a_pexnr,pi0,pi1,dn0,th00,a_temp,rs=a_rsl)
+    CALL fll_tkrs(nzp,nxp,nyp,a_theta%data,a_pexnr%data,pi0,pi1,dn0,th00,a_temp,rs=a_rsl%data)
 
-    CALL bruvais(nzp,nxp,nyp,level,a_theta,a_tp,rxt,a_rsl,a_tmp3,dzm,th00)
+    CALL bruvais(nzp,nxp,nyp,level,a_theta%data,a_tp%data,rxt,a_rsl%data,a_tmp3,dzm,th00)
 
     !
     ! the a_ut, a_wt, a_ut arrays are first used when the diffusive tendencies
@@ -127,9 +127,9 @@ CONTAINS
     CASE (1)
        CALL smagor(nzp,nxp,nyp,sflg,dxi,dn0,a_tmp3,a_tmp2,a_tmp1,zm)
     CASE (2)
-       CALL deardf(nzp,nxp,nyp,sflg,dxi,zm,dn0,a_qp,a_qt,a_tmp3,a_tmp2,a_tmp1)
+       CALL deardf(nzp,nxp,nyp,sflg,dxi,zm,dn0,a_qp%data,a_qt%data,a_tmp3,a_tmp2,a_tmp1)
 
-       CALL solv_tke(nzp,nxp,nyp,a_tmp3,a_tmp1,a_qp,a_qt,dn0,dzm,dzt,dxi,dyi,  &
+       CALL solv_tke(nzp,nxp,nyp,a_tmp3,a_tmp1,a_qp%data,a_qt%data,dn0,dzm,dzt,dxi,dyi,  &
                      dtlt)
     END SELECT
     !
@@ -165,22 +165,22 @@ CONTAINS
     !
     ! Diffuse scalars
     !
-    a_tt = 0.
+    a_tt%data = 0.
     DO n = 1, nscl
        CALL newsclr(n)
        sxy1 = 0.
        sxy2 = 0.
-       IF ( associated(a_tp,a_sp) ) sxy1 = wt_sfc
-       IF ( associated(a_tp,a_sp) ) sxy2 = wt_sfc
-       IF ( associated(a_rp,a_sp) ) sxy1 = wq_sfc
+       IF ( associated(a_tp%data,a_sp) ) sxy1 = wt_sfc
+       IF ( associated(a_tp%data,a_sp) ) sxy2 = wt_sfc
+       IF ( associated(a_rp%data,a_sp) ) sxy1 = wq_sfc
 
-       WHERE(abs(a_sp) < 1.e-40) a_sp=0. !stop denormal
+       ! WHERE(abs(a_sp) < 1.e-40) a_sp=0. !stop denormal AZ
 
        IF (sflg) a_tmp1 = 0.
        IF ( isgstyp <= 1) THEN
           CALL diffsclr(nzp,nxp,nyp,dtlt,dxi,dyi,dzm,dzt,dn0,sxy1,sxy2,   &
                         a_sp,a_tmp2,a_st,a_tmp1)
-       ELSE IF ( .NOT. associated(a_qp,a_sp) ) THEN
+       ELSE IF ( .NOT. associated(a_qp%data,a_sp) ) THEN
           CALL diffsclr(nzp,nxp,nyp,dtlt,dxi,dyi,dzm,dzt,dn0,sxy1,sxy2,   &
                         a_sp,a_tmp2,a_st,a_tmp1)
        END IF
@@ -188,10 +188,10 @@ CONTAINS
        IF (sflg) THEN
           CALL get_avg3(nzp,nxp,nyp,a_tmp1,sz1)
           CALL updtst(nzp,'sgs',n,sz1,1)
-          IF (associated(a_sp,a_tp))                                          &
-             CALL sgsflxs(nzp,nxp,nyp,level,a_tmp3,rx,a_theta,a_tmp1,'tl')
-          IF (associated(a_sp,a_rp))                          &
-             CALL sgsflxs(nzp,nxp,nyp,level,a_tmp3,rx,a_theta,a_tmp1,'rt')
+          IF (associated(a_sp,a_tp%data))                                          &
+             CALL sgsflxs(nzp,nxp,nyp,level,a_tmp3,rx,a_theta%data,a_tmp1,'tl')
+          IF (associated(a_sp,a_rp%data))                          &
+             CALL sgsflxs(nzp,nxp,nyp,level,a_tmp3,rx,a_theta%data,a_tmp1,'rt')
        END IF
 
        CALL cyclics(nzp,nxp,nyp,a_st,req)
@@ -827,8 +827,7 @@ CONTAINS
     DO j = 3, n3-2
        DO i = 2, n2-2
           DO k = 2, n1-1
-             !IF (abs(scp(k,i+1,j))<1e-100) scp(k,i+1,j) = 0. !stop denormal, also made scp inout AZ
-             !IF (abs(scp(k,i,j))<1e-100) scp(k,i,j) = 0.
+
              szx1(k,i) = -(scp(k,i+1,j)-scp(k,i,j))*dxi*.25*(xkh(k,i,j)  +     &
                          xkh(k,i+1,j)+xkh(k-1,i,j)+xkh(k-1,i+1,j))
           END DO

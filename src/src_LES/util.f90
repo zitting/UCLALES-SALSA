@@ -208,9 +208,8 @@ CONTAINS
    SUBROUTINE get_avg3(n1,n2,n3,a,avg,normalize,cond)
 
       USE mpi_interface, ONLY : nypg,nxpg,double_array_par_sum
-
       INTEGER,INTENT(in) :: n1,n2,n3
-      REAL,INTENT(in)    :: a(n1,n2,n3)
+      REAL, INTENT(in)   :: a(n1,n2,n3)
       REAL,INTENT(out)   :: avg(n1)
       LOGICAL, OPTIONAL  :: normalize
       LOGICAL, OPTIONAL  :: cond(n1,n2,n3)

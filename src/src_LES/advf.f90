@@ -44,9 +44,9 @@ CONTAINS
     ! diagnose liquid water flux
     !
     IF (sflg .AND. level > 1) THEN
-       a_tmp1 = a_rc
+       a_tmp1 = a_rc%data
        CALL add_vel(nzp,nxp,nyp,a_tmp2,a_wp,a_wc,.FALSE.)
-       CALL mamaos(nzp,nxp,nyp,a_tmp2,a_rc,a_tmp1,zt,dzm,dn0,dtlt,.FALSE.)
+       CALL mamaos(nzp,nxp,nyp,a_tmp2,a_rc%data,a_tmp1,zt,dzm,dn0,dtlt,.FALSE.)
        CALL get_avg3(nzp,nxp,nyp,a_tmp2,v1da)
        CALL updtst(nzp,'adv',0,v1da,1)
     END IF
@@ -62,7 +62,7 @@ CONTAINS
       IF ( ANY(a_sp /= 0.0 ) ) THEN ! TR added: no need to calculate advection for zero arrays
          a_tmp1 = a_sp
 
-         IF (isgstyp > 1 .AND. associated(a_qp,a_sp)) THEN
+         IF (isgstyp > 1 .AND. associated(a_qp%data,a_sp)) THEN
             iw = .TRUE.
          ELSE
             iw = .FALSE.
@@ -133,16 +133,16 @@ CONTAINS
 
           DO jj = 3, nyp-2
              DO ii = 3, nxp-2
-                fix_flux(ii,jj) = max(min(1.0,a_naerot(kp1,ii,jj,bbpar)/max(eps,dn(ii,jj))),0.8)
+                fix_flux(ii,jj) = max(min(1.0,a_naerot%data(kp1,ii,jj,bbpar)/max(eps,dn(ii,jj))),0.8)
              END DO
           END DO
 
           ! Add to cloud droplets
-          a_ncloudt(kp1,:,:,bb) = a_ncloudt(kp1,:,:,bb) +   &
+          a_ncloudt%data(kp1,:,:,bb) = a_ncloudt%data(kp1,:,:,bb) +   &
                                   MERGE( dn(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
 
           ! Remove from aerosols
-          a_naerot(kp1,:,:,bbpar) = a_naerot(kp1,:,:,bbpar) -   &
+          a_naerot%data(kp1,:,:,bbpar) = a_naerot%data(kp1,:,:,bbpar) -   &
                                     MERGE( dn(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
 
           ! Change in dry ccn/aerosol mass
@@ -155,40 +155,42 @@ CONTAINS
 
              DO jj = 3, nyp-2
                 DO ii = 3, nxp-2
-                   fix_flux(ii,jj) = max(min(1.0,a_maerot(kp1,ii,jj,mmpar)/max(eps,dv(ii,jj))),0.8)
+                   fix_flux(ii,jj) = max(min(1.0,a_maerot%data(kp1,ii,jj,mmpar)/max(eps,dv(ii,jj))),0.8)
                 END DO
              END DO
 
              ! Add to cloud droplets
-             a_mcloudt(kp1,:,:,mm) = a_mcloudt(kp1,:,:,mm) +   &
-                                     MERGE( dv(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
+             a_mcloudt%data(kp1,:,:,mm) = a_mcloudt%data(kp1,:,:,mm) +   &
+                                          MERGE( dv(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
 
              ! Remove from aerosols
-             a_maerot(kp1,:,:,mmpar) = a_maerot(kp1,:,:,mmpar) -   &
-                                       MERGE( dv(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
+             a_maerot%data(kp1,:,:,mmpar) = a_maerot%data(kp1,:,:,mmpar) -   &
+                                            MERGE( dv(:,:)*fix_flux(:,:), 0., pactmask(kk,:,:) )
 
           END DO ! ss
 
           ! Change in water content
           ! Assume that existing condensate from aerosols bins is taken in the same relation
           ! as the number concentration....
-          frac(:,:) = a_nactd(kk,:,:,bb)/MAX(a_naerop(kk,:,:,bbpar),1.)
+          frac(:,:) = a_nactd(kk,:,:,bb)/MAX(a_naerop%data(kk,:,:,bbpar),1.)
 
           nc = GetIndex(prtcl,'H2O')
           mm = (nc-1)*ncld + bb
           mmpar = (nc-1)*nbins + bbpar
 
           ! Amount of water condensed from vapor
-          a_rt(kp1,:,:) = a_rt(kp1,:,:) -   &
-                          MERGE( fix_flux(:,:)*zw(:,:)*(a_vactd(kk,:,:,mm)-frac(:,:)*a_maerop(kk,:,:,mmpar))*dzt(kk), 0., &
-                                 pactmask(kk,:,:) )
+          a_rt%data(kp1,:,:) = a_rt%data(kp1,:,:) -   &
+                               MERGE( fix_flux(:,:)*zw(:,:)*(a_vactd(kk,:,:,mm)-frac(:,:)* &
+                                      a_maerop%data(kk,:,:,mmpar))*dzt(kk), 0., &
+                                      pactmask(kk,:,:) )
           ! Add to cloud droplets
-          a_mcloudt(kp1,:,:,mm) = a_mcloudt(kp1,:,:,mm) +   &
-                                  MERGE( fix_flux(:,:)*zw(:,:)*a_vactd(kk,:,:,mm)*dzt(kk), 0., pactmask(kk,:,:) )
+          a_mcloudt%data(kp1,:,:,mm) = a_mcloudt%data(kp1,:,:,mm) +   &
+                                       MERGE( fix_flux(:,:)*zw(:,:)*a_vactd(kk,:,:,mm)*dzt(kk), 0., pactmask(kk,:,:) )
 
           ! Remove from aerosols
-          a_maerot(kp1,:,:,mmpar) = a_maerot(kp1,:,:,mmpar) -   &
-                                    MERGE( fix_flux(:,:)*zw(:,:)*frac(:,:)*a_maerop(kk,:,:,mmpar)*dzt(kk), 0., pactmask(kk,:,:) )
+          a_maerot%data(kp1,:,:,mmpar) = a_maerot%data(kp1,:,:,mmpar) -   &
+                                         MERGE( fix_flux(:,:)*zw(:,:)*frac(:,:)* &
+                                         a_maerop%data(kk,:,:,mmpar)*dzt(kk), 0., pactmask(kk,:,:) )
 
        END DO ! bb
 

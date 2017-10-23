@@ -79,12 +79,13 @@ CONTAINS
          IF (level >= 4) THEN
 
             ! Not needed when using interst. acivation?
-            CALL maskactiv(zactmask,nxp,nyp,nzp,1,a_rh)
+            CALL maskactiv(zactmask,nxp,nyp,nzp,1,a_rh%data)
 
             n4 = GetNcomp(prtcl) + 1 ! Aerosol compoenents + water
 
             IF ( nxp == 5 .AND. nyp == 5 ) THEN
-               CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,zwp,a_dn, &
+               CALL run_SALSA(nxp, nyp, nzp, n4, a_press, a_temp, ztkt,                   &
+                              a_rp, a_rt, a_rsl, a_rsi, zwp, a_dn,    &
                               a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
                               a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
                               a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
@@ -93,7 +94,8 @@ CONTAINS
                               a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
                               1, prtcl, dtlt, level   )
             ELSE
-               CALL run_SALSA(nxp,nyp,nzp,n4,a_press,a_temp,ztkt,a_rp,a_rt,a_rsl,a_rsi,a_wp,a_dn, &
+               CALL run_SALSA(nxp, nyp, nzp, n4, a_press, a_temp, ztkt,                   &
+                              a_rp, a_rt, a_rsl, a_rsi, a_wp, a_dn,    &
                               a_naerop,  a_naerot,  a_maerop,  a_maerot,   &
                               a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,  &
                               a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,  &
@@ -101,6 +103,15 @@ CONTAINS
                               a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
                               a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
                               1, prtcl, dtlt, level   )
+               !CALL run_SALSA(nxp, nyp, nzp, n4, a_press%data, a_temp, ztkt,                   &
+               !               a_rp%data, a_rt%data, a_rsl%data, a_rsi%data, a_wp, a_dn%data,   &
+               !               a_naerop%data,  a_naerot%data,  a_maerop%data,  a_maerot%data,   &
+               !               a_ncloudp%data, a_ncloudt%data, a_mcloudp%data, a_mcloudt%data,  &
+               !               a_nprecpp%data, a_nprecpt%data, a_mprecpp%data, a_mprecpt%data,  &
+               !               a_nicep%data,   a_nicet%data,   a_micep%data,   a_micet%data,    &
+               !               a_nsnowp%data,  a_nsnowt%data,  a_msnowp%data,  a_msnowt%data,   &
+               !               a_nactd,   a_vactd,   a_gaerop%data,  a_gaerot%data,             &
+               !               1, prtcl, dtlt, level   )
 
             END IF
             CALL SALSAInit
@@ -109,7 +120,7 @@ CONTAINS
          END IF !level >= 4
 
       ELSE IF (runtype == 'HISTORY') THEN
-         IF (isgstyp == 2) CALL tkeinit(nxyzp,a_qp)
+         IF (isgstyp == 2) CALL tkeinit(nxyzp,a_qp%data)
          CALL hstart
       ELSE
          IF (myid == 0) PRINT *,'  ABORTING:  Invalid Runtype'
@@ -123,7 +134,7 @@ CONTAINS
      !   -nucleation set to produce particles to b bins (currently only a bins)
 
      IF (level >= 4 .AND. (.NOT. salsa_b_bins)) &
-        salsa_b_bins=any( a_naerop(:,:,:,in2b:fn2b)>nlim ) .OR. any( a_nicep(:,:,:,iib%cur:fib%cur)>prlim )
+        salsa_b_bins=any( a_naerop%data(:,:,:,in2b:fn2b)>nlim ) .OR. any( a_nicep%data(:,:,:,iib%cur:fib%cur)>prlim )
 
       CALL sponge_init
       CALL init_stat(time+dtl,filprf,expnme,nzp)
@@ -135,8 +146,8 @@ CONTAINS
          mc_Adom = deltax*deltay*(nxp-4)*(nyp-4)
          mc_ApVdom = mc_Adom/mc_Vdom
          ! Get the initial mass of atmospheric water
-         CALL acc_massbudged(nzp,nxp,nyp,0,dtlt,dzt,a_dn,     &
-                             rv=a_rp,rc=a_rc,prc=a_srp)
+         CALL acc_massbudged(nzp,nxp,nyp,0,dtlt,dzt,a_dn%data,     &
+                             rv=a_rp%data,rc=a_rc%data,prc=a_srp%data)
       END IF ! mcflg
       !
       ! write analysis and history files from restart if appropriate
@@ -181,10 +192,10 @@ CONTAINS
             DO k = 1, nzp
                a_up(k,i,j)    = u0(k)
                a_vp(k,i,j)    = v0(k)
-               a_tp(k,i,j)    = (th0(k)-th00)
-               IF (associated (a_rp)) a_rp(k,i,j)   = rt0(k)
-               a_theta(k,i,j) = th0(k)
-               a_pexnr(k,i,j) = 0.
+               a_tp%data(k,i,j)    = (th0(k)-th00)
+               IF (associated (a_rp%data)) a_rp%data(k,i,j) = rt0(k)
+               a_theta%data(k,i,j) = th0(k)
+               a_pexnr%data(k,i,j) = 0.
             END DO
          END DO
       END DO
@@ -192,9 +203,9 @@ CONTAINS
       ! Juha: Added SELECT-CASE for level 4
       SELECT CASE(level)
          CASE(1,2,3)
-            IF ( allocated (a_rv)) a_rv = a_rp
+            IF ( associated (a_rv%data)) a_rv%data = a_rp%data
 
-            IF ( allocated (a_rc)) THEN
+            IF ( associated (a_rc%data)) THEN
                DO j = 1, nyp
                   DO i = 1, nxp
                      DO k = 1, nzp
@@ -202,16 +213,16 @@ CONTAINS
                         pres  = p00 * (exner)**cpr
                         IF (itsflg == 0) THEN
                            tk = th0(k)*exner
-                           rc = max(0.,a_rp(k,i,j)-rslf(pres,tk))
-                           a_tp(k,i,j) = a_theta(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
-                           a_rv(k,i,j) = a_rp(k,i,j)-rc
+                           rc = max(0.,a_rp%data(k,i,j)-rslf(pres,tk))
+                           a_tp%data(k,i,j) = a_theta%data(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
+                           a_rv%data(k,i,j) = a_rp%data(k,i,j)-rc
                         END IF
                         IF (itsflg == 2) THEN
                            tk = th0(k)
-                           a_theta(k,i,j) = tk/exner
-                           rc = max(0.,a_rp(k,i,j)-rslf(pres,tk))
-                           a_tp(k,i,j) = a_theta(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
-                           a_rv(k,i,j) = a_rp(k,i,j)-rc
+                           a_theta%data(k,i,j) = tk/exner
+                           rc = max(0.,a_rp%data(k,i,j)-rslf(pres,tk))
+                           a_tp%data(k,i,j) = a_theta%data(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
+                           a_rv%data(k,i,j) = a_rp%data(k,i,j)-rc
                         END IF
                      END DO
                   END DO
@@ -229,14 +240,14 @@ CONTAINS
                      pres  = p00 * (exner)**cpr
                      IF (itsflg == 0) THEN
                         tk = th0(k)*exner
-                        rc = max(0.,a_rp(k,i,j)-rslf(pres,tk))
-                        a_tp(k,i,j) = a_theta(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
+                        rc = max(0.,a_rp%data(k,i,j)-rslf(pres,tk))
+                        a_tp%data(k,i,j) = a_theta%data(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
                      END IF
                      IF (itsflg == 2) THEN
                         tk = th0(k)
-                        a_theta(k,i,j) = tk/exner
-                        rc = max(0.,a_rp(k,i,j)-rslf(pres,tk))
-                        a_tp(k,i,j) = a_theta(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
+                        a_theta%data(k,i,j) = tk/exner
+                        rc = max(0.,a_rp%data(k,i,j)-rslf(pres,tk))
+                        a_tp%data(k,i,j) = a_theta%data(k,i,j)*exp(-(alvl/cp)*rc/tk) - th00
                      END IF
                   END DO !k
                END DO !i
@@ -249,19 +260,19 @@ CONTAINS
          k = k+1
          xran(k) = 0.2*(zrand - zt(k))/zrand
       END DO
-      CALL random_pert(nzp,nxp,nyp,zt,a_tp,xran,k)
+      CALL random_pert(nzp,nxp,nyp,zt,a_tp%data,xran,k)
 
-      IF (associated(a_rp)) THEN
+      IF (associated(a_rp%data)) THEN
          k = 1
          DO WHILE( zt(k+1) <= zrand .AND. k+1 < nzp)
             k = k+1
             xran(k) = 5.0e-5*(zrand - zt(k))/zrand
          END DO
-         CALL random_pert(nzp,nxp,nyp,zt,a_rp,xran,k)
+         CALL random_pert(nzp,nxp,nyp,zt,a_rp%data,xran,k)
       END IF
 
       a_wp = 0.
-      IF(isgstyp == 2) CALL tkeinit(nxyzp,a_qp)
+      IF(isgstyp == 2) CALL tkeinit(nxyzp,a_qp%data)
       !
       ! initialize thermodynamic fields
       !
@@ -728,21 +739,21 @@ CONTAINS
     DO j = 1, nyp
        DO i = 1, nxp
           DO k = 1, nzp ! Apply tendencies
-             a_naerop(k,i,j,:)  = MAX( a_naerop(k,i,j,:)  + dtlt*a_naerot(k,i,j,:), 0. )
-             a_ncloudp(k,i,j,:) = MAX( a_ncloudp(k,i,j,:) + dtlt*a_ncloudt(k,i,j,:), 0. )
-             a_nprecpp(k,i,j,:) = MAX( a_nprecpp(k,i,j,:) + dtlt*a_nprecpt(k,i,j,:), 0. )
-             a_maerop(k,i,j,:)  = MAX( a_maerop(k,i,j,:)  + dtlt*a_maerot(k,i,j,:), 0. )
-             a_mcloudp(k,i,j,:) = MAX( a_mcloudp(k,i,j,:) + dtlt*a_mcloudt(k,i,j,:), 0. )
-             a_mprecpp(k,i,j,:) = MAX( a_mprecpp(k,i,j,:) + dtlt*a_mprecpt(k,i,j,:), 0. )
-             a_gaerop(k,i,j,:)  = MAX( a_gaerop(k,i,j,:)  + dtlt*a_gaerot(k,i,j,:), 0. )
-             a_rp(k,i,j) = a_rp(k,i,j) + dtlt*a_rt(k,i,j)
+             a_naerop%data(k,i,j,:)  = MAX( a_naerop%data(k,i,j,:)  + dtlt*a_naerot%data(k,i,j,:), 0. )
+             a_ncloudp%data(k,i,j,:) = MAX( a_ncloudp%data(k,i,j,:) + dtlt*a_ncloudt%data(k,i,j,:), 0. )
+             a_nprecpp%data(k,i,j,:) = MAX( a_nprecpp%data(k,i,j,:) + dtlt*a_nprecpt%data(k,i,j,:), 0. )
+             a_maerop%data(k,i,j,:)  = MAX( a_maerop%data(k,i,j,:)  + dtlt*a_maerot%data(k,i,j,:), 0. )
+             a_mcloudp%data(k,i,j,:) = MAX( a_mcloudp%data(k,i,j,:) + dtlt*a_mcloudt%data(k,i,j,:), 0. )
+             a_mprecpp%data(k,i,j,:) = MAX( a_mprecpp%data(k,i,j,:) + dtlt*a_mprecpt%data(k,i,j,:), 0. )
+             a_gaerop%data(k,i,j,:)  = MAX( a_gaerop%data(k,i,j,:)  + dtlt*a_gaerot%data(k,i,j,:), 0. )
+             a_rp%data(k,i,j) = a_rp%data(k,i,j) + dtlt*a_rt%data(k,i,j)
 
              IF(level < 5) CYCLE
 
-             a_nicep(k,i,j,:)   = MAX( a_nicep(k,i,j,:)   + dtlt*a_nicet(k,i,j,:), 0. )
-             a_nsnowp(k,i,j,:)  = MAX( a_nsnowp(k,i,j,:)  + dtlt*a_nsnowt(k,i,j,:), 0. )
-             a_micep(k,i,j,:)   = MAX( a_micep(k,i,j,:)   + dtlt*a_micet(k,i,j,:), 0. )
-             a_msnowp(k,i,j,:)  = MAX( a_msnowp(k,i,j,:)  + dtlt*a_msnowt(k,i,j,:), 0. )
+             a_nicep%data(k,i,j,:)   = MAX( a_nicep%data(k,i,j,:)   + dtlt*a_nicet%data(k,i,j,:), 0. )
+             a_nsnowp%data(k,i,j,:)  = MAX( a_nsnowp%data(k,i,j,:)  + dtlt*a_nsnowt%data(k,i,j,:), 0. )
+             a_micep%data(k,i,j,:)   = MAX( a_micep%data(k,i,j,:)   + dtlt*a_micet%data(k,i,j,:), 0. )
+             a_msnowp%data(k,i,j,:)  = MAX( a_msnowp%data(k,i,j,:)  + dtlt*a_msnowt%data(k,i,j,:), 0. )
           END DO
        END DO
     END DO
@@ -750,18 +761,18 @@ CONTAINS
    nc = GetIndex(prtcl,'H2O')
    ! Activation + diagnostic array initialization
    ! Clouds and aerosols
-   a_rc(:,:,:) = 0.
+   a_rc%data = 0.
     DO bb = 1, ncld
-       a_rc(:,:,:) = a_rc(:,:,:) + a_mcloudp(:,:,:,(nc-1)*ncld+bb)
+       a_rc%data = a_rc%data + a_mcloudp%data(:,:,:,(nc-1)*ncld+bb)
     END DO
     DO bb = 1, nbins
-       a_rc(:,:,:) = a_rc(:,:,:) + a_maerop(:,:,:,(nc-1)*nbins+bb)
+       a_rc%data = a_rc%data + a_maerop%data(:,:,:,(nc-1)*nbins+bb)
     END DO
 
     ! Ice
-    a_ri(:,:,:) = 0.
+    a_ri%data = 0.
     DO bb = 1, nice
-       a_ri(:,:,:) = a_ri(:,:,:) + a_micep(:,:,:,(nc-1)*nice + bb)
+       a_ri%data = a_ri%data + a_micep%data(:,:,:,(nc-1)*nice + bb)
     END DO
 
  END SUBROUTINE SALSAInit
@@ -808,8 +819,8 @@ CONTAINS
     pvf2a = 0.; pvf2b = 0.
     pnf2a = 0.; pvfOC1a = 0.
 
-    a_maerop(:,:,:,:) = 0.0
-    a_naerop(:,:,:,:) = 0.0
+    a_maerop%data(:,:,:,:) = 0.0
+    a_naerop%data(:,:,:,:) = 0.0
 
     ! Indices (-1 = not used)
     i = 0
@@ -904,12 +915,12 @@ CONTAINS
 
              ! a) Number concentrations
              ! Region 1
-             a_naerop(k,i,j,in1a:fn1a) = pndist(k,in1a:fn1a)
+             a_naerop%data(k,i,j,in1a:fn1a) = pndist(k,in1a:fn1a)
 
              ! Region 2
              IF (nreg > 1) THEN
-                a_naerop(k,i,j,in2a:fn2a) = max(0.0,pnf2a(k))*pndist(k,in2a:fn2a)
-                a_naerop(k,i,j,in2b:fn2b) = max(0.0,1.0-pnf2a(k))*pndist(k,in2a:fn2a)
+                a_naerop%data(k,i,j,in2a:fn2a) = max(0.0,pnf2a(k))*pndist(k,in2a:fn2a)
+                a_naerop%data(k,i,j,in2b:fn2b) = max(0.0,1.0-pnf2a(k))*pndist(k,in2a:fn2a)
              END IF
 
              !
@@ -918,12 +929,12 @@ CONTAINS
              ! SO4
              IF (iso4 > 0) THEN
                 ss = (iso4-1)*nbins + in1a; ee = (iso4-1)*nbins + fn1a
-                a_maerop(k,i,j,ss:ee) = max(0.0,1.0-pvfOC1a(k))*pndist(k,in1a:fn1a)*core(in1a:fn1a)*rhosu
+                a_maerop%data(k,i,j,ss:ee) = max(0.0,1.0-pvfOC1a(k))*pndist(k,in1a:fn1a)*core(in1a:fn1a)*rhosu
              END IF
              ! OC
              IF (ioc > 0) THEN
                 ss = (ioc-1)*nbins + in1a; ee = (ioc-1)*nbins + fn1a
-                a_maerop(k,i,j,ss:ee) = max(0.0,pvfOC1a(k))*pndist(k,in1a:fn1a)*core(in1a:fn1a)*rhooc
+                a_maerop%data(k,i,j,ss:ee) = max(0.0,pvfOC1a(k))*pndist(k,in1a:fn1a)*core(in1a:fn1a)*rhooc
              END IF
 
           END DO ! i
@@ -979,23 +990,23 @@ CONTAINS
     IF (myid == 0 .AND. isdtyp == 1) WRITE(*,*) 'AEROSOL PROPERTIES READ FROM aerosol_in.nc'
 
     IF (myid == 0) WRITE(*,fmt) &
-       ( zt(k), SUM(a_naerop(k,3,3,in1a:fn2a))*1.e-6, SUM(a_naerop(k,3,3,in2b:fn2b))*1.e-6,                 &
+       ( zt(k), SUM(a_naerop%data(k,3,3,in1a:fn2a))*1.e-6, SUM(a_naerop%data(k,3,3,in2b:fn2b))*1.e-6,                 &
 
-       MERGE( SUM( a_maerop(k,3,3,MAX(iso4-1,0)*nbins+in1a:MAX(iso4-1,0)*nbins+fn2a) ), -999., iso4>0 ),    &
-       MERGE( SUM( a_maerop(k,3,3,MAX(ioc-1,0)*nbins+in1a:MAX(ioc-1,0)*nbins+fn2a) ), -999., ioc>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(ibc-1,0)*nbins+in1a:MAX(ibc-1,0)*nbins+fn2a) ), -999., ibc>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(idu-1,0)*nbins+in1a:MAX(idu-1,0)*nbins+fn2a) ), -999., idu>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(iss-1,0)*nbins+in1a:MAX(iss-1,0)*nbins+fn2a) ), -999., iss>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(ino-1,0)*nbins+in1a:MAX(ino-1,0)*nbins+fn2a) ), -999., ino>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(inh-1,0)*nbins+in1a:MAX(inh-1,0)*nbins+fn2a) ), -999., inh>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(iso4-1,0)*nbins+in1a:MAX(iso4-1,0)*nbins+fn2a) ), -999., iso4>0 ),    &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(ioc-1,0)*nbins+in1a:MAX(ioc-1,0)*nbins+fn2a) ), -999., ioc>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(ibc-1,0)*nbins+in1a:MAX(ibc-1,0)*nbins+fn2a) ), -999., ibc>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(idu-1,0)*nbins+in1a:MAX(idu-1,0)*nbins+fn2a) ), -999., idu>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(iss-1,0)*nbins+in1a:MAX(iss-1,0)*nbins+fn2a) ), -999., iss>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(ino-1,0)*nbins+in1a:MAX(ino-1,0)*nbins+fn2a) ), -999., ino>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(inh-1,0)*nbins+in1a:MAX(inh-1,0)*nbins+fn2a) ), -999., inh>0 ),       &
 
-       MERGE( SUM( a_maerop(k,3,3,MAX(iso4-1,0)*nbins+in2b:MAX(iso4-1,0)*nbins+fn2b) ), -999., iso4>0 ),    &
-       MERGE( SUM( a_maerop(k,3,3,MAX(ioc-1,0)*nbins+in2b:MAX(ioc-1,0)*nbins+fn2b) ), -999., ioc>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(ibc-1,0)*nbins+in2b:MAX(ibc-1,0)*nbins+fn2b) ), -999., ibc>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(idu-1,0)*nbins+in2b:MAX(idu-1,0)*nbins+fn2b) ), -999., idu>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(iss-1,0)*nbins+in2b:MAX(iss-1,0)*nbins+fn2b) ), -999., iss>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(ino-1,0)*nbins+in2b:MAX(ino-1,0)*nbins+fn2b) ), -999., ino>0 ),       &
-       MERGE( SUM( a_maerop(k,3,3,MAX(inh-1,0)*nbins+in2b:MAX(inh-1,0)*nbins+fn2b) ), -999., inh>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(iso4-1,0)*nbins+in2b:MAX(iso4-1,0)*nbins+fn2b) ), -999., iso4>0 ),    &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(ioc-1,0)*nbins+in2b:MAX(ioc-1,0)*nbins+fn2b) ), -999., ioc>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(ibc-1,0)*nbins+in2b:MAX(ibc-1,0)*nbins+fn2b) ), -999., ibc>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(idu-1,0)*nbins+in2b:MAX(idu-1,0)*nbins+fn2b) ), -999., idu>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(iss-1,0)*nbins+in2b:MAX(iss-1,0)*nbins+fn2b) ), -999., iss>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(ino-1,0)*nbins+in2b:MAX(ino-1,0)*nbins+fn2b) ), -999., ino>0 ),       &
+       MERGE( SUM( a_maerop%data(k,3,3,MAX(inh-1,0)*nbins+in2b:MAX(inh-1,0)*nbins+fn2b) ), -999., inh>0 ),       &
        k=1,nzp )
 
  END SUBROUTINE aerosol_init
@@ -1028,9 +1039,9 @@ CONTAINS
        DO k = 2, nzp  ! DONT PUT STUFF INSIDE THE GROUND
           DO j = 1, nyp
              DO i = 1, nxp
-                IF (a_rh(k,i,j) < 1.0  .OR. a_temp(k,i,j) > 273.15) CYCLE
-                zumA = sum(a_naerop(k,i,j,in2a:fn2a))
-                zumB = sum(a_naerop(k,i,j,in2b:fn2b))
+                IF (a_rh%data(k,i,j) < 1.0  .OR. a_temp(k,i,j) > 273.15) CYCLE
+                zumA = sum(a_naerop%data(k,i,j,in2a:fn2a))
+                zumB = sum(a_naerop%data(k,i,j,in2b:fn2b))
 
                 zumCumIce = 0.0
                 zumCumLiq = 0.0
@@ -1040,43 +1051,43 @@ CONTAINS
 
                 DO bb = fn2a, in2a, -1
 
-                   IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce < iceFracA*zumA .AND. a_naerop(k,i,j,bb) > 10e-10) THEN !initialize ice if it is cold enough
+                   IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce < iceFracA*zumA .AND. a_naerop%data(k,i,j,bb) > 10e-10) THEN !initialize ice if it is cold enough
 
-                      excessIce = min(abs(zumCumIce-iceFracA*zumA),a_naerop(k,i,j,bb))
-                      a_nicep(k,i,j,bb-3) = a_nicep(k,i,j,bb-3) + excessIce
+                      excessIce = min(abs(zumCumIce-iceFracA*zumA),a_naerop%data(k,i,j,bb))
+                      a_nicep%data(k,i,j,bb-3) = a_nicep%data(k,i,j,bb-3) + excessIce
                       zumCumIce = zumCumIce + excessIce
 
-                      excessFracIce = excessIce/a_naerop(k,i,j,bb)
+                      excessFracIce = excessIce/a_naerop%data(k,i,j,bb)
                       excessFracIce = MAX(0.0,MIN(1.0,excessFracIce))
-                      a_naerop(k,i,j,bb)=(1.0-excessFracIce)*a_naerop(k,i,j,bb)
+                      a_naerop%data(k,i,j,bb)=(1.0-excessFracIce)*a_naerop%data(k,i,j,bb)
 
                       DO m = 1, nspec
-                         a_micep(k,i,j,(m-1)*nice+bb-3) = &
-                            excessFracIce*a_maerop(k,i,j,(m-1)*nbins+bb)
+                         a_micep%data(k,i,j,(m-1)*nice+bb-3) = &
+                            excessFracIce*a_maerop%data(k,i,j,(m-1)*nbins+bb)
 
-                         a_maerop(k,i,j,(m-1)*nbins+bb) = &
-                            (1.0-excessFracIce)*a_maerop(k,i,j,(m-1)*nbins+bb)
+                         a_maerop%data(k,i,j,(m-1)*nbins+bb) = &
+                            (1.0-excessFracIce)*a_maerop%data(k,i,j,(m-1)*nbins+bb)
                       END DO
 
                    END IF
 
-                   IF (a_rh(k,i,j) > 1.0 .AND. zumCumLiq < liqFracA*zumA .AND. a_naerop(k,i,j,bb) > 10e-10) THEN
+                   IF (a_rh%data(k,i,j) > 1.0 .AND. zumCumLiq < liqFracA*zumA .AND. a_naerop%data(k,i,j,bb) > 10e-10) THEN
 
-                      excessLiq = min(abs(zumCumLiq-liqFracA*zumA),a_naerop(k,i,j,bb))
-                      a_ncloudp(k,i,j,bb-3) = a_ncloudp(k,i,j,bb-3) + excessLiq
+                      excessLiq = min(abs(zumCumLiq-liqFracA*zumA),a_naerop%data(k,i,j,bb))
+                      a_ncloudp%data(k,i,j,bb-3) = a_ncloudp%data(k,i,j,bb-3) + excessLiq
                       zumCumLiq = zumCumLiq + excessLiq
 
-                      excessFracLiq = excessLiq/a_naerop(k,i,j,bb)
+                      excessFracLiq = excessLiq/a_naerop%data(k,i,j,bb)
                       excessFracLiq = MAX(0.0,MIN(1.0,excessFracLiq))
 
-                      a_naerop(k,i,j,bb) = (1.0-excessFracLiq)*a_naerop(k,i,j,bb)
+                      a_naerop%data(k,i,j,bb) = (1.0-excessFracLiq)*a_naerop%data(k,i,j,bb)
 
                       DO m = 1, nspec
-                         a_mcloudp(k,i,j,(m-1)*ncld+bb-3) = &
-                            excessFracLiq*a_maerop(k,i,j,(m-1)*nbins+bb)
+                         a_mcloudp%data(k,i,j,(m-1)*ncld+bb-3) = &
+                            excessFracLiq*a_maerop%data(k,i,j,(m-1)*nbins+bb)
 
-                         a_maerop(k,i,j,(m-1)*nbins+bb) = &
-                            (1.0-excessFracLiq)*a_maerop(k,i,j,(m-1)*nbins+bb)
+                         a_maerop%data(k,i,j,(m-1)*nbins+bb) = &
+                            (1.0-excessFracLiq)*a_maerop%data(k,i,j,(m-1)*nbins+bb)
                       END DO
 
                    END IF
@@ -1088,43 +1099,43 @@ CONTAINS
                 excessFracIce = 1.0
                 excessFracLiq = 1.0
                 DO bb = fn2b, in2b, -1
-                   IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce < iceFracB*zumB  .AND. a_naerop(k,i,j,bb) > 10e-10) THEN !initialize ice if it is cold enough
+                   IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce < iceFracB*zumB  .AND. a_naerop%data(k,i,j,bb) > 10e-10) THEN !initialize ice if it is cold enough
 
-                      excessIce = min(abs(zumCumIce-iceFracB*zumB),a_naerop(k,i,j,bb))
-                      a_nicep(k,i,j,bb-3) = a_nicep(k,i,j,bb-3) + excessIce
+                      excessIce = min(abs(zumCumIce-iceFracB*zumB),a_naerop%data(k,i,j,bb))
+                      a_nicep%data(k,i,j,bb-3) = a_nicep%data(k,i,j,bb-3) + excessIce
                       zumCumIce = zumCumIce + excessIce
 
-                      excessFracIce = excessIce/a_naerop(k,i,j,bb)
+                      excessFracIce = excessIce/a_naerop%data(k,i,j,bb)
                       excessFracIce = MAX(0.0,MIN(1.0,excessFracIce))
 
-                      a_naerop(k,i,j,bb) = (1.0-excessFracIce)*a_naerop(k,i,j,bb)
+                      a_naerop%data(k,i,j,bb) = (1.0-excessFracIce)*a_naerop%data(k,i,j,bb)
 
                       DO m = 1, nspec
-                         a_micep(k,i,j,(m-1)*nice+bb-3) = &
-                            excessFracIce*a_maerop(k,i,j,(m-1)*nbins+bb)
+                         a_micep%data(k,i,j,(m-1)*nice+bb-3) = &
+                            excessFracIce*a_maerop%data(k,i,j,(m-1)*nbins+bb)
  
-                         a_maerop(k,i,j,(m-1)*nbins+bb) = &
-                            (1.0-excessFracIce)*a_maerop(k,i,j,(m-1)*nbins+bb)
+                         a_maerop%data(k,i,j,(m-1)*nbins+bb) = &
+                            (1.0-excessFracIce)*a_maerop%data(k,i,j,(m-1)*nbins+bb)
                       END DO
                    END IF
 
-                   IF (a_rh(k,i,j) > 1.0 .AND. zumCumLiq < liqFracB*zumB .AND. a_naerop(k,i,j,bb) > 10e-10) THEN
+                   IF (a_rh%data(k,i,j) > 1.0 .AND. zumCumLiq < liqFracB*zumB .AND. a_naerop%data(k,i,j,bb) > 10e-10) THEN
 
-                      excessLiq = min(abs(zumCumLiq-liqFracB*zumB),a_naerop(k,i,j,bb))
-                      a_ncloudp(k,i,j,bb-3) = a_ncloudp(k,i,j,bb-3) + excessLiq
+                      excessLiq = min(abs(zumCumLiq-liqFracB*zumB),a_naerop%data(k,i,j,bb))
+                      a_ncloudp%data(k,i,j,bb-3) = a_ncloudp%data(k,i,j,bb-3) + excessLiq
                       zumCumLiq = zumCumLiq + excessLiq
 
-                      excessFracLiq = excessLiq/a_naerop(k,i,j,bb)
+                      excessFracLiq = excessLiq/a_naerop%data(k,i,j,bb)
                       excessFracLiq = MAX(0.0,MIN(1.0,excessFracLiq))
 
-                      a_naerop(k,i,j,bb) = (1.0-excessFracLiq)*a_naerop(k,i,j,bb)
+                      a_naerop%data(k,i,j,bb) = (1.0-excessFracLiq)*a_naerop%data(k,i,j,bb)
 
                       DO m = 1, nspec
-                         a_mcloudp(k,i,j,(m-1)*ncld+bb-3) = &
-                            excessFracLiq*a_maerop(k,i,j,(m-1)*nbins+bb)
+                         a_mcloudp%data(k,i,j,(m-1)*ncld+bb-3) = &
+                            excessFracLiq*a_maerop%data(k,i,j,(m-1)*nbins+bb)
 
-                         a_maerop(k,i,j,(m-1)*nbins+bb) = &
-                            (1.0-excessFracLiq)*a_maerop(k,i,j,(m-1)*nbins+bb)
+                         a_maerop%data(k,i,j,(m-1)*nbins+bb) = &
+                            (1.0-excessFracLiq)*a_maerop%data(k,i,j,(m-1)*nbins+bb)
                       END DO
 
                    END IF
@@ -1161,12 +1172,12 @@ CONTAINS
           DO i = 1, nxp
              ! 2a
              ss = (ispec-1)*nbins + in2a; ee = (ispec-1)*nbins + fn2a
-             a_maerop(k,i,j,ss:ee) =      &
+             a_maerop%data(k,i,j,ss:ee) =      &
                 max( 0.0,ppvf2a(k,ispec) )*ppnf2a(k) * &
                 ppndist(k,in2a:fn2a)*pcore(in2a:fn2a)*prho
              ! 2b
              ss = (ispec-1)*nbins + in2b; ee = (ispec-1)*nbins + fn2b
-             a_maerop(k,i,j,ss:ee) =      &
+             a_maerop%data(k,i,j,ss:ee) =      &
                 max( 0.0,ppvf2b(k,ispec) )*(1.0-ppnf2a(k)) * &
                 ppndist(k,in2a:fn2a)*pcore(in2a:fn2a)*prho
           END DO
@@ -1325,11 +1336,11 @@ CONTAINS
     DO j = 1, nyp
        DO i = 1, nxp
           DO k = 1, nzp
-             a_gaerop(k,i,j,1) = 5.E14/dn0(k) !SO4
-             a_gaerop(k,i,j,2) = 0./dn0(k)    !NO3
-             a_gaerop(k,i,j,3) = 0./dn0(k)    !NH4
-             a_gaerop(k,i,j,4) = 5.E14/dn0(k) !OCNV
-             a_gaerop(k,i,j,5) = 1.E14/dn0(k) !OCSV
+             a_gaerop%data(k,i,j,1) = 5.E14/dn0(k) !SO4
+             a_gaerop%data(k,i,j,2) = 0./dn0(k)    !NO3
+             a_gaerop%data(k,i,j,3) = 0./dn0(k)    !NH4
+             a_gaerop%data(k,i,j,4) = 5.E14/dn0(k) !OCNV
+             a_gaerop%data(k,i,j,5) = 1.E14/dn0(k) !OCSV
           END DO
        END DO
     END DO

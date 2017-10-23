@@ -44,7 +44,7 @@ CONTAINS
          ! (Liquid water) potential temperature: nudge towards th0(:)-th00
          IF (nudge_theta /= 0) THEN
             ALLOCATE(theta_ref(nzp))
-            theta_ref(:) = a_tp(:,3,3)
+            theta_ref(:) = a_tp%data(:,3,3)
          END IF
          !
          ! Water vapor mixing ratio based on total water
@@ -54,11 +54,11 @@ CONTAINS
          IF (nudge_rv /= 0)  THEN
             ALLOCATE(rv_ref(nzp))
             IF (level == 5) THEN
-               rv_ref(:) = a_rp(:,3,3)+a_rc(:,3,3)+a_srp(:,3,3)+a_ri(:,3,3)+a_srs(:,3,3)
+               rv_ref(:) = a_rp%data(:,3,3)+a_rc%data(:,3,3)+a_srp%data(:,3,3)+a_ri%data(:,3,3)+a_srs%data(:,3,3)
             ELSE IF (level == 4) THEN
-               rv_ref(:) = a_rp(:,3,3)+a_rc(:,3,3)+a_srp(:,3,3)
+               rv_ref(:) = a_rp%data(:,3,3)+a_rc%data(:,3,3)+a_srp%data(:,3,3)
             ELSE ! Levels 0-3
-               rv_ref(:) = a_rp(:,3,3)+a_rpp(:,3,3)
+               rv_ref(:) = a_rp%data(:,3,3)+a_rpp%data(:,3,3)
             END IF
          END IF
          !
@@ -79,9 +79,9 @@ CONTAINS
          IF (level > 3 .AND. nudge_ccn /= 0) THEN
             ! Nudge aerosol based on the total number (aerosol+cloud+ice)
             ALLOCATE(aero_ref(nzp,nbins),aero_target(nzp,nbins))
-            aero_ref(:,:) = a_naerop(:,3,3,:)
-            aero_ref(:,in2a:fn2b) = aero_ref(:,in2a:fn2b)+a_ncloudp(:,3,3,1:ncld)
-            IF (level == 5) aero_ref(:,in2a:fn2b) = aero_ref(:,in2a:fn2b)+a_nicep(:,3,3,1:nice)
+            aero_ref(:,:) = a_naerop%data(:,3,3,:)
+            aero_ref(:,in2a:fn2b) = aero_ref(:,in2a:fn2b)+a_ncloudp%data(:,3,3,1:ncld)
+            IF (level == 5) aero_ref(:,in2a:fn2b) = aero_ref(:,in2a:fn2b)+a_nicep%data(:,3,3,1:nice)
          END IF
          !
          ! Initialized
@@ -90,16 +90,16 @@ CONTAINS
 
       ! (Liquid water) potential temperature:
       IF (nudge_theta > 0) &
-         CALL nudge_any(nxp,nyp,nzp,zt,a_tp,a_tt,theta_ref,dtlt,tau_theta,nudge_theta)
+         CALL nudge_any(nxp,nyp,nzp,zt,a_tp%data,a_tt%data,theta_ref,dtlt,tau_theta,nudge_theta)
 
       ! Water vapor
       IF (nudge_rv > 0) THEN
          IF (level > 3) THEN
             ! Nudge water vapor (a_rp) based on total (vapor + cloud + rain)
-            CALL nudge_any(nxp,nyp,nzp,zt,a_rp+a_rc+a_srp,a_rt,rv_ref,dtlt,tau_rv,nudge_rv)
+            CALL nudge_any(nxp,nyp,nzp,zt,a_rp%data+a_rc%data+a_srp%data,a_rt%data,rv_ref,dtlt,tau_rv,nudge_rv)
          ELSE
             ! Nudge total water (a_rp) based on total + rain
-            CALL nudge_any(nxp,nyp,nzp,zt,a_rp+a_rpp,a_rt,rv_ref,dtlt,tau_rv,nudge_rv)
+            CALL nudge_any(nxp,nyp,nzp,zt,a_rp%data+a_rpp%data,a_rt%data,rv_ref,dtlt,tau_rv,nudge_rv)
          END IF
       END IF
 
@@ -113,10 +113,10 @@ CONTAINS
       IF (level > 3 .AND. nudge_ccn /= 0) THEN
          ! Target aerosol concentration = total(t=0)-cloud(t)-ice(t)
          aero_target(:,:) = aero_ref(:,:)
-         aero_target(:,in2a:fn2b) = aero_target(:,in2a:fn2b)-a_ncloudp(:,3,3,1:ncld)
-         IF (level == 5) aero_target(:,in2a:fn2b) = aero_target(:,in2a:fn2b)-a_nicep(:,3,3,1:nice)
+         aero_target(:,in2a:fn2b) = aero_target(:,in2a:fn2b)-a_ncloudp%data(:,3,3,1:ncld)
+         IF (level == 5) aero_target(:,in2a:fn2b) = aero_target(:,in2a:fn2b)-a_nicep%data(:,3,3,1:nice)
          ! Apply to sectional data
-         CALL nudge_any_2d(nxp,nyp,nzp,nbins,zt,a_naerop,a_naerot,aero_target,dtlt,tau_ccn,nudge_ccn)
+         CALL nudge_any_2d(nxp,nyp,nzp,nbins,zt,a_naerop%data,a_naerot%data,aero_target,dtlt,tau_ccn,nudge_ccn)
       END IF
 
    END SUBROUTINE nudging

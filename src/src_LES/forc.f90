@@ -18,7 +18,7 @@
 !----------------------------------------------------------------------------
 !
 MODULE forc
-
+  USE mo_structured_datatypes, ONLY : FloatArray1d, FloatArray2d, FloatArray3d, FloatArray4d
   USE defs, ONLY      : cp
   USE radiation, ONLY : d4stream
   USE stat, ONLY      : sflg
@@ -83,7 +83,7 @@ CONTAINS
        ! 1-3 total mixing ratio is the only prognostic water variable.
        ! -------------------------------------------------
        IF ( case_name /= 'none' ) THEN
-          CALL case_forcing(nzp,nxp,nyp,zt,dzt,dzm,div,a_tp,a_rp,a_tt,a_rt)
+          CALL case_forcing(nzp,nxp,nyp,zt,dzt,dzm,div,a_tp%data,a_rp%data,a_tt%data,a_rt%data)
        END IF
 
     CASE (2)
@@ -96,14 +96,14 @@ CONTAINS
 
        SELECT CASE(level)
        CASE(1) 
-          CALL smoke_rad(nzp, nxp, nyp, dn0, a_rflx, zm, dzt,a_tt,a_rp)
+          CALL smoke_rad(nzp, nxp, nyp, dn0, a_rflx, zm, dzt, a_tt%data, a_rp%data)
        CASE(2)
-          CALL gcss_rad(nzp, nxp, nyp, xka, fr0, fr1, div, a_rc, dn0,     &
-                        a_rflx, zt, zm, dzt, a_tt, a_tp, a_rt, a_rp)
+          CALL gcss_rad(nzp, nxp, nyp, xka, fr0, fr1, div, a_rc%data, dn0,     &
+                        a_rflx, zt, zm, dzt, a_tt%data, a_tp%data, a_rt%data, a_rp%data)
 
        END SELECT
        IF (trim(case_name) == 'atex') CALL case_forcing(nzp, nxp, nyp,    &
-                                                        zt, dzt, dzm, div, a_tp, a_rp, a_tt, a_rt)
+                                                        zt, dzt, dzm, div, a_tp%data, a_rp%data, a_tt%data, a_rt%data)
     CASE (3)
        ! Radiation + large-scale forcing
        ! -------------------------------------
@@ -111,48 +111,48 @@ CONTAINS
 
           IF (level <= 3) THEN
              znc(:,:,:) = CCN
-             zrc(:,:,:) = a_rc(:,:,:) ! Cloud water only
+             zrc(:,:,:) = a_rc%data ! Cloud water only
              IF (level == 3 .AND. RadPrecipBins > 0) THEN ! Add precipitation (all or nothing)
-                znc(:,:,:) = znc(:,:,:) + a_npp(:,:,:)
-                zrc(:,:,:) = zrc(:,:,:) + a_rpp(:,:,:)
+                znc(:,:,:) = znc(:,:,:) + a_npp%data(:,:,:)
+                zrc(:,:,:) = zrc(:,:,:) + a_rpp%data(:,:,:)
              END IF
              CALL d4stream(nzp, nxp, nyp, cntlat, time_in, sst, sfc_albedo, &
-                           dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rv, zrc, znc, a_tt,  &
+                           dn0, pi0, pi1, dzt, a_pexnr%data, a_temp, a_rv%data, zrc, znc, a_tt%data,  &
                            a_rflx, a_sflx, a_fus, a_fds, a_fuir, a_fdir, albedo, radsounding=radsounding, &
                            useMcICA=useMcICA, ConstPrs=RadConstPress)
 
           ELSE IF (level == 4) THEN
-             znc(:,:,:) = SUM(a_ncloudp(:,:,:,:),DIM=4) ! Cloud droplets
-             zrc(:,:,:) = a_rc(:,:,:) ! Cloud and aerosol water
+             znc(:,:,:) = SUM(a_ncloudp%data(:,:,:,:),DIM=4) ! Cloud droplets
+             zrc(:,:,:) = a_rc%data ! Cloud and aerosol water
              IF (RadPrecipBins > 0) THEN ! Add precipitation bins
                 ! Water is the last species (nspec+1)
-                zrc(:,:,:) = zrc(:,:,:) + SUM(a_mprecpp(:,:,:,nspec*nprc+ira:nspec*nprc+min(RadPrecipBins,fra)),DIM=4)
-                znc(:,:,:) = znc(:,:,:) + SUM(a_nprecpp(:,:,:,ira:min(RadPrecipBins,fra)),DIM=4)
+                zrc(:,:,:) = zrc(:,:,:) + SUM(a_mprecpp%data(:,:,:,nspec*nprc+ira:nspec*nprc+min(RadPrecipBins,fra)),DIM=4)
+                znc(:,:,:) = znc(:,:,:) + SUM(a_nprecpp%data(:,:,:,ira:min(RadPrecipBins,fra)),DIM=4)
              END IF
              CALL d4stream(nzp, nxp, nyp, cntlat, time_in, sst, sfc_albedo, &
-                           dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rp, zrc, znc, a_tt,  &
+                           dn0, pi0, pi1, dzt, a_pexnr%data, a_temp, a_rp%data, zrc, znc, a_tt%data,  &
                            a_rflx, a_sflx, a_fus, a_fds, a_fuir, a_fdir, albedo, radsounding=radsounding, &
                            useMcICA=useMcICA, ConstPrs=RadConstPress)
 
           ELSE IF (level == 5) THEN
-             znc(:,:,:) = SUM(a_ncloudp(:,:,:,:),DIM=4) ! Cloud droplets
-             zrc(:,:,:) = a_rc(:,:,:) ! Cloud and aerosol water
+             znc(:,:,:) = SUM(a_ncloudp%data(:,:,:,:),DIM=4) ! Cloud droplets
+             zrc(:,:,:) = a_rc%data ! Cloud and aerosol water
              IF (RadPrecipBins > 0) THEN ! Add precipitation bins
                 ! Water is the last species (nspec+1)
-                zrc(:,:,:) = zrc(:,:,:) + SUM(a_mprecpp(:,:,:,nspec*nprc+ira:nspec*nprc+min(RadPrecipBins,fra)),DIM=4)
-                znc(:,:,:) = znc(:,:,:) + SUM(a_nprecpp(:,:,:,ira:min(RadPrecipBins,fra)),DIM=4)
+                zrc(:,:,:) = zrc(:,:,:) + SUM(a_mprecpp%data(:,:,:,nspec*nprc+ira:nspec*nprc+min(RadPrecipBins,fra)),DIM=4)
+                znc(:,:,:) = znc(:,:,:) + SUM(a_nprecpp%data(:,:,:,ira:min(RadPrecipBins,fra)),DIM=4)
              END IF
-             zni(:,:,:) = SUM(a_nicep(:,:,:,:),DIM=4) ! Ice
-             zri(:,:,:) = a_ri(:,:,:) ! Ice (no aerosol ice?)
+             zni(:,:,:) = SUM(a_nicep%data(:,:,:,:),DIM=4) ! Ice
+             zri(:,:,:) = a_ri%data ! Ice (no aerosol ice?)
              CALL d4stream(nzp, nxp, nyp, cntlat, time_in, sst, sfc_albedo, &
-                           dn0, pi0, pi1, dzt, a_pexnr, a_temp, a_rp, zrc, znc, a_tt,  &
+                           dn0, pi0, pi1, dzt, a_pexnr%data, a_temp, a_rp%data, zrc, znc, a_tt%data,  &
                            a_rflx, a_sflx, a_fus, a_fds, a_fuir, a_fdir, albedo, ice=zri,nice=zni,radsounding=radsounding, &
                            useMcICA=useMcICA, ConstPrs=RadConstPress)
 
           END IF
 
           IF ( case_name /= 'none') THEN
-             CALL case_forcing(nzp,nxp,nyp,zt,dzt,dzm,div,a_tp,a_rp,a_tt,a_rt)
+             CALL case_forcing(nzp,nxp,nyp,zt,dzt,dzm,div,a_tp%data,a_rp%data,a_tt%data,a_rt%data)
           END IF 
 
        ELSE
@@ -160,8 +160,8 @@ CONTAINS
           CALL appl_abort(0)
        END IF
     CASE (4)
-       CALL bellon(nzp, nxp, nyp, a_rflx, a_sflx, zt, dzt, dzm, a_tt, a_tp,&
-                   a_rt, a_rp, a_ut, a_up, a_vt, a_vp)
+       CALL bellon(nzp, nxp, nyp, a_rflx, a_sflx, zt, dzt, dzm, a_tt%data, a_tp%data,&
+                   a_rt%data, a_rp%data, a_ut, a_up, a_vt, a_vp)
     END SELECT 
 
   END SUBROUTINE forcings

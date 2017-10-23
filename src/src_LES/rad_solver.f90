@@ -190,22 +190,22 @@ CONTAINS
       IF ( solar ) THEN
          !fq0 = 0.
          !fq1 = 0.
-         !IF(t0/u0 < 300)
-         fq0 = exp ( - t0 / u0 ) !Stopping denormal values AZ
-         !IF(t0/u0 < 300)
+         !IF(t0/u0 < 300) fq0 = exp ( - t0 / u0 ) !Stopping denormal values AZ
+         !IF(t0/u0 < 300) fq1 = exp ( - t1 / u0 )
+         fq0 = exp ( - t0 / u0 )
          fq1 = exp ( - t1 / u0 )
       ELSE
          fq0 = 1.0
          !fq1 = 0.
-         !IF(dt/u0 < 300)
+         !IF(dt/u0 < 300) fq1 = exp ( - dt / u0 )
          fq1 = exp ( - dt / u0 )
       END IF
       !x = 0.
       !y = 0.
-      !IF (fk1*dt < 300)
-       x = exp ( - fk1 * dt )
-      !IF (fk2*dt < 300)
-       y = exp ( - fk2 * dt )
+      !IF (fk1*dt < 300) x = exp ( - fk1 * dt )
+      !IF (fk2*dt < 300) y = exp ( - fk2 * dt )
+      x = exp ( - fk1 * dt )
+      y = exp ( - fk2 * dt )
       DO i = 1, 4
          zz(i,1) = z1(i) * fq0
          zz(i,2) = z1(i) * fq1
@@ -237,8 +237,8 @@ CONTAINS
       fk1 = 4.7320545
       fk2 = 1.2679491
       !y = 0.
-      !IF( (t1-t0)/u0 < 300)
-      y = exp ( - ( t1 - t0 ) / u0 ) !Stop denormal AZ
+      !IF( (t1-t0)/u0 < 300)  y = exp ( -   ( t1 - t0 ) / u0 ) !Stop denormal AZ
+      y = exp ( -   ( t1 - t0 ) / u0 )
       fw = 0.5 * f0
       DO i = 1, 4
          IF ( solar ) THEN
@@ -266,10 +266,11 @@ CONTAINS
       dt = t1 - t0
       !x = 0.
       !y = 0.
-      !IF (fk1*dt < 300)
-      x = exp ( - fk1 * dt ) !stop denormal AZ
-      !IF (fk2*dt < 300)
-       y = exp ( - fk2 * dt )
+      !IF (fk1*dt < 300)  x = exp ( - fk1 * dt ) !stop denormal AZ
+      !IF (fk2*dt < 300) y = exp ( - fk2 * dt )
+
+      x = exp ( - fk1 * dt )
+      y = exp ( - fk2 * dt )
 
       aa(1,4,1) = y
       aa(2,3,1) = x
@@ -392,8 +393,8 @@ CONTAINS
          v1 = 0.2113247 * asbs
          v2 = 0.7886753 * asbs
          !v3 = 0.
-         !IF (t(nv)/u0(1) < 300)
-         v3 = asbs * u0(1) * f0(1) * exp ( - t(nv) / u0(1) ) !Stop denormal AZ
+         !IF (t(nv)/u0(1) < 300) v3 = asbs * u0(1) * f0(1) * exp ( - t(nv) / u0(1) ) !Stop denormal AZ
+         v3 = asbs * u0(1) * f0(1) * exp ( - t(nv) / u0(1) )
       ELSE
          v1 = 0.2113247 * ( 1.0 - ee )
          v2 = 0.7886753 * ( 1.0 - ee )
@@ -689,9 +690,9 @@ CONTAINS
             x(2) = 1.0
             !x(3) = 0.0
             !x(4) = 0.0
-            !IF (fk1(1)*t(1) < 300)
-            x(3) = exp ( - fk1(1) * t(1) ) !stop denormal values AZ
-            !IF (fk2(1)*t(1) < 300)
+            !IF (fk1(1)*t(1) < 300) x(3) = exp ( - fk1(1) * t(1) ) !stop denormal values AZ
+            !IF (fk2(1)*t(1) < 300) x(4) = exp ( - fk2(1) * t(1) )
+            x(3) = exp ( - fk1(1) * t(1) )
             x(4) = exp ( - fk2(1) * t(1) )
             kk = 1
             xy = 1.0
@@ -700,16 +701,16 @@ CONTAINS
             y1 = t(kk) - tkm1
             !x(1) = 0.0
             !x(2) = 0.0
-            !IF (fk2(kk)*y1 < 300)
+            !IF (fk2(kk)*y1 < 300) x(1) = exp ( - fk2(kk) * y1 ) !stop denormal values
+            !IF (fk1(kk)*y1 < 300) x(2) = exp ( - fk1(kk) * y1 )
             x(1) = exp ( - fk2(kk) * y1 )
-            !IF (fk1(kk)*y1 < 300)
             x(2) = exp ( - fk1(kk) * y1 )
             x(3) = 1.0
             x(4) = 1.0
             IF (solar) y1 = t(kk)
             !xy = 0.0
-            !IF (y1/u0a(kk) < 300)
-            xy =  exp ( - y1 / u0a(kk) ) !AZ
+            !IF (y1/u0a(kk) < 300) xy =  exp ( - y1 / u0a(kk) ) !AZ
+            xy =  exp ( - y1 / u0a(kk) )
          END IF
 
          IF (kk > 1) tkm1 = t(kk)

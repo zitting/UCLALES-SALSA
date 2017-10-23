@@ -101,9 +101,9 @@ CONTAINS
       ! Added by Juha
       SELECT CASE(level)
          CASE(1,2,3)
-            rx = a_rv
+            rx = a_rv%data
          CASE(4,5)
-            rx = a_rp
+            rx = a_rp%data
       END SELECT
 
       SELECT CASE(isfctyp)
@@ -116,7 +116,7 @@ CONTAINS
                DO i = 3, nxp-2
                   dtdz(i,j) = dthcon
                   drdz(i,j) = drtcon
-                  bfct(i,j) = g*zt(2)/(a_theta(2,i,j)*wspd(i,j)**2) ! TR: is this needed?
+                  bfct(i,j) = g*zt(2)/(a_theta%data(2,i,j)*wspd(i,j)**2) ! TR: is this needed?
                END DO
             END DO
             zs = zt(2)/zrough
@@ -133,9 +133,9 @@ CONTAINS
             usum = 0.
             DO j = 3, nyp-2
                DO i = 3, nxp-2
-                  dtdz(i,j) = a_theta(2,i,j) - sst*(p00/psrf)**rcp
+                  dtdz(i,j) = a_theta%data(2,i,j) - sst*(p00/psrf)**rcp
                   drdz(i,j) = rx(2,i,j) - rslf(psrf,sst) ! Juha: rx
-                  bfct(i,j) = g*zt(2)/(a_theta(2,i,j)*wspd(i,j)**2)
+                  bfct(i,j) = g*zt(2)/(a_theta%data(2,i,j)*wspd(i,j)**2)
                   usum = usum + a_ustar(i,j)
                END DO
             END DO
@@ -154,7 +154,7 @@ CONTAINS
             CALL get_swnds(nzp,nxp,nyp,usfc,vsfc,wspd,a_up,a_vp,umean,vmean)
             DO j = 3, nyp-2
                DO i = 3, nxp-2
-                  dtdz(i,j) = a_theta(2,i,j) - sst*(p00/psrf)**rcp
+                  dtdz(i,j) = a_theta%data(2,i,j) - sst*(p00/psrf)**rcp
                   drdz(i,j) = rx(2,i,j) - rslf(psrf,sst) ! Juha: rx
                   IF (ubmin > 0.) THEN
                      a_ustar(i,j) = sqrt(zrough)* wspd(i,j)
@@ -163,7 +163,7 @@ CONTAINS
                   END IF
                   a_tstar(i,j) =  dthcon * wspd(i,j)*dtdz(i,j)/a_ustar(i,j)
                   a_rstar(i,j) =  drtcon * wspd(i,j)*drdz(i,j)/a_ustar(i,j)
-                  bfct(i,j) = g*zt(2)/(a_theta(2,i,j)*wspd(i,j)**2)
+                  bfct(i,j) = g*zt(2)/(a_theta%data(2,i,j)*wspd(i,j)**2)
                END DO
             END DO
             CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar,  &
@@ -179,7 +179,7 @@ CONTAINS
             bfl(:) = 0.
             DO j = 3, nyp-2
                DO i = 3, nxp-2
-                  bfl(1) = bfl(1)+a_theta(2,i,j)
+                  bfl(1) = bfl(1)+a_theta%data(2,i,j)
                   bfl(2) = bfl(2)+rx(2,i,j) ! Juha: rx
                END DO
             END DO
@@ -200,7 +200,7 @@ CONTAINS
 
             DO j = 3, nyp-2
                DO i = 3, nxp-2
-                  wt_sfc(i,j) = Vbulk * (sst -a_theta(2,i,j))
+                  wt_sfc(i,j) = Vbulk * (sst -a_theta%data(2,i,j))
                   wq_sfc(i,j) = Vbulk * (rslf(psrf,sst) - rx(2,i,j)) ! Juha: rx
                   wspd(i,j)    = max(0.1,                                    &
                                  sqrt((a_up(2,i,j)+umean)**2+(a_vp(2,i,j)+vmean)**2))
@@ -291,14 +291,14 @@ CONTAINS
             DO j = 3, nyp-2
                DO i = 3, nxp-2
 
-                  dtdz(i,j) = a_theta(2,i,j) - sst1*(p00/psrf)**rcp
+                  dtdz(i,j) = a_theta%data(2,i,j) - sst1*(p00/psrf)**rcp
 
                   ff1 = 1.0
                   IF(W1 < 0.75) ff1 = W1/0.75
                   ! Flux of moisture is limited by water content.
-                  drdz(i,j) = a_rp(2,i,j) - ff1*rslf(psrf,min(sst1,280.))  !  a_rv changed to a_rp (by Zubair)
+                  drdz(i,j) = a_rp%data(2,i,j) - ff1*rslf(psrf,min(sst1,280.))  !  a_rv changed to a_rp (by Zubair)
                   !
-                  bfct(i,j) = g*zt(2)/(a_theta(2,i,j)*wspd(i,j)**2)
+                  bfct(i,j) = g*zt(2)/(a_theta%data(2,i,j)*wspd(i,j)**2)
                   usum = usum + a_ustar(i,j)
                END DO
             END DO
@@ -367,8 +367,8 @@ CONTAINS
       IF ( mcflg ) THEN
          !
          ! Juha: Take moisture flux to mass budged statistics
-         mctmp(:,:) = wq_sfc(:,:)*(0.5*(a_dn(1,:,:)+a_dn(2,:,:)))
-         CALL acc_massbudged(nzp,nxp,nyp,2,dtlt,dzt,a_dn,       &
+         mctmp(:,:) = wq_sfc(:,:)*(0.5*(a_dn%data(1,:,:)+a_dn%data(2,:,:)))
+         CALL acc_massbudged(nzp,nxp,nyp,2,dtlt,dzt,a_dn%data,       &
                              revap=mctmp,ApVdom=mc_ApVdom)
          !
          !

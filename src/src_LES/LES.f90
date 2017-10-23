@@ -156,9 +156,8 @@ CONTAINS
          nudge_u, tau_u, nudge_v, tau_v,  & ! Horozontal wind nudging
          nudge_ccn, tau_ccn    ! Aerosol number concentration nudging
 
-
       NAMELIST /version/  &
-               ver, author        ! Information about UCLALES-SALSA version and author
+         ver, author        ! Information about UCLALES-SALSA version and author
 
       ps = 0.
       ts = th00

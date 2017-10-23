@@ -73,22 +73,22 @@ CONTAINS
       SELECT CASE (level)
          CASE(2)
             IF (droplet_sedim)  &
-               CALL sedim_cd(nzp,nxp,nyp,a_theta,a_temp,a_rc,precip,a_rt,a_tt)
+               CALL sedim_cd(nzp,nxp,nyp,a_theta%data,a_temp,a_rc%data,precip,a_rt%data,a_tt%data)
          CASE(3)
-            CALL mcrph(nzp,nxp,nyp,dn0,a_theta,a_temp,a_rv,a_rsl,a_rc,a_rpp,   &
-                       a_npp,precip,a_rt,a_tt,a_rpt,a_npt)
+            CALL mcrph(nzp,nxp,nyp,dn0,a_theta%data,a_temp,a_rv%data,a_rsl%data,a_rc%data,a_rpp%data,   &
+                       a_npp%data,precip,a_rt%data,a_tt%data,a_rpt%data,a_npt%data)
          CASE(4,5)
             IF (level < 5) THEN
                sed_ice = .FALSE.; sed_snow = .FALSE.
             END IF
             nn = GetNcomp(prtcl)+1
-            CALL sedim_SALSA(nzp,nxp,nyp,nn,dtlt, a_temp, a_theta,                &
-                             a_naerop,  a_naerot,  a_maerop,  a_maerot,           &
-                             a_ncloudp, a_ncloudt, a_mcloudp, a_mcloudt,          &
-                             a_nprecpp, a_nprecpt, a_mprecpp, a_mprecpt,          &
-                             a_nicep,   a_nicet,   a_micep,   a_micet,            &
-                             a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,           &
-                             a_ustar, precip, snowin, a_tt                )
+            CALL sedim_SALSA(nzp,nxp,nyp,nn,dtlt, a_temp, a_theta%data,                &
+                             a_naerop%data,  a_naerot%data,  a_maerop%data,  a_maerot%data,           &
+                             a_ncloudp%data, a_ncloudt%data, a_mcloudp%data, a_mcloudt%data,          &
+                             a_nprecpp%data, a_nprecpt%data, a_mprecpp%data, a_mprecpt%data,          &
+                             a_nicep%data,   a_nicet%data,   a_micep%data,   a_micet%data,            &
+                             a_nsnowp%data,  a_nsnowt%data,  a_msnowp%data,  a_msnowt%data,           &
+                             a_ustar, precip, snowin, a_tt%data                )
       END SELECT
 
    END SUBROUTINE micro
@@ -606,9 +606,9 @@ CONTAINS
       !-------------------------------------------------------
       IF (sed_aero) THEN
 
-         CALL NumMassDivergence(n1,n2,n3,n4,nbins,tk,a_dn,1500.,naerop,maerop,dzt,nlim,andiv,amdiv)
+         CALL NumMassDivergence(n1,n2,n3,n4,nbins,tk,a_dn%data,1500.,naerop,maerop,dzt,nlim,andiv,amdiv)
        
-         CALL NumMassDepositionSlow(n1,n2,n3,n4,nbins,a_dn,1500.,tk,ustar,naerop,maerop,nlim,andep,amdep)
+         CALL NumMassDepositionSlow(n1,n2,n3,n4,nbins,a_dn%data,1500.,tk,ustar,naerop,maerop,nlim,andep,amdep)
        
          naerot = naerot - andiv
          naerot(2,:,:,:) = naerot(2,:,:,:) - andep
@@ -634,9 +634,9 @@ CONTAINS
 
       IF (sed_cloud) THEN
 
-         CALL NumMassDivergence(n1,n2,n3,n4,ncld,tk,a_dn,rhowa,ncloudp,mcloudp,dzt,nlim,cndiv,cmdiv)
+         CALL NumMassDivergence(n1,n2,n3,n4,ncld,tk,a_dn%data,rhowa,ncloudp,mcloudp,dzt,nlim,cndiv,cmdiv)
     
-         CALL NumMassDepositionSlow(n1,n2,n3,n4,ncld,a_dn,rhowa,tk,ustar,ncloudp,mcloudp,nlim,cndep,cmdep)
+         CALL NumMassDepositionSlow(n1,n2,n3,n4,ncld,a_dn%data,rhowa,tk,ustar,ncloudp,mcloudp,nlim,cndep,cmdep)
 
          ncloudt = ncloudt - cndiv
          ncloudt(2,:,:,:) = ncloudt(2,:,:,:) - cndep
@@ -662,9 +662,9 @@ CONTAINS
 
       IF (sed_ice) THEN
 
-         CALL NumMassDivergence(n1,n2,n3,n4,nice,tk,a_dn,rhoic,nicep,micep,dzt,prlim,indiv,imdiv)
+         CALL NumMassDivergence(n1,n2,n3,n4,nice,tk,a_dn%data,rhoic,nicep,micep,dzt,prlim,indiv,imdiv)
 
-         CALL NumMassDepositionSlow(n1,n2,n3,n4,nice,a_dn,rhoic,tk,ustar,nicep,micep,prlim,indep,imdep)
+         CALL NumMassDepositionSlow(n1,n2,n3,n4,nice,a_dn%data,rhoic,tk,ustar,nicep,micep,prlim,indep,imdep)
 
          nicet = nicet - indiv
          nicet(2,:,:,:) = nicet(2,:,:,:) - indep
@@ -691,7 +691,7 @@ CONTAINS
       ! ---------------------------------------------------------
       ! SEDIMENTATION/DEPOSITION OF FAST PRECIPITATING PARTICLES
       IF (sed_precp) THEN
-         CALL DepositionFast(n1,n2,n3,n4,nprc,tk,a_dn,rowt,nprecpp,mprecpp,tstep,dzt,prnt,prvt,remprc,prlim,rrate)
+         CALL DepositionFast(n1,n2,n3,n4,nprc,tk,a_dn%data,rowt,nprecpp,mprecpp,tstep,dzt,prnt,prvt,remprc,prlim,rrate)
        
          nprecpt(:,:,:,:) = nprecpt(:,:,:,:) + prnt(:,:,:,:)/tstep
          mprecpt(:,:,:,:) = mprecpt(:,:,:,:) + prvt(:,:,:,:)/tstep
@@ -717,7 +717,7 @@ CONTAINS
       END IF
     
       IF (sed_snow) THEN
-         CALL DepositionFast(n1,n2,n3,n4,nsnw,tk,a_dn,rowt,nsnowp,msnowp,tstep,dzt,srnt,srvt,remsnw,prlim,srate)
+         CALL DepositionFast(n1,n2,n3,n4,nsnw,tk,a_dn%data,rowt,nsnowp,msnowp,tstep,dzt,srnt,srvt,remsnw,prlim,srate)
            
          nsnowt(:,:,:,:) = nsnowt(:,:,:,:) + srnt(:,:,:,:)/tstep
          msnowt(:,:,:,:) = msnowt(:,:,:,:) + srvt(:,:,:,:)/tstep
@@ -755,7 +755,7 @@ CONTAINS
          mctmp(:,:) = mctmp(:,:) + SUM(remice(:,:,istr:iend),dim=3)
          istr = (ss-1)*nsnw; iend = ss*nsnw
          mctmp(:,:) = mctmp(:,:) + SUM(remsnw(:,:,istr:iend),dim=3)
-         CALL acc_massbudged(n1,n2,n3,3,tstep,dzt,a_dn,rdep=mctmp,ApVdom=mc_ApVdom)
+         CALL acc_massbudged(n1,n2,n3,3,tstep,dzt,a_dn%data,rdep=mctmp,ApVdom=mc_ApVdom)
       END IF !mcflg
       IF (sflg) CALL updtst(n1,'prc',1,v1,1)
       ! Aerosol removal statistics
@@ -779,9 +779,9 @@ CONTAINS
       REAL, INTENT(in) :: numc(n1,n2,n3,nn)    ! Particle number concentration
       REAL, INTENT(in) :: mass(n1,n2,n3,nn*n4) ! Particle mass mixing ratio
       REAL, INTENT(in) :: dzt(n1)              ! Inverse of grid level thickness
-      REAL, INTENT(IN) :: clim                ! Concentration limit
-      REAL, INTENT(OUT) :: flxdivm(n1,n2,n3,nn*n4)
-      REAL, INTENT(OUT) :: flxdivn(n1,n2,n3,nn)
+      REAL, INTENT(in) :: clim                ! Concentration limit
+      REAL, INTENT(out) :: flxdivm(n1,n2,n3,nn*n4)
+      REAL, INTENT(out) :: flxdivn(n1,n2,n3,nn)
 
       INTEGER :: i,j,k,kp1
       INTEGER :: bin,ss,bs
@@ -1032,7 +1032,7 @@ CONTAINS
                   Kn = lambda/rwet
                  ! GG = 1 + Kn*A
                  ! IF(C/Kn < 300) GG = 1.+ Kn*(A+B*exp(-C/Kn)) !fix? AZ
-                 GG = 1.+ Kn*(A+B*exp(-C/Kn))
+                  GG = 1.+ Kn*(A+B*exp(-C/Kn))
                   vc = terminal_vel(rwet,pdn,adn(k,i,j),avis,GG)
 
                   ! Rain rate statistics: removal of water from the current bin is accounted for

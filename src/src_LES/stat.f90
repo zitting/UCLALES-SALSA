@@ -549,13 +549,13 @@ CONTAINS
 
       SELECT CASE(level)
          CASE(1,2,3)
-            rxt  = a_rp
-            xrpp = a_rpp
-            xnpp = a_npp
+            rxt  = a_rp%data
+            xrpp = a_rpp%data
+            xnpp = a_npp%data
          CASE(4,5)
-            rxt  = a_rp + a_rc
-            xrpp = a_srp
-            xnpp = a_snrp
+            rxt  = a_rp%data + a_rc%data
+            xrpp = a_srp%data
+            xnpp = a_snrp%data
       END SELECT
 
       IF (nsmp == 0.) fsttm = time
@@ -564,7 +564,7 @@ CONTAINS
       !
       ! profile statistics
       !
-      CALL accum_stat(nzp, nxp, nyp, a_up, a_vp, a_wp, a_tp, a_press, umean, &
+      CALL accum_stat(nzp, nxp, nyp, a_up, a_vp, a_wp, a_tp%data, a_press%data, umean, &
                       vmean,th00)
       IF (iradtyp == 3) THEN
          CALL accum_rad(nzp, nxp, nyp, a_rflx, sflx=a_sflx, sup=a_fus, sdwn=a_fds, &
@@ -574,19 +574,19 @@ CONTAINS
       END IF
       IF (level >= 1) CALL accum_lvl1(nzp, nxp, nyp, rxt)
       IF (level >= 2) CALL accum_lvl2(nzp, nxp, nyp, th00, dn0, zm, a_wp,        &
-                                     a_theta, a_tp, a_rc, rxt   )
-      IF (level >= 3) CALL accum_lvl3(nzp, nxp, nyp, dn0, zm, a_rc, xrpp,  &
-                                     xnpp, precip, CCN                    )
+                                      a_theta%data, a_tp%data, a_rc%data, rxt   )
+      IF (level >= 3) CALL accum_lvl3(nzp, nxp, nyp, dn0, zm, a_rc%data, xrpp,  &
+                                      xnpp, precip, CCN                    )
       IF (level >= 4) CALL accum_lvl4(nzp, nxp, nyp)
        !for Salsa output in ps files .. by Zubair Maalick
 
       !
       ! scalar statistics
       !
-      CALL set_ts(nzp, nxp, nyp, a_wp, a_theta, dn0, zt,zm,dzt,dzm,th00,time)
+      CALL set_ts(nzp, nxp, nyp, a_wp, a_theta%data, dn0, zt,zm,dzt,dzm,th00,time)
       IF ( level >= 1 ) CALL ts_lvl1(nzp, nxp, nyp, dn0, zt, dzm, rxt)
-      IF ( level >= 2 ) CALL ts_lvl2(nzp, nxp, nyp, a_rc, zt)
-      IF ( level >= 4 ) CALL ts_lvl4(nzp, nxp, nyp, a_rc)
+      IF ( level >= 2 ) CALL ts_lvl2(nzp, nxp, nyp, a_rc%data, zt)
+      IF ( level >= 4 ) CALL ts_lvl4(nzp, nxp, nyp, a_rc%data)
 
       CALL write_ts
 
@@ -614,22 +614,22 @@ CONTAINS
              ! No clouds or precipitation
          ELSE IF (level == 2) THEN
             ! Clouds available
-            rxt = a_rc
+            rxt = a_rc%data
             rnt = CCN
          ELSE IF (level == 3) THEN
             ! Clouds and precipitation available
-            rxt = a_rc
+            rxt = a_rc%data
             rnt = CCN
-            xrpp = a_rpp
-            xnpp = a_npp
+            xrpp = a_rpp%data
+            xnpp = a_npp%data
          ELSE IF (level == 4 .OR. level == 5) THEN
             ! Levels 4 and 5
-            rxt = a_rc
-            rnt = SUM(a_ncloudp,DIM=4)
-            xrpp = a_srp
-            xnpp = a_snrp
+            rxt = a_rc%data
+            rnt = SUM(a_ncloudp%data,DIM=4)
+            xrpp = a_srp%data
+            xnpp = a_snrp%data
          END IF
-         CALL set_cs_warm(nzp,nxp,nyp,rxt,rnt,xrpp,xnpp,a_theta,dn0,zm,zt,dzm,xt,yt,time)
+         CALL set_cs_warm(nzp,nxp,nyp,rxt,rnt,xrpp,xnpp,a_theta%data,dn0,zm,zt,dzm,xt,yt,time)
       END IF
 
    END SUBROUTINE statistics
@@ -1461,19 +1461,19 @@ CONTAINS
       ! Bin number concentrations
       ! -------------------------------------------
       DO bb = in1a, fn2a
-         CALL get_avg3(n1,n2,n3,a_naerop(:,:,:,bb),a3_a(:,bb))
+         CALL get_avg3(n1,n2,n3,a_naerop%data(:,:,:,bb),a3_a(:,bb))
       END DO
       DO bb = in2b, fn2b
-         CALL get_avg3(n1,n2,n3,a_naerop(:,:,:,bb),a3_b(:,bb-fn2a))
+         CALL get_avg3(n1,n2,n3,a_naerop%data(:,:,:,bb),a3_b(:,bb-fn2a))
       END DO
       DO bb = ica%cur, fca%cur
-         CALL get_avg3(n1,n2,n3,a_ncloudp(:,:,:,bb),a4_a(:,bb))
+         CALL get_avg3(n1,n2,n3,a_ncloudp%data(:,:,:,bb),a4_a(:,bb))
       END DO
       DO bb = icb%cur, fcb%cur
-         CALL get_avg3(n1,n2,n3,a_ncloudp(:,:,:,bb),a4_b(:,bb-fca%cur))
+         CALL get_avg3(n1,n2,n3,a_ncloudp%data(:,:,:,bb),a4_b(:,bb-fca%cur))
       END DO
       DO bb = ira, fra
-         CALL get_avg3(n1,n2,n3,a_nprecpp(:,:,:,bb),a5(:,bb))
+         CALL get_avg3(n1,n2,n3,a_nprecpp%data(:,:,:,bb),a5(:,bb))
       END DO
 
       svctr_aa(:,:,1) = svctr_aa(:,:,1) + a3_a(:,:)
@@ -1546,16 +1546,16 @@ CONTAINS
       END IF
 
       ! Liquid water mixing ratio
-      CALL get_avg3(n1,n2,n3,a_rc,a2(:,1))
+      CALL get_avg3(n1,n2,n3,a_rc%data,a2(:,1))
 
       ! Precipitation mixing ratio
-      CALL get_avg3(n1,n2,n3,a_srp,a2(:,2))
+      CALL get_avg3(n1,n2,n3,a_srp%data,a2(:,2))
 
       ! Water vapor mixing ratio
-      CALL get_avg3(n1,n2,n3,a_rp,a2(:,3))
+      CALL get_avg3(n1,n2,n3,a_rp%data,a2(:,3))
 
       ! Relative humidity
-      CALL get_avg3(n1,n2,n3,a_rh,a2(:,4))
+      CALL get_avg3(n1,n2,n3,a_rh%data,a2(:,4))
       a2(:,4) = a2(:,4)*100.0 ! RH in %
 
       svctr_b(:,37:40) = svctr_b(:,37:40) + a2(:,1:4)
@@ -1566,7 +1566,7 @@ CONTAINS
          ! Total cloud droplets
          CALL bulkNumc('cloud','ab',a1)
          ! Which columns should be included
-         cloudmask(1,:,:)=ANY( (a1>nlim .AND. a_rc>1.e-5), DIM=1)
+         cloudmask(1,:,:)=ANY( (a1>nlim .AND. a_rc%data>1.e-5), DIM=1)
          ! Fill array
          DO ii = 2, n1
              cloudmask(ii,:,:)=cloudmask(1,:,:)
@@ -1596,10 +1596,10 @@ CONTAINS
          svctr_b(:,41:44) = svctr_b(:,41:44) + a2(:,1:4)
 
          ! Cloud liquid water mixing ratio
-         CALL get_avg3(n1,n2,n3,a_rc,a2(:,1),cond=cloudmask)
+         CALL get_avg3(n1,n2,n3,a_rc%data,a2(:,1),cond=cloudmask)
 
          ! Liquid water potential temperature
-         CALL get_avg3(n1,n2,n3,a_tp,a2(:,2),cond=cloudmask)
+         CALL get_avg3(n1,n2,n3,a_tp%data,a2(:,2),cond=cloudmask)
 
          ! Save
          svctr_b(:,45:46) = svctr_b(:,45:46) + a2(:,1:2)

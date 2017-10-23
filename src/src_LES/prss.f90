@@ -61,7 +61,7 @@ CONTAINS
       ! ------
       ! Pressure Solve
       !
-      CALL poiss(nzp,nxp,nyp,ix,iy,a_up,a_vp,a_wp,a_pexnr,a_press,dn0,th00,dzt, &
+      CALL poiss(nzp,nxp,nyp,ix,iy,a_up,a_vp,a_wp,a_pexnr%data,a_press%data,dn0,th00,dzt, &
                  dzm,dxi,dyi,dtlt,s1,wsavex,wsavey)
       CALL ae1mm(nzp,nxp,nyp,a_wp,awpbar)
       !
@@ -81,7 +81,7 @@ CONTAINS
          CALL get_diverg(nzp,nxp,nyp,ix,iy,s1,a_up,a_vp,a_wp,dn0,dzt,dxi,dyi,  &
                          dtlt,mxdiv)
          CALL fill_scalar(2,mxdiv)
-         CALL prs_cor(nzp,nxp,nyp,a_pexnr,a_up,a_vp,a_wp,dzm,dxi,dyi,th00)
+         CALL prs_cor(nzp,nxp,nyp,a_pexnr%data,a_up,a_vp,a_wp,dzm,dxi,dyi,th00)
          CALL chk_tsplt(nzp,nxp,nyp,a_up,a_vp,a_wp,a_uc,a_vc,a_wc)
       END IF
       DEALLOCATE (s1)
@@ -464,8 +464,8 @@ CONTAINS
 
       CALL velset(nzp,nxp,nyp,a_up,a_vp,a_wp)
       CALL velset(nzp,nxp,nyp,a_uc,a_vc,a_wc)
-      CALL sclrset('grad',nzp,nxp,nyp,a_pexnr,dzm)
-      CALL sclrset('grad',nzp,nxp,nyp,a_press,dzm)
+      CALL sclrset('grad',nzp,nxp,nyp,a_pexnr%data,dzm)
+      CALL sclrset('grad',nzp,nxp,nyp,a_press%data,dzm)
 
    END SUBROUTINE velocity_bcs
 

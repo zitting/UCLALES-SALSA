@@ -51,20 +51,20 @@ CONTAINS
 
     SELECT CASE (level)
     CASE DEFAULT
-       CALL drythrm(nzp,nxp,nyp,a_pexnr,a_press,a_tp,a_theta,a_temp,pi0,   &
-                    pi1,th00,a_rp,a_rv)
+       CALL drythrm(nzp,nxp,nyp,a_pexnr%data,a_press%data,a_tp%data,a_theta%data,a_temp,pi0,   &
+                    pi1,th00,a_rp%data,a_rv%data)
     CASE (2)
-       CALL satadjst(nzp,nxp,nyp,a_pexnr,a_press,a_tp,a_theta,a_temp,pi0,  &
-                     pi1,th00,a_rp,a_rv,a_rc,a_rsl)
+       CALL satadjst(nzp,nxp,nyp,a_pexnr%data,a_press%data,a_tp%data,a_theta%data,a_temp,pi0,  &
+                     pi1,th00,a_rp%data,a_rv%data,a_rc%data,a_rsl%data)
     CASE (3)
-       CALL satadjst3(nzp,nxp,nyp,a_pexnr,a_press,a_tp,a_theta,a_temp,pi0, &
-                      pi1,th00,a_rp,a_rv,a_rc,a_rsl,a_rpp)
+       CALL satadjst3(nzp,nxp,nyp,a_pexnr%data,a_press%data,a_tp%data,a_theta%data,a_temp,pi0, &
+                      pi1,th00,a_rp%data,a_rv%data,a_rc%data,a_rsl%data,a_rpp%data)
     CASE (4)
-       CALL SALSAthrm(level,nzp,nxp,nyp,a_pexnr,pi0,pi1,th00,a_rp,a_tp,a_theta, &
-                      a_temp,a_press,a_rsl,a_rh,a_rc,a_srp)
+       CALL SALSAthrm(level,nzp,nxp,nyp,a_pexnr%data,pi0,pi1,th00,a_rp%data,a_tp%data,a_theta%data, &
+                      a_temp,a_press%data,a_rsl%data,a_rh%data,a_rc%data,a_srp%data)
     CASE (5)
-       CALL SALSAthrm(level,nzp,nxp,nyp,a_pexnr,pi0,pi1,th00,a_rp,a_tp,a_theta, &
-                      a_temp,a_press,a_rsl,a_rh,a_rc,a_srp,a_ri,a_rsi,a_rhi,a_srs)
+       CALL SALSAthrm(level,nzp,nxp,nyp,a_pexnr%data,pi0,pi1,th00,a_rp%data,a_tp%data,a_theta%data, &
+                      a_temp,a_press%data,a_rsl%data,a_rh%data,a_rc%data,a_srp%data,a_ri%data,a_rsi%data,a_rhi%data,a_srs%data)
     END SELECT
 
   END SUBROUTINE thermo
@@ -152,7 +152,7 @@ CONTAINS
              END IF
 
              ! True air density
-             a_dn(k,i,j) = p(k,i,j)/(R*tk(k,i,j))
+             a_dn%data(k,i,j) = p(k,i,j)/(R*tk(k,i,j))
 
           END DO
        END DO
