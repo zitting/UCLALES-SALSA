@@ -21,6 +21,7 @@ MODULE grid
 
    USE ncio, ONLY : open_nc, define_nc
    USE mo_structured_datatypes, ONLY : FloatArray1d, FloatArray2d, FloatArray3d, FloatArray4d
+   USE classFieldArray
    USE class_componentIndex, ONLY : componentIndex
 
    IMPLICIT NONE
@@ -53,7 +54,7 @@ MODULE grid
    REAL    :: distim = 300.0      ! dissipation timescale
 
    REAL    :: sst = 283.   ! Surface temperature      added by Zubair Maalick
-   REAL    :: W1  = 0.9   ! Water content
+   REAL    :: W1  = 0.9    ! Water content
    REAL    :: W2  = 0.9
    REAL    :: W3  = 0.9
 
@@ -188,6 +189,13 @@ MODULE grid
    REAL :: mc_Adom           ! Domain surface area
    REAL :: mc_ApVdom         ! Volume/Area
 
+   CLASS(*), POINTER :: dummy, dummyt, dummyp !dummy pointers for field arrays
+
+   TYPE(FloatArray3d), POINTER :: testi_diag
+
+   TYPE(FieldArray) :: ProgF
+   TYPE(FieldArray) :: DiagF
+
    !
    INTEGER :: nscl = 1
    INTEGER, SAVE :: ncid0,ncid_s
@@ -217,6 +225,9 @@ CONTAINS
       INTEGER :: nc
       REAL :: zeros3d(nzp,nxp,nyp)  ! array to help allocate 3d FloatArrays to zero -AZ
       zeros3d(:,:,:) = 0.
+
+      ProgF = FieldArray()
+      DiagF = FieldArray()
 
       ! Juha: Number of prognostic tracers for SALSA
       !            Aerosol bins + Cloud bins + gas compound tracers
@@ -252,8 +263,16 @@ CONTAINS
       a_wt(:,:,:) = 0.
 
       a_theta = FloatArray3D(zeros3d,store=.TRUE.)
+      dummy => a_theta
+      CALL DiagF%NewField("theta","Potential temperature","K","tttt",.TRUE.,dummy)
+
       a_pexnr = FloatArray3D(zeros3d,store=.TRUE.)
+      dummy => a_pexnr
+      CALL DiagF%NewField("pexnr"," "," "," ",.FALSE.,dummy)
+
       a_press = FloatArray3D(zeros3d,store=.TRUE.)
+      dummy => a_press
+      CALL DiagF%NewField("press","Pressure","Pa","tttt",.TRUE.,dummy)
 
       memsize = memsize + nxyzp*13 !
 
@@ -277,7 +296,11 @@ CONTAINS
       ALLOCATE (a_temp(nzp,nxp,nyp),a_temp0(nzp,nxp,nyp))
       a_temp(:,:,:) = 0.
       a_temp0(:,:,:) = 0.
+
       a_rsl = FloatArray3D(zeros3d,store=.TRUE.)
+      dummy => a_rsl
+      CALL DiagF%NewField("rsl"," "," "," ",.FALSE.,dummy)
+
       memsize = memsize + nxyzp*3
 
       ! Juha: Stuff that's allocated if SALSA is not used
@@ -286,9 +309,15 @@ CONTAINS
 
          IF (level >= 0) THEN
             a_rv = FloatArray3D(zeros3d,store=.TRUE.)
+            dummy => a_rv
+            CALL DiagF%NewField("rv"," "," "," ",.FALSE.,dummy)
+
             memsize = memsize + nxyzp
             IF (level > 1) THEN
                a_rc = FloatArray3D(zeros3d,store=.TRUE.)
+               dummy => a_rc
+               CALL DiagF%NewField("rc"," "," "," ",.FALSE.,dummy)
+
                memsize = memsize + nxyzp
             END IF
          END IF
@@ -304,20 +333,37 @@ CONTAINS
 
          a_tp = FloatArray3D(a_sclrp(:,:,:,1),store=.FALSE.)
          a_tt = FloatArray3D(a_sclrt(:,:,:,1),store=.FALSE.)
+         dummyp => a_tp
+         dummyt => a_tt
+         CALL ProgF%NewField("t","Liquid water potential temperature","K","tttt",.TRUE.,dummyp,dummyt)
 
          IF (level >= 0) THEN
             a_rp = FloatArray3D(a_sclrp(:,:,:,2),store=.FALSE.)
             a_rt = FloatArray3D(a_sclrt(:,:,:,2),store=.FALSE.)
+            dummyp => a_rp
+            dummyt => a_rt
+            CALL ProgF%NewField("r","Rain-water mixing ratio","kg/kg","tttt",.TRUE.,dummyp,dummyt)
          END IF
+
          IF (level >= 3) THEN
             a_rpp = FloatArray3D(a_sclrp(:,:,:,3),store=.FALSE.)
             a_rpt = FloatArray3D(a_sclrt(:,:,:,3),store=.FALSE.)
+            dummyp => a_rpp
+            dummyt => a_rpt
+            CALL ProgF%NewField("rp"," "," "," ",.FALSE.,dummyp,dummyt)
+
             a_npp = FloatArray3D(a_sclrp(:,:,:,4),store=.FALSE.)
             a_npt = FloatArray3D(a_sclrt(:,:,:,4),store=.FALSE.)
+            dummyp => a_npp
+            dummyt => a_npt
+            CALL ProgF%NewField("np"," "," "," ",.FALSE.,dummyp,dummyt)
          END IF
          IF (isgstyp > 1) THEN
             a_qp = FloatArray3D(a_sclrp(:,:,:,nscl - naddsc),store=.FALSE.)
             a_qt = FloatArray3D(a_sclrt(:,:,:,nscl - naddsc),store=.FALSE.)
+            dummyp => a_qp
+            dummyt => a_qt
+            CALL ProgF%NewField("q"," "," "," ",.FALSE.,dummyp,dummyt)
          END IF
 
       !Juha: Stuff that's allocated when SALSA is used
@@ -329,20 +375,50 @@ CONTAINS
          ALLOCATE (a_nactd(nzp,nxp,nyp,ncld), a_vactd(nzp,nxp,nyp,(nc+1)*ncld)  )
 
          a_rc = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_rc
+         CALL DiagF%NewField("rc"," "," "," ",.FALSE.,dummy)
+
          a_srp = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_srp
+         CALL DiagF%NewField("srp"," "," "," ",.FALSE.,dummy)
+
          a_snrp = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_snrp
+         CALL DiagF%NewField("snrp"," "," "," ",.FALSE.,dummy)
+
          a_rh = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_rh
+         CALL DiagF%NewField("rh","Relative humidity","%","tttt",.TRUE.,dummy)
+
          a_dn = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_dn
+         CALL DiagF%NewField("dn"," "," "," ",.FALSE.,dummy)
+
          a_nactd(:,:,:,:) = 0.
          a_vactd(:,:,:,:) = 0.
          memsize = memsize + 4*nxyzp + 3*nbins*nxyzp + 3*ncld*nxyzp + nxyzp*(nc+1)*ncld + 2*nprc*nxyzp
 
          ! ice'n'snow
          a_ri = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_ri
+         CALL DiagF%NewField("ri"," "," "," ",.FALSE.,dummy)
+
          a_rsi = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_rsi
+         CALL DiagF%NewField("rsi"," "," "," ",.FALSE.,dummy)
+
          a_rhi = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_rhi
+         CALL DiagF%NewField("rhi"," "," "," ",.FALSE.,dummy)
+
          a_srs = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_srs
+         CALL DiagF%NewField("srs"," "," "," ",.FALSE.,dummy)
+
          a_snrs = FloatArray3D(zeros3d,store=.TRUE.)
+         dummy => a_snrs
+         CALL DiagF%NewField("snrs"," "," "," ",.FALSE.,dummy)
+
          memsize = memsize + 5*nxyzp + 2*nice*nxyzp + 2*nsnw*nxyzp
 
          ! Total number of prognostic scalars: temp + total water + SALSA + tke(?)
@@ -355,62 +431,105 @@ CONTAINS
 
          a_tp = FloatArray3D(a_sclrp(:,:,:,1),store=.FALSE.)
          a_tt = FloatArray3D(a_sclrt(:,:,:,1),store=.FALSE.)
+         dummyp => a_tp
+         dummyt => a_tt
+         CALL ProgF%NewField("t","Liquid water potential temperature","K","tttt",.TRUE.,dummyp,dummyt)
          a_rp = FloatArray3D(a_sclrp(:,:,:,2),store=.FALSE.)
          a_rt = FloatArray3D(a_sclrt(:,:,:,2),store=.FALSE.)
+         dummyp => a_rp
+         dummyt => a_rt
+         CALL ProgF%NewField("r","Rain-water mixing ratio","kg/kg","tttt",.TRUE.,dummyp,dummyt)
 
          IF (isgstyp > 1) THEN
             a_qp = FloatArray3D(a_sclrp(:,:,:,nscl - nsalsa),store=.FALSE.)
             a_qt = FloatArray3D(a_sclrt(:,:,:,nscl - nsalsa),store=.FALSE.)
+            dummyp => a_qp
+            dummyt => a_qt
+            CALL ProgF%NewField("q","Total water mixing ratio","kg/kg","tttt",.TRUE.,dummyp,dummyt)
          END IF
 
          !JT: Set the pointers for prognostic SALSA variables (levels 4 & 5)
          zz = nscl-nsalsa
          a_naerop = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+nbins),store=.FALSE.)
          a_naerot = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+nbins),store=.FALSE.)
+         dummyp => a_naerop
+         dummyt => a_naerot
+         CALL ProgF%NewField("naero"," "," "," ",.FALSE.,dummyp,dummyt)
+
 
          zz = zz+nbins
          a_maerop = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*nbins),store=.FALSE.)
          a_maerot = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*nbins),store=.FALSE.)
+         dummyp => a_maerop
+         dummyt => a_maerot
+         CALL ProgF%NewField("maero"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+(nc+1)*nbins
          a_ncloudp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+ncld),store=.FALSE.)
          a_ncloudt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+ncld),store=.FALSE.)
+         dummyp => a_ncloudp
+         dummyt => a_ncloudt
+         CALL ProgF%NewField("ncloud"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+ncld
          a_mcloudp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*ncld),store=.FALSE.)
          a_mcloudt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*ncld),store=.FALSE.)
+         dummyp => a_mcloudp
+         dummyt => a_mcloudt
+         CALL ProgF%NewField("mcloud"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+(nc+1)*ncld
          a_nprecpp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+nprc),store=.FALSE.)
          a_nprecpt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+nprc),store=.FALSE.)
+         dummyp => a_nprecpp
+         dummyt => a_nprecpt
+         CALL ProgF%NewField("nprecp"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+nprc
          a_mprecpp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*nprc),store=.FALSE.)
          a_mprecpt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*nprc),store=.FALSE.)
+         dummyp => a_mprecpp
+         dummyt => a_mprecpt
+         CALL ProgF%NewField("mprecp"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+(nc+1)*nprc
          a_gaerop = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+5),store=.FALSE.)
          a_gaerot = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+5),store=.FALSE.)
+         dummyp => a_gaerop
+         dummyt => a_gaerot
+         CALL ProgF%NewField("gaero"," "," "," ",.FALSE.,dummyp,dummyt)
 
          ! Level 5
          zz = zz+5
          a_nicep = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+nice),store=.FALSE.)
          a_nicet = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+nice),store=.FALSE.)
+         dummyp => a_nicep
+         dummyt => a_nicet
+         CALL ProgF%NewField("nice"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+nice
 
          a_micep = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*nice),store=.FALSE.)
          a_micet = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*nice),store=.FALSE.)
+         dummyp => a_micep
+         dummyt => a_micet
+         CALL ProgF%NewField("mice"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+(nc+1)*nice
 
          a_nsnowp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+nsnw),store=.FALSE.)
          a_nsnowt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+nsnw),store=.FALSE.)
+         dummyp => a_nsnowp
+         dummyt => a_nsnowt
+         CALL ProgF%NewField("nsnow"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+nsnw
 
          a_msnowp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*nsnw),store=.FALSE.)
          a_msnowt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*nsnw),store=.FALSE.)
+         dummyp => a_msnowp
+         dummyt => a_msnowt
+         CALL ProgF%NewField("msnow"," "," "," ",.FALSE.,dummyp,dummyt)
 
          zz = zz+(nc+1)*nsnw
          ! Density, molecular weight, dissociation factor and molar volume arrays for the used species
@@ -763,7 +882,7 @@ CONTAINS
          'ym     ','aea    ','aeb    ','cla    ','clb    ','prc    ',  &  ! 7
          'ica    ','icb    ','snw    ','u0     ','v0     ','dn0    ',  &  ! 13
          'u      ','v      ','w      ','theta  ','p      ','q      ',  &  ! 19
-         'l      ','r      ','f      ','i      ','s      ',         &  ! 25
+         'l      ','r      ','f      ','i      ','s      ',            &  ! 25
          'S_RH   ','S_RHI  ','S_Nact ','S_Na   ','S_Naba ','S_Rwaa ',  &  ! 30
          'S_Rwaba','S_Nb   ','S_Nabb ','S_Rwab ','S_Rwabb','S_Nc   ',  &  ! 36
          'S_Ncba ','S_Ncbb ','S_Rwca ','S_Rwcb ','S_Rwcba','S_Rwcbb',  &  ! 42
@@ -1764,10 +1883,8 @@ CONTAINS
          WRITE(10) a_sp
       END DO
 
-      !IF ( allocated(a_rv%data)   ) WRITE(10) a_rv%data
-      !IF ( allocated(a_rc%data)   ) WRITE(10) a_rc%data
-      IF ( associated(a_rv%data)   ) WRITE(10) a_rv%data !Not sure about this AZ
-      IF ( associated(a_rc%data)   ) WRITE(10) a_rc%data
+      IF ( allocated(a_rv%alloc)   ) WRITE(10) a_rv%data
+      IF ( allocated(a_rc%alloc)   ) WRITE(10) a_rc%data
       IF ( allocated(a_rflx) ) WRITE(10) a_rflx
       CLOSE(10)
 
@@ -1868,7 +1985,7 @@ CONTAINS
          !
          IF (thx /= th00) THEN
             IF (myid == 0) PRINT "('  th00 changed  -  ',2f8.2)",th00,thx
-            a_tp%data(:,:,:) = a_tp%data(:,:,:) + thx - th00
+            a_tp%data = a_tp%data + thx - th00
          END IF
          IF (umx /= umean) THEN
             IF (myid == 0) PRINT "('  umean changed  -  ',2f8.2)",umean,umx

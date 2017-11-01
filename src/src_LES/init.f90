@@ -93,6 +93,7 @@ CONTAINS
                               a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
                               a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
                               1, prtcl, dtlt, level   )
+
             ELSE
                CALL run_SALSA(nxp, nyp, nzp, n4, a_press, a_temp, ztkt,                   &
                               a_rp, a_rt, a_rsl, a_rsi, a_wp, a_dn,    &
@@ -103,15 +104,6 @@ CONTAINS
                               a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
                               a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
                               1, prtcl, dtlt, level   )
-               !CALL run_SALSA(nxp, nyp, nzp, n4, a_press%data, a_temp, ztkt,                   &
-               !               a_rp%data, a_rt%data, a_rsl%data, a_rsi%data, a_wp, a_dn%data,   &
-               !               a_naerop%data,  a_naerot%data,  a_maerop%data,  a_maerot%data,   &
-               !               a_ncloudp%data, a_ncloudt%data, a_mcloudp%data, a_mcloudt%data,  &
-               !               a_nprecpp%data, a_nprecpt%data, a_mprecpp%data, a_mprecpt%data,  &
-               !               a_nicep%data,   a_nicet%data,   a_micep%data,   a_micet%data,    &
-               !               a_nsnowp%data,  a_nsnowt%data,  a_msnowp%data,  a_msnowt%data,   &
-               !               a_nactd,   a_vactd,   a_gaerop%data,  a_gaerot%data,             &
-               !               1, prtcl, dtlt, level   )
 
             END IF
             CALL SALSAInit
@@ -192,8 +184,8 @@ CONTAINS
             DO k = 1, nzp
                a_up(k,i,j)    = u0(k)
                a_vp(k,i,j)    = v0(k)
-               a_tp%data(k,i,j)    = (th0(k)-th00)
-               IF (associated (a_rp%data)) a_rp%data(k,i,j) = rt0(k)
+               a_tp%data(k,i,j)    =  (th0(k)-th00)
+               IF ( associated (a_rp%data)) a_rp%data(k,i,j) = rt0(k)
                a_theta%data(k,i,j) = th0(k)
                a_pexnr%data(k,i,j) = 0.
             END DO
@@ -203,9 +195,9 @@ CONTAINS
       ! Juha: Added SELECT-CASE for level 4
       SELECT CASE(level)
          CASE(1,2,3)
-            IF ( associated (a_rv%data)) a_rv%data = a_rp%data
+            IF ( allocated (a_rv%alloc)) a_rv%data = a_rp%data
 
-            IF ( associated (a_rc%data)) THEN
+            IF ( allocated (a_rc%alloc)) THEN
                DO j = 1, nyp
                   DO i = 1, nxp
                      DO k = 1, nzp
@@ -762,18 +754,18 @@ CONTAINS
    ! Activation + diagnostic array initialization
    ! Clouds and aerosols
    a_rc%data = 0.
-    DO bb = 1, ncld
-       a_rc%data = a_rc%data + a_mcloudp%data(:,:,:,(nc-1)*ncld+bb)
-    END DO
-    DO bb = 1, nbins
-       a_rc%data = a_rc%data + a_maerop%data(:,:,:,(nc-1)*nbins+bb)
-    END DO
+   DO bb = 1, ncld
+      a_rc%data = a_rc%data + a_mcloudp%data(:,:,:,(nc-1)*ncld+bb)
+   END DO
+   DO bb = 1, nbins
+      a_rc%data = a_rc%data + a_maerop%data(:,:,:,(nc-1)*nbins+bb)
+   END DO
 
     ! Ice
-    a_ri%data = 0.
-    DO bb = 1, nice
-       a_ri%data = a_ri%data + a_micep%data(:,:,:,(nc-1)*nice + bb)
-    END DO
+   a_ri%data = 0.
+   DO bb = 1, nice
+      a_ri%data = a_ri%data + a_micep%data(:,:,:,(nc-1)*nice + bb)
+   END DO
 
  END SUBROUTINE SALSAInit
  !-------------------------------------------
@@ -1099,7 +1091,8 @@ CONTAINS
                 excessFracIce = 1.0
                 excessFracLiq = 1.0
                 DO bb = fn2b, in2b, -1
-                   IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce < iceFracB*zumB  .AND. a_naerop%data(k,i,j,bb) > 10e-10) THEN !initialize ice if it is cold enough
+                  !initialize ice if it is cold enough
+                  IF(a_temp(k,i,j) < 273.15 .AND. zumCumIce < iceFracB*zumB  .AND. a_naerop%data(k,i,j,bb) > 10e-10) THEN
 
                       excessIce = min(abs(zumCumIce-iceFracB*zumB),a_naerop%data(k,i,j,bb))
                       a_nicep%data(k,i,j,bb-3) = a_nicep%data(k,i,j,bb-3) + excessIce
@@ -1173,13 +1166,13 @@ CONTAINS
              ! 2a
              ss = (ispec-1)*nbins + in2a; ee = (ispec-1)*nbins + fn2a
              a_maerop%data(k,i,j,ss:ee) =      &
-                max( 0.0,ppvf2a(k,ispec) )*ppnf2a(k) * &
-                ppndist(k,in2a:fn2a)*pcore(in2a:fn2a)*prho
+                                          max( 0.0,ppvf2a(k,ispec) )*ppnf2a(k) * &
+                                          ppndist(k,in2a:fn2a)*pcore(in2a:fn2a)*prho
              ! 2b
              ss = (ispec-1)*nbins + in2b; ee = (ispec-1)*nbins + fn2b
              a_maerop%data(k,i,j,ss:ee) =      &
-                max( 0.0,ppvf2b(k,ispec) )*(1.0-ppnf2a(k)) * &
-                ppndist(k,in2a:fn2a)*pcore(in2a:fn2a)*prho
+                                          max( 0.0,ppvf2b(k,ispec) )*(1.0-ppnf2a(k)) * &
+                                          ppndist(k,in2a:fn2a)*pcore(in2a:fn2a)*prho
           END DO
        END DO
     END DO

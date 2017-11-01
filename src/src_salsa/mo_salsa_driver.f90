@@ -90,9 +90,9 @@ CONTAINS
 
 
       TYPE(FloatArray3D), INTENT(in) :: press, &            ! Pressure (Pa)
-                             rv,    &            ! Water vapor mixing ratio
-                             rs,    &            ! Water vapour saturation mixing ratio
-                             rsi               ! water vapour sat mix rat over ice
+                                        rv,    &            ! Water vapor mixing ratio
+                                        rs,    &            ! Water vapour saturation mixing ratio
+                                        rsi                 ! Water vapour sat mix rat over ice
 
       REAL, INTENT(in) ::    tk(pnz,pnx,pny),    &            ! Temperature (K)
                              tt(pnz,pnx,pny),    &            ! Temperature tendency
@@ -102,15 +102,15 @@ CONTAINS
       TYPE(FloatArray3D), INTENT(in) :: pdn             ! Air density (for normalizing concentrations)
 
       TYPE(FloatArray4D), INTENT(in) :: pa_naerop,        & ! aerosol number concentration (# kg-1)
-                             pa_maerop,     & ! aerosol volume concentration (m3 kg-1)
-                             pa_ncloudp,        & ! Cloud droplet number concentration (# kg-1)
-                             pa_mcloudp,     & ! Cloud droplet volume concentration (m3 kg-1)
-                             pa_nprecpp,       & ! Rain drop number concentration (# kg-1)
-                             pa_mprecpp,     & ! Rain drop volume concentration (m3 kg-1)
-                             pa_nicep,          & ! ice number concentration (# kg-1)
-                             pa_micep,       & ! ice volume concentration (m3 kg-1)
-                             pa_nsnowp,        & ! snow precipitation number concentration (# kg-1)
-                             pa_msnowp           ! snow precipitation volume concentration (m3 kg-1)
+                                        pa_maerop,        & ! aerosol volume concentration (m3 kg-1)
+                                        pa_ncloudp,       & ! Cloud droplet number concentration (# kg-1)
+                                        pa_mcloudp,       & ! Cloud droplet volume concentration (m3 kg-1)
+                                        pa_nprecpp,       & ! Rain drop number concentration (# kg-1)
+                                        pa_mprecpp,       & ! Rain drop volume concentration (m3 kg-1)
+                                        pa_nicep,         & ! ice number concentration (# kg-1)
+                                        pa_micep,         & ! ice volume concentration (m3 kg-1)
+                                        pa_nsnowp,        & ! snow precipitation number concentration (# kg-1)
+                                        pa_msnowp           ! snow precipitation volume concentration (m3 kg-1)
 
       TYPE(FloatArray4D), INTENT(in) :: pa_gaerop         ! Gaseous tracers [# kg]
 
@@ -123,15 +123,15 @@ CONTAINS
       TYPE(ComponentIndex), INTENT(in) :: prtcl ! Object containing the indices of different aerosol components for mass arrays
 
      TYPE(FloatArray4D), INTENT(inout) :: pa_naerot,      & ! Aerosol number tendency
-                             pa_maerot,   & ! Aerosol volume tendency
-                             pa_ncloudt,      & ! Cloud droplet number tendency
-                             pa_mcloudt,   & ! Cloud droplet volume tendency
-                             pa_nprecpt,      & ! Rain drop number tendency
-                             pa_mprecpt,   &  ! Rain drop volume tendency
-                             pa_nicet,        & ! Ice particle number tendency
-                             pa_micet,     & ! Ice particle volume tendency
-                             pa_nsnowt,       & ! snow flake number tendency
-                             pa_msnowt         ! snow flake volume tendecy
+                                          pa_maerot,      & ! Aerosol volume tendency
+                                          pa_ncloudt,     & ! Cloud droplet number tendency
+                                          pa_mcloudt,     & ! Cloud droplet volume tendency
+                                          pa_nprecpt,     & ! Rain drop number tendency
+                                          pa_mprecpt,     & ! Rain drop volume tendency
+                                          pa_nicet,       & ! Ice particle number tendency
+                                          pa_micet,       & ! Ice particle volume tendency
+                                          pa_nsnowt,      & ! snow flake number tendency
+                                          pa_msnowt         ! snow flake volume tendecy
 
       TYPE(FloatArray4D), INTENT(inout) :: pa_gaerot         ! Gaseous tracer tendency
       TYPE(FloatArray3D), INTENT(inout) :: rt                  ! Water vapour tendency
@@ -188,6 +188,7 @@ CONTAINS
                ELSE
                   in_rv(1,1) = rv%data(kk,ii,jj)
                END IF
+
                rv_old(1,1) = in_rv(1,1)
                 
                ! Set volume concentrations
@@ -523,15 +524,24 @@ CONTAINS
 
                ! Calculate tendencies (convert back to #/kg or kg/kg)
                pa_naerot%data(kk,ii,jj,1:nbins) = pa_naerot%data(kk,ii,jj,1:nbins) + &
-                                             ( aero(1,1,1:nbins)%numc - aero_old(1,1,1:nbins)%numc )/pdn%data(kk,ii,jj)/tstep
+                                                  ( aero(1,1,1:nbins)%numc - aero_old(1,1,1:nbins)%numc )/ &
+                                                  pdn%data(kk,ii,jj)/tstep
+
                pa_ncloudt%data(kk,ii,jj,1:ncld) = pa_ncloudt%data(kk,ii,jj,1:ncld) + &
-                                             ( cloud(1,1,1:ncld)%numc - cloud_old(1,1,1:ncld)%numc )/pdn%data(kk,ii,jj)/tstep
+                                                  ( cloud(1,1,1:ncld)%numc - cloud_old(1,1,1:ncld)%numc )/ &
+                                                  pdn%data(kk,ii,jj)/tstep
+
                pa_nprecpt%data(kk,ii,jj,1:nprc) = pa_nprecpt%data(kk,ii,jj,1:nprc) + &
-                                             ( precp(1,1,1:nprc)%numc - precp_old(1,1,1:nprc)%numc )/pdn%data(kk,ii,jj)/tstep
+                                                  ( precp(1,1,1:nprc)%numc - precp_old(1,1,1:nprc)%numc )/ &
+                                                  pdn%data(kk,ii,jj)/tstep
+
                pa_nicet%data(kk,ii,jj,1:nice) = pa_nicet%data(kk,ii,jj,1:nice) + &
-                                           ( ice(1,1,1:nice)%numc - ice_old(1,1,1:nice)%numc )/pdn%data(kk,ii,jj)/tstep
+                                                ( ice(1,1,1:nice)%numc - ice_old(1,1,1:nice)%numc )/ &
+                                                pdn%data(kk,ii,jj)/tstep
+
                pa_nsnowt%data(kk,ii,jj,1:nsnw) = pa_nsnowt%data(kk,ii,jj,1:nsnw) + &
-                                            ( snow(1,1,1:nsnw)%numc - snow_old(1,1,1:nsnw)%numc )/pdn%data(kk,ii,jj)/tstep
+                                                 ( snow(1,1,1:nsnw)%numc - snow_old(1,1,1:nsnw)%numc )/ &
+                                                 pdn%data(kk,ii,jj)/tstep
                ! Activated droplets
                pa_nactd(kk,ii,jj,1:ncld) = actd(1,1,1:ncld)%numc/pdn%data(kk,ii,jj)
 
@@ -542,32 +552,32 @@ CONTAINS
                   str = (nc-1)*nbins+1
                   END = nc*nbins
                   pa_maerot%data(kk,ii,jj,str:end) = pa_maerot%data(kk,ii,jj,str:end) + &
-                                                ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
-                                                rhosu/pdn%data(kk,ii,jj)/tstep
+                                                     ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
+                                                     rhosu/pdn%data(kk,ii,jj)/tstep
                   ! Hydrometeor bins
                   str = (nc-1)*ncld+1
                   END = nc*ncld
                   pa_mcloudt%data(kk,ii,jj,str:end) = pa_mcloudt%data(kk,ii,jj,str:end) + &
-                                                 ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
-                                                 rhosu/pdn%data(kk,ii,jj)/tstep
+                                                      ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
+                                                      rhosu/pdn%data(kk,ii,jj)/tstep
                   ! Rain drops
                   str = (nc-1)*nprc+1
                   END = nc*nprc
                   pa_mprecpt%data(kk,ii,jj,str:end) = pa_mprecpt%data(kk,ii,jj,str:end) + &
-                                                 ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
-                                                 rhosu/pdn%data(kk,ii,jj)/tstep
+                                                      ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
+                                                      rhosu/pdn%data(kk,ii,jj)/tstep
                   ! Ice bins
                   str = (nc-1)*nice+1
                   END = nc*nice
                   pa_micet%data(kk,ii,jj,str:end) = pa_micet%data(kk,ii,jj,str:end) + &
-                                               ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
-                                               rhosu/pdn%data(kk,ii,jj)/tstep
+                                                    ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
+                                                    rhosu/pdn%data(kk,ii,jj)/tstep
                   ! Snow bins
                   str = (nc-1)*nsnw+1
                   END = nc*nsnw
                   pa_msnowt%data(kk,ii,jj,str:end) = pa_msnowt%data(kk,ii,jj,str:end) + &
-                                                ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
-                                                rhosu/pdn%data(kk,ii,jj)/tstep
+                                                     ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
+                                                     rhosu/pdn%data(kk,ii,jj)/tstep
                   ! Activated droplets
                   str = (nc-1)*ncld+1
                   END = nc*ncld
@@ -581,32 +591,32 @@ CONTAINS
                   str = (nc-1)*nbins+1
                   END = nc*nbins
                   pa_maerot%data(kk,ii,jj,str:end) = pa_maerot%data(kk,ii,jj,str:end) + &
-                                                ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
-                                                rhooc/pdn%data(kk,ii,jj)/tstep
+                                                     ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
+                                                     rhooc/pdn%data(kk,ii,jj)/tstep
                   ! Hydrometeor bins
                   str = (nc-1)*ncld+1
                   END = nc*ncld
                   pa_mcloudt%data(kk,ii,jj,str:end) = pa_mcloudt%data(kk,ii,jj,str:end) + &
-                                                 ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
-                                                 rhooc/pdn%data(kk,ii,jj)/tstep
+                                                      ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
+                                                      rhooc/pdn%data(kk,ii,jj)/tstep
                   ! Rain drops
                   str = (nc-1)*nprc+1
                   END = nc*nprc
                   pa_mprecpt%data(kk,ii,jj,str:end) = pa_mprecpt%data(kk,ii,jj,str:end) + &
-                                                 ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
-                                                 rhooc/pdn%data(kk,ii,jj)/tstep
+                                                      ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
+                                                      rhooc/pdn%data(kk,ii,jj)/tstep
                   ! Ice bins
                   str = (nc-1)*nice+1
                   END = nc*nice
                   pa_micet%data(kk,ii,jj,str:end) = pa_micet%data(kk,ii,jj,str:end) + &
-                                               ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
-                                               rhooc/pdn%data(kk,ii,jj)/tstep
+                                                    ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
+                                                    rhooc/pdn%data(kk,ii,jj)/tstep
                   ! Snow bins
                   str = (nc-1)*nsnw+1
                   END = nc*nsnw
                   pa_msnowt%data(kk,ii,jj,str:end) = pa_msnowt%data(kk,ii,jj,str:end) + &
-                                                ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
-                                                rhooc/pdn%data(kk,ii,jj)/tstep
+                                                     ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
+                                                     rhooc/pdn%data(kk,ii,jj)/tstep
                   ! Activated droplets
                   str = (nc-1)*ncld+1
                   END = nc*ncld
@@ -620,32 +630,32 @@ CONTAINS
                   str = (nc-1)*nbins+1
                   END = nc*nbins
                   pa_maerot%data(kk,ii,jj,str:end) = pa_maerot%data(kk,ii,jj,str:end) + &
-                                                ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
-                                                rhobc/pdn%data(kk,ii,jj)/tstep
+                                                     ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
+                                                     rhobc/pdn%data(kk,ii,jj)/tstep
                   ! Hydrometeor bins
                   str = (nc-1)*ncld+1
                   END = nc*ncld
                   pa_mcloudt%data(kk,ii,jj,str:end) = pa_mcloudt%data(kk,ii,jj,str:end) + &
-                                                 ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
-                                                 rhobc/pdn%data(kk,ii,jj)/tstep
+                                                      ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
+                                                      rhobc/pdn%data(kk,ii,jj)/tstep
                   ! Rain drops
                   str = (nc-1)*nprc+1
                   END = nc*nprc
                   pa_mprecpt%data(kk,ii,jj,str:end) = pa_mprecpt%data(kk,ii,jj,str:end) + &
-                                                 ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
-                                                 rhobc/pdn%data(kk,ii,jj)/tstep
+                                                      ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
+                                                      rhobc/pdn%data(kk,ii,jj)/tstep
                   ! Ice bins
                   str = (nc-1)*nice+1
                   END = nc*nice
                   pa_micet%data(kk,ii,jj,str:end) = pa_micet%data(kk,ii,jj,str:end) + &
-                                               ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
-                                               rhobc/pdn%data(kk,ii,jj)/tstep
+                                                    ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
+                                                    rhobc/pdn%data(kk,ii,jj)/tstep
                   ! Snow bins
                   str = (nc-1)*nsnw+1
                   END = nc*nsnw
                   pa_msnowt%data(kk,ii,jj,str:end) = pa_msnowt%data(kk,ii,jj,str:end) + &
-                                                ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
-                                                rhobc/pdn%data(kk,ii,jj)/tstep
+                                                     ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
+                                                     rhobc/pdn%data(kk,ii,jj)/tstep
                   ! Activated droplets
                   str = (nc-1)*ncld+1
                   END = nc*ncld
@@ -659,32 +669,32 @@ CONTAINS
                   str = (nc-1)*nbins+1
                   END = nc*nbins
                   pa_maerot%data(kk,ii,jj,str:end) = pa_maerot%data(kk,ii,jj,str:end) + &
-                                                ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
-                                                rhodu/pdn%data(kk,ii,jj)/tstep
+                                                     ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
+                                                     rhodu/pdn%data(kk,ii,jj)/tstep
                   ! Hydrometeor bins
                   str = (nc-1)*ncld+1
                   END = nc*ncld
                   pa_mcloudt%data(kk,ii,jj,str:end) = pa_mcloudt%data(kk,ii,jj,str:end) + &
-                                                 ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
-                                                 rhodu/pdn%data(kk,ii,jj)/tstep
+                                                      ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
+                                                      rhodu/pdn%data(kk,ii,jj)/tstep
                   ! Rain drops
                   str = (nc-1)*nprc+1
                   END = nc*nprc
                   pa_mprecpt%data(kk,ii,jj,str:end) = pa_mprecpt%data(kk,ii,jj,str:end) + &
-                                                 ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
-                                                 rhodu/pdn%data(kk,ii,jj)/tstep
+                                                      ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
+                                                      rhodu/pdn%data(kk,ii,jj)/tstep
                   ! Ice bins
                   str = (nc-1)*nice+1
                   END = nc*nice
                   pa_micet%data(kk,ii,jj,str:end) = pa_micet%data(kk,ii,jj,str:end) + &
-                                               ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
-                                               rhodu/pdn%data(kk,ii,jj)/tstep
+                                                    ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
+                                                    rhodu/pdn%data(kk,ii,jj)/tstep
                   ! Snow bins
                   str = (nc-1)*nsnw+1
                   END = nc*nsnw
                   pa_msnowt%data(kk,ii,jj,str:end) = pa_msnowt%data(kk,ii,jj,str:end) + &
-                                                ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
-                                                rhodu/pdn%data(kk,ii,jj)/tstep
+                                                     ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
+                                                     rhodu/pdn%data(kk,ii,jj)/tstep
                   ! Activated droplets
                   str = (nc-1)*ncld+1
                   END = nc*ncld
@@ -698,32 +708,32 @@ CONTAINS
                   str = (nc-1)*nbins+1
                   END = nc*nbins
                   pa_maerot%data(kk,ii,jj,str:end) = pa_maerot%data(kk,ii,jj,str:end) + &
-                                                ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
-                                                rhoss/pdn%data(kk,ii,jj)/tstep
+                                                     ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
+                                                     rhoss/pdn%data(kk,ii,jj)/tstep
                   ! Hydrometeor bins
                   str = (nc-1)*ncld+1
                   END = nc*ncld
                   pa_mcloudt%data(kk,ii,jj,str:end) = pa_mcloudt%data(kk,ii,jj,str:end) + &
-                                                 ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
-                                                 rhoss/pdn%data(kk,ii,jj)/tstep
+                                                      ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
+                                                      rhoss/pdn%data(kk,ii,jj)/tstep
                   ! Rain drops
                   str = (nc-1)*nprc+1
                   END = nc*nprc
                   pa_mprecpt%data(kk,ii,jj,str:end) = pa_mprecpt%data(kk,ii,jj,str:end) + &
-                                                 ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
-                                                 rhoss/pdn%data(kk,ii,jj)/tstep
+                                                      ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
+                                                      rhoss/pdn%data(kk,ii,jj)/tstep
                   ! Ice bins
                   str = (nc-1)*nice+1
                   END = nc*nice
                   pa_micet%data(kk,ii,jj,str:end) = pa_micet%data(kk,ii,jj,str:end) + &
-                                               ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
-                                               rhoss/pdn%data(kk,ii,jj)/tstep
+                                                    ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
+                                                    rhoss/pdn%data(kk,ii,jj)/tstep
                   ! Snow bins
                   str = (nc-1)*nsnw+1
                   END = nc*nsnw
                   pa_msnowt%data(kk,ii,jj,str:end) = pa_msnowt%data(kk,ii,jj,str:end) + &
-                                                ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
-                                                rhoss/pdn%data(kk,ii,jj)/tstep
+                                                     ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
+                                                     rhoss/pdn%data(kk,ii,jj)/tstep
                   ! Activated droplets
                   str = (nc-1)*ncld+1
                   END = nc*ncld
@@ -737,32 +747,32 @@ CONTAINS
                   str = (nc-1)*nbins+1
                   END = nc*nbins
                   pa_maerot%data(kk,ii,jj,str:end) = pa_maerot%data(kk,ii,jj,str:end) + &
-                                                ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
-                                                rhono/pdn%data(kk,ii,jj)/tstep
+                                                     ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
+                                                     rhono/pdn%data(kk,ii,jj)/tstep
                   ! Hydrometeor bins
                   str = (nc-1)*ncld+1
                   END = nc*ncld
                   pa_mcloudt%data(kk,ii,jj,str:end) = pa_mcloudt%data(kk,ii,jj,str:end) + &
-                                                 ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
-                                                 rhono/pdn%data(kk,ii,jj)/tstep
+                                                      ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
+                                                      rhono/pdn%data(kk,ii,jj)/tstep
                   ! Rain drops
                   str = (nc-1)*nprc+1
                   END = nc*nprc
                   pa_mprecpt%data(kk,ii,jj,str:end) = pa_mprecpt%data(kk,ii,jj,str:end) + &
-                                                 ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
-                                                 rhono/pdn%data(kk,ii,jj)/tstep
+                                                      ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
+                                                      rhono/pdn%data(kk,ii,jj)/tstep
                   ! Ice bins
                   str = (nc-1)*nice+1
                   END = nc*nice
                   pa_micet%data(kk,ii,jj,str:end) = pa_micet%data(kk,ii,jj,str:end) + &
-                                               ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
-                                               rhono/pdn%data(kk,ii,jj)/tstep
+                                                    ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
+                                                    rhono/pdn%data(kk,ii,jj)/tstep
                   ! Snow bins
                   str = (nc-1)*nsnw+1
                   END = nc*nsnw
                   pa_msnowt%data(kk,ii,jj,str:end) = pa_msnowt%data(kk,ii,jj,str:end) + &
-                                                ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
-                                                rhono/pdn%data(kk,ii,jj)/tstep
+                                                     ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
+                                                     rhono/pdn%data(kk,ii,jj)/tstep
                   ! Activated droplets
                   str = (nc-1)*ncld+1
                   END = nc*ncld
@@ -776,32 +786,32 @@ CONTAINS
                   str = (nc-1)*nbins+1
                   END = nc*nbins
                   pa_maerot%data(kk,ii,jj,str:end) = pa_maerot%data(kk,ii,jj,str:end) + &
-                                                ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
-                                                rhonh/pdn%data(kk,ii,jj)/tstep
+                                                     ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
+                                                     rhonh/pdn%data(kk,ii,jj)/tstep
                   ! Hydrometeor bins
                   str = (nc-1)*ncld+1
                   END = nc*ncld
                   pa_mcloudt%data(kk,ii,jj,str:end) = pa_mcloudt%data(kk,ii,jj,str:end) + &
-                                                 ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
-                                                 rhonh/pdn%data(kk,ii,jj)/tstep
+                                                      ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
+                                                      rhonh/pdn%data(kk,ii,jj)/tstep
                   ! Rain drops
                   str = (nc-1)*nprc+1
                   END = nc*nprc
                   pa_mprecpt%data(kk,ii,jj,str:end) = pa_mprecpt%data(kk,ii,jj,str:end) + &
-                                                 ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
-                                                 rhonh/pdn%data(kk,ii,jj)/tstep
+                                                      ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
+                                                      rhonh/pdn%data(kk,ii,jj)/tstep
                   ! Ice bins
                   str = (nc-1)*nice+1
                   END = nc*nice
                   pa_micet%data(kk,ii,jj,str:end) = pa_micet%data(kk,ii,jj,str:end) + &
-                                               ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
-                                               rhonh/pdn%data(kk,ii,jj)/tstep
+                                                    ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
+                                                    rhonh/pdn%data(kk,ii,jj)/tstep
                   ! Snow bins
                   str = (nc-1)*nsnw+1
                   END = nc*nsnw
                   pa_msnowt%data(kk,ii,jj,str:end) = pa_msnowt%data(kk,ii,jj,str:end) + &
-                                                ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
-                                                rhonh/pdn%data(kk,ii,jj)/tstep
+                                                     ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
+                                                     rhonh/pdn%data(kk,ii,jj)/tstep
                   ! Activated droplets
                   str = (nc-1)*ncld+1
                   END = nc*ncld
@@ -816,32 +826,32 @@ CONTAINS
                str = (nc-1)*nbins+1
                END = nc*nbins
                pa_maerot%data(kk,ii,jj,str:end) = pa_maerot%data(kk,ii,jj,str:end) + &
-                                             ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
-                                             rhowa/pdn%data(kk,ii,jj)/tstep
+                                                  ( aero(1,1,1:nbins)%volc(vc) - aero_old(1,1,1:nbins)%volc(vc) )*&
+                                                  rhowa/pdn%data(kk,ii,jj)/tstep
                ! Hydrometeor bins
                str = (nc-1)*ncld+1
                END = nc*ncld
                pa_mcloudt%data(kk,ii,jj,str:end) = pa_mcloudt%data(kk,ii,jj,str:end) + &
-                                              ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
-                                              rhowa/pdn%data(kk,ii,jj)/tstep
+                                                   ( cloud(1,1,1:ncld)%volc(vc) - cloud_old(1,1,1:ncld)%volc(vc) )*&
+                                                   rhowa/pdn%data(kk,ii,jj)/tstep
                ! Rain drops
                str = (nc-1)*nprc+1
                END = nc*nprc
                pa_mprecpt%data(kk,ii,jj,str:end) = pa_mprecpt%data(kk,ii,jj,str:end) + &
-                                              ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
-                                              rhowa/pdn%data(kk,ii,jj)/tstep
+                                                   ( precp(1,1,1:nprc)%volc(vc) - precp_old(1,1,1:nprc)%volc(vc) )*&
+                                                   rhowa/pdn%data(kk,ii,jj)/tstep
                ! Ice bins
                str = (nc-1)*nice+1
                END = nc*nice
                pa_micet%data(kk,ii,jj,str:end) = pa_micet%data(kk,ii,jj,str:end) + &
-                                            ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
-                                            rhoic/pdn%data(kk,ii,jj)/tstep
+                                                 ( ice(1,1,1:nice)%volc(vc) - ice_old(1,1,1:nice)%volc(vc) )*&
+                                                 rhoic/pdn%data(kk,ii,jj)/tstep
                ! Snow bins
                str = (nc-1)*nsnw+1
                END = nc*nsnw
                pa_msnowt%data(kk,ii,jj,str:end) = pa_msnowt%data(kk,ii,jj,str:end) + &
-                                             ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
-                                             rhosn/pdn%data(kk,ii,jj)/tstep
+                                                  ( snow(1,1,1:nsnw)%volc(vc) - snow_old(1,1,1:nsnw)%volc(vc) )*&
+                                                  rhosn/pdn%data(kk,ii,jj)/tstep
                ! Activated droplets
                str = (nc-1)*ncld+1
                END = nc*ncld
@@ -850,26 +860,26 @@ CONTAINS
 
                IF (lscndgas) THEN
                   pa_gaerot%data(kk,ii,jj,1) = pa_gaerot%data(kk,ii,jj,1) + &
-                                          ( zgso4(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,1) )/tstep
+                                               ( zgso4(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,1) )/tstep
 
                   pa_gaerot%data(kk,ii,jj,2) = pa_gaerot%data(kk,ii,jj,2) + &
-                                          ( zghno3(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,2) )/tstep
+                                               ( zghno3(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,2) )/tstep
 
                   pa_gaerot%data(kk,ii,jj,3) = pa_gaerot%data(kk,ii,jj,3) + &
-                                          ( zgnh3(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,3) )/tstep
+                                               ( zgnh3(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,3) )/tstep
 
                   pa_gaerot%data(kk,ii,jj,4) = pa_gaerot%data(kk,ii,jj,4) + &
-                                          ( zgocnv(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,4) )/tstep
+                                               ( zgocnv(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,4) )/tstep
 
                   pa_gaerot%data(kk,ii,jj,5) = pa_gaerot%data(kk,ii,jj,5) + &
-                                          ( zgocsv(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,5) )/tstep
+                                               ( zgocsv(1,1)/pdn%data(kk,ii,jj) - pa_gaerop%data(kk,ii,jj,5) )/tstep
                END IF
 
 
                ! Tendency of water vapour mixing ratio is obtained from the change in RH during SALSA run.
                ! Assumes no temperature change during SALSA run.
                rt%data(kk,ii,jj) = rt%data(kk,ii,jj) + &
-                  ( in_rv(1,1) - rv_old(1,1) )/tstep
+                                   ( in_rv(1,1) - rv_old(1,1) )/tstep
 
             END DO ! kk
          END DO ! ii

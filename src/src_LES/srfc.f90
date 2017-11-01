@@ -200,16 +200,16 @@ CONTAINS
 
             DO j = 3, nyp-2
                DO i = 3, nxp-2
-                  wt_sfc(i,j) = Vbulk * (sst -a_theta%data(2,i,j))
+                  wt_sfc(i,j) = Vbulk * (sst - a_theta%data(2,i,j))
                   wq_sfc(i,j) = Vbulk * (rslf(psrf,sst) - rx(2,i,j)) ! Juha: rx
                   wspd(i,j)    = max(0.1,                                    &
-                                 sqrt((a_up(2,i,j)+umean)**2+(a_vp(2,i,j)+vmean)**2))
+                                     sqrt((a_up(2,i,j)+umean)**2+(a_vp(2,i,j)+vmean)**2))
                   bflx         = wt_sfc(i,j)*g/bfg(1) + g*ep2*wq_sfc(i,j)
                   a_ustar(i,j) = diag_ustar(zt(2),zrough,bflx,wspd(i,j))
-                  uw_sfc(i,j)  = -a_ustar(i,j)*a_ustar(i,j)                  &
-                                 *(a_up(2,i,j)+umean)/wspd(i,j)
-                  vw_sfc(i,j)  = -a_ustar(i,j)*a_ustar(i,j)                  &
-                                 *(a_vp(2,i,j)+vmean)/wspd(i,j)
+                  uw_sfc(i,j)  = -a_ustar(i,j)*a_ustar(i,j)*                  &
+                                 (a_up(2,i,j)+umean)/wspd(i,j)
+                  vw_sfc(i,j)  = -a_ustar(i,j)*a_ustar(i,j)*                  &
+                                 (a_vp(2,i,j)+vmean)/wspd(i,j)
                   ww_sfc(i,j)  = 0.
                   a_rstar(i,j) = wq_sfc(i,j)/a_ustar(i,j)
                   a_tstar(i,j) = wt_sfc(i,j)/a_ustar(i,j)

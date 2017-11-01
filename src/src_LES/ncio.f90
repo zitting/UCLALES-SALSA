@@ -12,7 +12,7 @@ MODULE ncio
 CONTAINS
   !
   ! ----------------------------------------------------------------------
-  ! Subroutine Open_NC: Opens a NetCDF File and identIFies starting record
+  ! Subroutine Open_NC: Opens a NetCDF File and identifies starting record
   !
   SUBROUTINE open_nc (fname, ename, time, npts, ncid, nrec, version, author, info)
 
@@ -36,7 +36,7 @@ CONTAINS
        WRITE(lfname,'(a,a3)') trim(fname),'.nc'
     END IF
 
-    inquire(file=trim(lfname),exist=exans)
+    INQUIRE(file=trim(lfname),exist=exans)
 
     ncall = 0
     IF (.NOT. exans) THEN
@@ -164,10 +164,10 @@ CONTAINS
 
        dim_tt = (/ztID,timeID/)
        dim_mt = (/zmID,timeID/)
-       dim_tttt= (/ztID,xtID,ytID,timeID/)  ! thermo point
-       dim_mttt= (/zmID,xtID,ytID,timeID/)  ! zpoint
-       dim_tmtt= (/ztID,xmID,ytID,timeID/)  ! upoint
-       dim_ttmt= (/ztID,xtID,ymID,timeID/)  ! ypoint
+       dim_tttt = (/ztID,xtID,ytID,timeID/)  ! thermo point
+       dim_mttt = (/zmID,xtID,ytID,timeID/)  ! zpoint
+       dim_tmtt = (/ztID,xmID,ytID,timeID/)  ! upoint
+       dim_ttmt = (/ztID,xtID,ymID,timeID/)  ! ypoint
 
        ! Juha: dimension environments for size distribution variables
        dim_ttttaea = (/ztID,xtID,ytID,aeaID,timeID/)

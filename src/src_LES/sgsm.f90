@@ -190,7 +190,7 @@ CONTAINS
           CALL updtst(nzp,'sgs',n,sz1,1)
           IF (associated(a_sp,a_tp%data))                                          &
              CALL sgsflxs(nzp,nxp,nyp,level,a_tmp3,rx,a_theta%data,a_tmp1,'tl')
-          IF (associated(a_sp,a_rp%data))                          &
+          IF (associated(a_sp,a_rp%data))                                          &
              CALL sgsflxs(nzp,nxp,nyp,level,a_tmp3,rx,a_theta%data,a_tmp1,'rt')
        END IF
 

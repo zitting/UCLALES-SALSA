@@ -113,8 +113,8 @@ CONTAINS
              znc(:,:,:) = CCN
              zrc(:,:,:) = a_rc%data ! Cloud water only
              IF (level == 3 .AND. RadPrecipBins > 0) THEN ! Add precipitation (all or nothing)
-                znc(:,:,:) = znc(:,:,:) + a_npp%data(:,:,:)
-                zrc(:,:,:) = zrc(:,:,:) + a_rpp%data(:,:,:)
+                znc(:,:,:) = znc(:,:,:) + a_npp%data
+                zrc(:,:,:) = zrc(:,:,:) + a_rpp%data
              END IF
              CALL d4stream(nzp, nxp, nyp, cntlat, time_in, sst, sfc_albedo, &
                            dn0, pi0, pi1, dzt, a_pexnr%data, a_temp, a_rv%data, zrc, znc, a_tt%data,  &

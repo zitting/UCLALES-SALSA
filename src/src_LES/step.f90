@@ -297,7 +297,8 @@ CONTAINS
                               a_nicep,   a_nicet,   a_micep,   a_micet,    &
                               a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
                               a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
-                              1, prtcl, dtlt, level   )
+                              zrm, prtcl, dtlt, level   )
+
             ELSE
                !! for 2D or 3D runs
                CALL run_SALSA(nxp, nyp, nzp, n4, a_press, a_temp, ztkt,                   &
@@ -308,8 +309,8 @@ CONTAINS
                               a_nicep,   a_nicet,   a_micep,   a_micet,    &
                               a_nsnowp,  a_nsnowt,  a_msnowp,  a_msnowt,   &
                               a_nactd,   a_vactd,   a_gaerop,  a_gaerot,   &
-                              1, prtcl, dtlt, level   )
-             
+                              zrm, prtcl, dtlt, level   )
+
             END IF !nxp==5 and nyp == 5
           
             CALL tend_constrain(n4)
@@ -464,7 +465,7 @@ CONTAINS
                      DO ni = 1, nn
                         a_mcloudt%data(kk,ii,jj,(ni-1)*ncld+cc) = &
                                        MAX( ((1.e-10-1.0)*a_mcloudp%data(kk,ii,jj,(ni-1)*ncld+cc))/dtlt,  &
-                                       a_mcloudt%data(kk,ii,jj,(ni-1)*ncld+cc) )
+                                           a_mcloudt%data(kk,ii,jj,(ni-1)*ncld+cc) )
                      END DO
 
                   END IF
@@ -480,7 +481,7 @@ CONTAINS
                      DO ni = 1, nn
                         a_mprecpt%data(kk,ii,jj,(ni-1)*nprc+cc) = &
                                        MAX( ((1.e-10-1.0)*a_mprecpp%data(kk,ii,jj,(ni-1)*nprc+cc))/dtlt,  &
-                                       a_mprecpt%data(kk,ii,jj,(ni-1)*nprc+cc) )
+                                           a_mprecpt%data(kk,ii,jj,(ni-1)*nprc+cc) )
                      END DO
 
                   END IF
@@ -496,7 +497,7 @@ CONTAINS
                      DO ni = 1, nn
                         a_micet%data(kk,ii,jj,(ni-1)*ncld+cc) = &
                                      MAX( ((1.e-10-1.0)*a_micep%data(kk,ii,jj,(ni-1)*nice+cc))/dtlt,  &
-                                     a_micet%data(kk,ii,jj,(ni-1)*nice+cc) )
+                                         a_micet%data(kk,ii,jj,(ni-1)*nice+cc) )
                      END DO
 
                   END IF
@@ -512,7 +513,7 @@ CONTAINS
                      DO ni = 1, nn
                         a_msnowt%data(kk,ii,jj,(ni-1)*nprc+cc) = &
                                       MAX( ((1.e-10-1.0)*a_msnowp%data(kk,ii,jj,(ni-1)*nsnw+cc))/dtlt,  &
-                                      a_msnowt%data(kk,ii,jj,(ni-1)*nsnw+cc) )
+                                          a_msnowt%data(kk,ii,jj,(ni-1)*nsnw+cc) )
                      END DO
 
                   END IF
@@ -741,7 +742,7 @@ CONTAINS
                   kk = k+1-(nzp-nfpt)
                   IF (isponge == 0) THEN
                      a_tt%data(k,i,j) = a_tt%data(k,i,j) - spng_tfct(kk)*                   &
-                                   (a_tp%data(k,i,j)-th0(k)+th00)
+                                        (a_tp%data(k,i,j)-th0(k)+th00)
                   ELSE
                      a_ut(k,i,j) = a_ut(k,i,j) - spng_tfct(kk)*(a_up(k,i,j)-u0(k))
                      a_vt(k,i,j) = a_vt(k,i,j) - spng_tfct(kk)*(a_vp(k,i,j)-v0(k))
@@ -1272,11 +1273,11 @@ CONTAINS
       ! Aerosols, regimes a and b
       str = (nc-1)*nbins + in1a
       end = (nc-1)*nbins + fn2b
-      a_rc%data(:,:,:) = SUM(a_maerop%data(:,:,:,str:end),DIM=4)
+      a_rc%data = SUM(a_maerop%data(:,:,:,str:end),DIM=4)
       ! Clouds, regime a and b
       str = (nc-1)*ncld+ica%cur
       end = (nc-1)*ncld+fcb%cur
-      a_rc%data(:,:,:) = a_rc%data(:,:,:) + SUM(a_mcloudp%data(:,:,:,str:end),DIM=4)
+      a_rc%data = a_rc%data + SUM(a_mcloudp%data(:,:,:,str:end),DIM=4)
       ! Precipitation
       str = (nc-1)*nprc+ira
       end = (nc-1)*nprc+fra
@@ -1286,7 +1287,7 @@ CONTAINS
       ! ice, regimes a and b
       str = (nc-1)*nice+iia%cur
       end = (nc-1)*nice+fib%cur
-      a_ri%data(:,:,:) = SUM(a_micep%data(:,:,:,str:end),DIM=4)
+      a_ri%data = SUM(a_micep%data(:,:,:,str:end),DIM=4)
       ! Snow
       str = (nc-1)*nsnw+isa
       end = (nc-1)*nsnw+fsa
