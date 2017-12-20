@@ -20,7 +20,7 @@
 !
 MODULE stat
 
-   USE ncio, ONLY : open_nc, define_nc, define_nc_cs
+   USE ncio, ONLY : open_nc, define_nc, define_nc_cs, define_nc2
    USE grid, ONLY : level, lbinanl
    USE util, ONLY : get_avg3, get_cor3, get_var3, get_avg_ts, &
                     get_avg2dh, get_3rd3
@@ -51,6 +51,7 @@ MODULE stat
    REAL               :: ssam_intvl = 30.   ! statistical sampling interval
    REAL               :: savg_intvl = 1800. ! statistical averaging interval
 
+   CLASS(*), POINTER  :: dummy,dummy2
    ! New output variables:
    ! 1. Add them to one of the arrays below
    ! 2. Update the dimensions of the output arrays accordingly
@@ -58,7 +59,6 @@ MODULE stat
    !    in the output arrays
    ! 4. Add the new variables in ncio.f90 list of variables
    ! 5. Make sure stat_init is up to date (boolean arrays etc).
-
 
    CHARACTER (len=7), SAVE :: s1(nvar1)=(/                         &
       'time   ','cfl    ','maxdiv ','zi1_bar','zi2_bar','zi3_bar', & ! 1
@@ -158,7 +158,7 @@ MODULE stat
       ! Additional ssclr and svctr for BINNED SALSA output.
                               svctr_aa(:,:,:), svctr_ca(:,:,:), svctr_p(:,:,:),       &
                               svctr_ab(:,:,:), svctr_cb(:,:,:),                       &
-            ! Mass budget arrays
+      ! Mass budget arrays
                               massbdg(:), scs_rm(:,:,:)
 
    PUBLIC :: sflg, ssam_intvl, savg_intvl, statistics, init_stat, write_ps,        &
@@ -175,6 +175,857 @@ CONTAINS
    ! if (nvar2 >= 90 the program stops
    !
    SUBROUTINE init_stat(time, filprf, expnme, nzp)
+
+      USE classFieldArray
+      USE mo_structured_datatypes
+      USE grid,          ONLY : nxp, nyp, iradtyp, prtcl
+      USE mpi_interface, ONLY : myid, ver, author, info
+      USE mo_submctl,    ONLY : nprc, fn2a,fn2b,fca,fcb,fra
+      USE class_ComponentIndex, ONLY : IsUsed
+
+      CHARACTER (len=80), INTENT (in) :: filprf, expnme
+      INTEGER, INTENT (in)            :: nzp
+      REAL, INTENT (in)               :: time
+
+      INTEGER :: i,e, nnum
+      CHARACTER (len=80) :: fname
+      CHARACTER (len=10) :: strn
+
+      REAL :: zeros1d(1)  ! array to help allocate 3d FloatArrays to zero -AZ
+      REAL :: zeros2d(2,2)  ! array to help allocate 3d FloatArrays to zero -AZ
+      REAL :: zeros3d(3,3,3)  ! array to help allocate 3d FloatArrays to zero -AZ
+      REAL :: zeros4d(4,4,4,4)  ! array to help allocate 3d FloatArrays to zero -AZ
+
+      TYPE(FieldArray) :: fields1,fields2
+      TYPE(FloatArray1d), TARGET :: dumarr1d
+      TYPE(FloatArray2d), TARGET :: dumarr2d
+      TYPE(FloatArray3d), TARGET :: dumarr3d
+      TYPE(FloatArray4d), TARGET :: dumarr4d
+      TYPE(ArrayElement), POINTER :: ArrEl
+
+      fields1 = FieldArray()
+      fields2 = FieldArray()
+
+      !Initialize dummy arrays
+      zeros1d(:) = 0.
+      zeros2d(:,:) = 0.
+      zeros3d(:,:,:) = 0.
+      zeros4d(:,:,:,:) = 0.
+
+      dumarr3d = FloatArray3D(zeros3d,store=.TRUE.)
+      dumarr4d = FloatArray4D(zeros4d,store=.TRUE.)
+
+      !Point dummy pointers to dummy arrays
+      dummy => dumarr3d
+      dummy2 => dumarr4d
+
+      ALLOCATE (wtv_sgs(nzp),wtv_res(nzp),wrl_sgs(nzp))
+      ALLOCATE (tke_res(nzp),tke_sgs(nzp),tke0(nzp),thvar(nzp))
+
+      ! Combine name arrays
+      i = 1; e = nvar1
+      s1Total(i:e) = s1
+      i = e + 1; e = e + nv1sbulk
+      s1Total(i:e) = s1SalsaBulk
+      ! ---
+      i = 1; e = nvar2
+      s2Total(i:e) = s2
+      i = e + 1; e = e + nv2sbulk
+      s2Total(i:e) = s2SalsaBulk
+      i = e + 1; e = e + nv2saa
+      s2Total(i:e) = s2Aeroa
+      i = e + 1; e = e + nv2sab
+      s2Total(i:e) = s2Aerob
+      i = e + 1; e = e + nv2sca
+      s2Total(i:e) = s2Clouda
+      i = e + 1; e = e + nv2scb
+      s2Total(i:e) = s2Cloudb
+      i = e + 1; e = e + nv2sp
+      s2Total(i:e) = s2Precp
+
+      wtv_sgs(:) = 0.
+      wtv_res(:) = 0.
+      wrl_sgs(:) = 0.
+      tke_res(:) = 0.
+      tke_sgs(:) = 0.
+      tke0(:)    = 0.
+
+      SELECT CASE(level)
+         CASE (0)
+            nv1 = 13
+            nv2 = 58
+         CASE (1)
+            nv1 = 14
+            nv2 = 58
+         CASE (2)
+            nv1 = 20
+            nv2 = 83
+            IF (iradtyp == 3) nv1 = 21
+         ! For SALSA
+         CASE (4)
+            nv1 = nvar1
+            nv2 = nvar2
+         CASE DEFAULT
+
+            nv1 = nvar1
+            nv2 = nvar2
+      END SELECT
+
+      IF ( level < 4 ) THEN
+         ALLOCATE ( ssclr(nvar1), svctr(nzp,nvar2) )
+         IF (mcflg) &
+            ALLOCATE ( massbdg(nv1MB) ) ! Mass budged array; ALL CALCULATIONS ARE NOT IMPLEMENTED FOR LEVEL < 4
+         svctr(:,:) = 0.
+         ssclr(:)   = 0.
+         IF (mcflg) massbdg(:) = 0.
+         s1bool(1:nvar1) = .TRUE.
+         s2bool(1:nvar2) = .TRUE.
+
+         CALL fields1%NewField("time","Time","s","time",.TRUE.,dummy)
+         CALL fields1%NewField("cfl","Courant number","-","time",.TRUE.,dummy)
+         CALL fields1%NewField("maxdiv","Maximum divergence","1/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("zi1_bar","Height of maximum theta gradient","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("zi2_bar","Height of maximum theta variance","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("zi3_bar","Height of minimum buoyancy flux","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("vtke","Vertical integral of total TKE","kg/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("sfcbflx","Surface Buoyancy Flux","m/s^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("wmax","Maximum vertical velocity","m/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("tsrf","Surface temperature","K","time",.TRUE.,dummy)
+         CALL fields1%NewField("ustar","Surface friction velocity","m/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("shf_bar","Sensible heat flux","W/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("lhf_bar","Latent heat flux","W/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("zi_bar","Height of maximum scalar gradient","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("lwp_bar","Liquid-water path","kg/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("lwp_var","Liquid-water path variance","kg^2/m^4","time",.TRUE.,dummy)
+         CALL fields1%NewField("zc","Cloud-top height","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("zb","Cloud-base height","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("cfrac","Cloud fraction","-","time",.TRUE.,dummy)
+         CALL fields1%NewField("lmax","Maximum liquid water mixing ratio","kg/kg","time",.TRUE.,dummy)
+         CALL fields1%NewField("albedo","Reflected (TOA) shortwave radiation","-","time",.TRUE.,dummy)
+         CALL fields1%NewField("rwp_bar","Rain-water path","kg/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("prcp","Surface precipitation rate","W/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("pfrac","Surface precipitation fraction","-","time",.TRUE.,dummy)
+         CALL fields1%NewField("CCN","Cloud condensation nuclei","kg^-1","time",.TRUE.,dummy)
+         CALL fields1%NewField("nrain","Conditionally sampled rain number mixing ratio","kg^-1","time",.TRUE.,dummy)
+         CALL fields1%NewField("nrcnt","Rain cell counts","#","time",.TRUE.,dummy)
+         CALL fields1%NewField("nccnt","Cloud cell counts","#","time",.TRUE.,dummy)
+         CALL fields1%NewField("prcp_bc","Below cloud precipitation rate","W/m^2","time",.TRUE.,dummy)
+
+         CALL fields2%NewField("time","Time","s","time",.TRUE.,dummy)
+         CALL fields2%NewField("zt","Vertical displacement of cell centers","m","zt",.TRUE.,dummy)
+         CALL fields2%NewField("zm","Vertical displacement of cell edges","m","zm",.TRUE.,dummy)
+         CALL fields2%NewField("dn0","Base-state density","kg/m^3","zt",.TRUE.,dummy)
+         CALL fields2%NewField("u0","Geostrophic zonal wind","m/s","zt",.TRUE.,dummy)
+         CALL fields2%NewField("v0","Geostrophic meridional wind","m/s","zt",.TRUE.,dummy)
+         CALL fields2%NewField("fsttm","First sample time","s","time",.TRUE.,dummy)
+         CALL fields2%NewField("lsttm","Last sample time","s","time",.TRUE.,dummy)
+         CALL fields2%NewField("nsmp","Number of samples","#","time",.TRUE.,dummy)
+         CALL fields2%NewField("u","Zonal wind","m/s","mttt",.TRUE.,dummy)
+         CALL fields2%NewField("v","Meridional wind","m/s","tmtt",.TRUE.,dummy)
+         CALL fields2%NewField("t","Liquid water potential temperature","K","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("p","Pressure","Pa","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("u_2","Variance of u wind","m^2/s^2","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("v_2","Variance of v wind","m^2/s^2","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("w_2","Second raw moment of w wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("t_2","Variance of theta_1","K^2","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("w_3","Third raw moment of w wind","m^3/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("t_3","Third moment of theta_1","K^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_tw","Total vertical flux of theta","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_tw","Sub-filter scale vertical flux of theta","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_uw","Total vertical flux of theta","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_uw","Sub-filter scale vertical flux of u-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_vw","Total vertical flux of v-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_vw","SGS vertical flux of v-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_ww","Total vertical flux of w-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_ww","SGS vertical flux of w-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+
+         CALL fields2%NewField("km","Eddy viscosity","m^2/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("kh","Eddy diffusivity","m^2/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("lmbd","Mixing lengthscale","m","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("lmbde","Dissipation lengthscale","m","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_tke","Subfilter scale TKE","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_boy","Subfilter buoyancy production of TKE","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_shr","Shear production of SGS TKE","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("boy_prd","Buoyancy production of resolved TKE","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("shr_prd","Shear production of resolved TKE","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("trans","Net transport of resolved TKE","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("diss","Dissipation rate of resolved TKE","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("dff_u","u(du/dt) from diffusion","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("dff_v","v(dv/dt) from diffusion","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("dff_w","w(dw/dt) from diffusion","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("adv_u","u(du/dt) from advection","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("adv_v","v(dv/dt) from advection","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("adv_w","w(dw/dt) from advection","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("prs_u","u(du/dt) from pressure","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("prs_v","v(dv/dt) from pressure","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("prs_w","w(dw/dt) from pressure","m^2/s^3","ttmt",.TRUE.,dummy)
+
+         CALL fields2%NewField("prd_uw","uw shear production","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("storage","Rate of increase of resolved TKE","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("q","Total water mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("q_2","Variance of total water","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("q_3","Third moment of total water","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_qw","Total vertical flux of q","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_qw","Sub-filter scale vertical flux of q","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("rflx","Total radiative flux","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("rflx2","Variance of total radiative flux","W^2/m^4","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sflx","Shortwave radiative flux","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sflx2","Variance of shortwave radiative flux","W^2/m^4","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("l","Liquid water mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("l_2","Variance of liquid water mixing ratio","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("l_3","Third moment of liquid water mixing ratio","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_lw","Resolved turbulent flux of liquid water mixing ratio","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sed_lw","Sedimentation flux of r_l","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("cs1","Fraction of cloudy columns (cs1)","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("cnt_cs1","Number of cloudy columns (cs1)","#","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("w_cs1","Conditional average of w over cs1","m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tl_cs1","Conditional average of theta_l over cs1","K","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tv_cs1","Conditional average of theta_v over cs1","K","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rt_cs1","Conditional average of rt over cs1","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rl_cs1","Conditional average of rl over cs1","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("wt_cs1","Covariance of wtheta_l flux and cs1","K*m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("wv_cs1","Covariance of wtheta_v flux and cs1","K*m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("wr_cs1","Covariance of wr_t flux and cs1","kg/kg*m/s","ttmt",.TRUE.,dummy)
+
+
+         CALL fields2%NewField("cs2","Fraction of cloud core columns (cs2)","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("cnt_cs2","Number of cloud core columns (cs2)","#","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("w_cs2","Conditional average of w over cs2","m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tl_cs2","Conditional average of theta_l over cs2","K","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("tv_cs2","Conditional average of theta_v over cs2","K","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rt_cs2","Conditional average of rt over cs2","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rl_cs2","Conditional average of rl over cs2","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("wt_cs2","Covariance of wtheta_l flux and cs2","K*m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("wv_cs2","Covariance of wtheta_v flux and cs2","K*m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("wr_cs2","Covariance of wr_t flux and cs2","kg/kg*m/s","ttmt",.TRUE.,dummy)
+
+         CALL fields2%NewField("Nc","Cloud droplet number concentration","kg^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("Nr","Rain drop number concentration","kg^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rr","Rain water mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("precip","Precipitation flux (positive downward)","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("evap","Net evap of rain-water","s^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("frc_prc","Conditionally sampled rain fraction","-","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("prc_prc","Conditionally sampled precipitation flux","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("frc_ran","Rain water fraction","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("hst_srf","Histogram of surface rain rates","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("sw_up","Upwelling shortwave radiation","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sw_down","Downwelling shortwave radiation","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("lw_up","Upwelling longwave radiation","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("lw_down","Downwelling longwave radiation","W/m^2","ttmt",.TRUE.,dummy)
+
+
+      ELSE IF ( level >= 4 ) THEN
+         ! Additional arrays for SALSA
+         ALLOCATE ( ssclr(nvar1), svctr(nzp,nvar2) )
+         ALLOCATE ( ssclr_b(nv1sbulk), svctr_b(nzp,nv2sbulk))
+         ALLOCATE ( svctr_aa(nzp,fn2a,nv2saa), svctr_ab(nzp,fn2b-fn2a,nv2sab),          &
+                    svctr_ca(nzp,fca%cur,nv2sca), svctr_cb(nzp,fcb%cur-fca%cur,nv2scb), &
+                    svctr_p(nzp,nprc,nv2sp)   )
+         IF (mcflg) &
+            ALLOCATE ( massbdg(nv1MB) ) ! Mass budged array
+         svctr(:,:) = 0.
+         ssclr(:) = 0.
+         svctr_b(:,:) = 0.
+         ssclr_b(:) = 0.
+         svctr_aa(:,:,:) = 0.; svctr_ab(:,:,:) = 0.
+         svctr_ca(:,:,:) = 0.; svctr_cb(:,:,:) = 0.
+         svctr_p(:,:,:) = 0.
+         IF (mcflg) massbdg(:) = 0.
+
+         ! Create a boolean array for items that are actually used
+         s2bool(:) = .FALSE.
+         s1bool(:) = .FALSE.
+
+         s1bool(1:nvar1) = .TRUE.
+         s2bool(1:nvar2) = .TRUE.     ! Original LES vars (assume always used...)
+
+         CALL fields1%NewField("time","Time","s","time",.TRUE.,dummy)
+         CALL fields1%NewField("cfl","Courant number","-","time",.TRUE.,dummy)
+         CALL fields1%NewField("maxdiv","Maximum divergence","1/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("zi1_bar","Height of maximum theta gradient","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("zi2_bar","Height of maximum theta variance","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("zi3_bar","Height of minimum buoyancy flux","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("vtke","Vertical integral of total TKE","kg/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("sfcbflx","Surface Buoyancy Flux","m/s^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("wmax","Maximum vertical velocity","m/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("tsrf","Surface temperature","K","time",.TRUE.,dummy)
+         CALL fields1%NewField("ustar","Surface friction velocity","m/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("shf_bar","Sensible heat flux","W/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("lhf_bar","Latent heat flux","W/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("zi_bar","Height of maximum scalar gradient","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("lwp_bar","Liquid-water path","kg/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("lwp_var","Liquid-water path variance","kg^2/m^4","time",.TRUE.,dummy)
+         CALL fields1%NewField("zc","Cloud-top height","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("zb","Cloud-base height","m","time",.TRUE.,dummy)
+         CALL fields1%NewField("cfrac","Cloud fraction","-","time",.TRUE.,dummy)
+         CALL fields1%NewField("lmax","Maximum liquid water mixing ratio","kg/kg","time",.TRUE.,dummy)
+         CALL fields1%NewField("albedo","Reflected (TOA) shortwave radiation","-","time",.TRUE.,dummy)
+         CALL fields1%NewField("rwp_bar","Rain-water path","kg/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("prcp","Surface precipitation rate","W/m^2","time",.TRUE.,dummy)
+         CALL fields1%NewField("pfrac","Surface precipitation fraction","-","time",.TRUE.,dummy)
+         CALL fields1%NewField("CCN","Cloud condensation nuclei","kg^-1","time",.TRUE.,dummy)
+         CALL fields1%NewField("nrain","Conditionally sampled rain number mixing ratio","kg^-1","time",.TRUE.,dummy)
+         CALL fields1%NewField("nrcnt","Rain cell counts","#","time",.TRUE.,dummy)
+         CALL fields1%NewField("nccnt","Cloud cell counts","#","time",.TRUE.,dummy)
+         CALL fields1%NewField("prcp_bc","Below cloud precipitation rate","W/m^2","time",.TRUE.,dummy)
+
+         CALL fields2%NewField("time","Time","s","time",.TRUE.,dummy)
+         CALL fields2%NewField("zt","Vertical displacement of cell centers","m","zt",.TRUE.,dummy)
+         CALL fields2%NewField("zm","Vertical displacement of cell edges","m","zm",.TRUE.,dummy)
+         CALL fields2%NewField("dn0","Base-state density","kg/m^3","zt",.TRUE.,dummy)
+         CALL fields2%NewField("u0","Geostrophic zonal wind","m/s","zt",.TRUE.,dummy)
+         CALL fields2%NewField("v0","Geostrophic meridional wind","m/s","zt",.TRUE.,dummy)
+         CALL fields2%NewField("fsttm","First sample time","s","time",.TRUE.,dummy)
+         CALL fields2%NewField("lsttm","Last sample time","s","time",.TRUE.,dummy)
+         CALL fields2%NewField("nsmp","Number of samples","#","time",.TRUE.,dummy)
+         CALL fields2%NewField("u","Zonal wind","m/s","mttt",.TRUE.,dummy)
+         CALL fields2%NewField("v","Meridional wind","m/s","tmtt",.TRUE.,dummy)
+         CALL fields2%NewField("t","Liquid water potential temperature","K","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("p","Pressure","Pa","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("u_2","Variance of u wind","m^2/s^2","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("v_2","Variance of v wind","m^2/s^2","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("w_2","Second raw moment of w wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("t_2","Variance of theta_1","K^2","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("w_3","Third raw moment of w wind","m^3/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("t_3","Third moment of theta_1","K^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_tw","Total vertical flux of theta","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_tw","Sub-filter scale vertical flux of theta","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_uw","Total vertical flux of theta","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_uw","Sub-filter scale vertical flux of u-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_vw","Total vertical flux of v-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_vw","SGS vertical flux of v-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_ww","Total vertical flux of w-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_ww","SGS vertical flux of w-wind","m^2/s^2","ttmt",.TRUE.,dummy)
+
+         CALL fields2%NewField("km","Eddy viscosity","m^2/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("kh","Eddy diffusivity","m^2/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("lmbd","Mixing lengthscale","m","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("lmbde","Dissipation lengthscale","m","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_tke","Subfilter scale TKE","m^2/s^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_boy","Subfilter buoyancy production of TKE","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_shr","Shear production of SGS TKE","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("boy_prd","Buoyancy production of resolved TKE","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("shr_prd","Shear production of resolved TKE","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("trans","Net transport of resolved TKE","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("diss","Dissipation rate of resolved TKE","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("dff_u","u(du/dt) from diffusion","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("dff_v","v(dv/dt) from diffusion","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("dff_w","w(dw/dt) from diffusion","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("adv_u","u(du/dt) from advection","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("adv_v","v(dv/dt) from advection","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("adv_w","w(dw/dt) from advection","m^2/s^3","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("prs_u","u(du/dt) from pressure","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("prs_v","v(dv/dt) from pressure","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("prs_w","w(dw/dt) from pressure","m^2/s^3","ttmt",.TRUE.,dummy)
+
+         CALL fields2%NewField("prd_uw","uw shear production","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("storage","Rate of increase of resolved TKE","m^2/s^3","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("q","Total water mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("q_2","Variance of total water","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("q_3","Third moment of total water","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_qw","Total vertical flux of q","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sfs_qw","Sub-filter scale vertical flux of q","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("rflx","Total radiative flux","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("rflx2","Variance of total radiative flux","W^2/m^4","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sflx","Shortwave radiative flux","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sflx2","Variance of shortwave radiative flux","W^2/m^4","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("l","Liquid water mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("l_2","Variance of liquid water mixing ratio","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("l_3","Third moment of liquid water mixing ratio","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("tot_lw","Resolved turbulent flux of liquid water mixing ratio","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sed_lw","Sedimentation flux of r_l","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("cs1","Fraction of cloudy columns (cs1)","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("cnt_cs1","Number of cloudy columns (cs1)","#","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("w_cs1","Conditional average of w over cs1","m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tl_cs1","Conditional average of theta_l over cs1","K","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tv_cs1","Conditional average of theta_v over cs1","K","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rt_cs1","Conditional average of rt over cs1","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rl_cs1","Conditional average of rl over cs1","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("wt_cs1","Covariance of wtheta_l flux and cs1","K*m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("wv_cs1","Covariance of wtheta_v flux and cs1","K*m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("wr_cs1","Covariance of wr_t flux and cs1","kg/kg*m/s","ttmt",.TRUE.,dummy)
+
+
+         CALL fields2%NewField("cs2","Fraction of cloud core columns (cs2)","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("cnt_cs2","Number of cloud core columns (cs2)","#","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("w_cs2","Conditional average of w over cs2","m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("tl_cs2","Conditional average of theta_l over cs2","K","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("tv_cs2","Conditional average of theta_v over cs2","K","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rt_cs2","Conditional average of rt over cs2","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rl_cs2","Conditional average of rl over cs2","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("wt_cs2","Covariance of wtheta_l flux and cs2","K*m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("wv_cs2","Covariance of wtheta_v flux and cs2","K*m/s","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("wr_cs2","Covariance of wr_t flux and cs2","kg/kg*m/s","ttmt",.TRUE.,dummy)
+
+         CALL fields2%NewField("Nc","Cloud droplet number concentration","kg^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("Nr","Rain drop number concentration","kg^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("rr","Rain water mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("precip","Precipitation flux (positive downward)","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("evap","Net evap of rain-water","s^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("frc_prc","Conditionally sampled rain fraction","-","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("prc_prc","Conditionally sampled precipitation flux","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("frc_ran","Rain water fraction","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("hst_srf","Histogram of surface rain rates","-","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("sw_up","Upwelling shortwave radiation","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("sw_down","Downwelling shortwave radiation","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("lw_up","Upwelling longwave radiation","W/m^2","ttmt",.TRUE.,dummy)
+         CALL fields2%NewField("lw_down","Downwelling longwave radiation","W/m^2","ttmt",.TRUE.,dummy)
+
+
+         s1bool(nvar1+1:nvar1+3) = .TRUE.  ! Number concentrations
+         CALL fields1%NewField("Nc_ic","In-cloud CDNC","kg^-1","time",.TRUE.,dummy)
+         CALL fields1%NewField("Na_int","In-cloud interstitial aerosol number concentration","kg^-1","time",.TRUE.,dummy)
+         CALL fields1%NewField("Na_oc","Aerosol number concentration outside clous","kg^-1","time",.TRUE.,dummy)
+
+
+         s2bool(nvar2+1:nvar2+15) = .TRUE. ! Bin dimensions, number concentrations and radius
+         CALL fields2%NewField("aea","Aerosol size bins, regime a","m","aea",.TRUE.,dummy)
+         CALL fields2%NewField("aeb","Aerosol size bins, regime b","m","aeb",.TRUE.,dummy)
+         CALL fields2%NewField("cla","Cloud droplet size bins, regime a","m","cla",.TRUE.,dummy)
+         CALL fields2%NewField("clb","Cloud droplet size bins, regime b","m","clb",.TRUE.,dummy)
+         CALL fields2%NewField("prc","Precipitation size bins","m","prc",.TRUE.,dummy)
+         CALL fields2%NewField("P_Naa","SALSA aerosol number concentration in regime A","kg^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("P_Nab","SALSA aerosol number concentration in regime B","kg^-1","tttt",salsa_b_bins,dummy)
+         CALL fields2%NewField("P_Nca","SALSA CDNC in regime A","kg^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("P_Ncb","SALSA CDNC in regime B","kg^-1","tttt",salsa_b_bins,dummy)
+         CALL fields2%NewField("P_Np","SALSA rdnc","kg^-1","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("P_Rwaa","SALSA mean aerosol wet radius, regime A","m","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("P_Rwab","SALSA mean aerosol wet radius, regime B","m","tttt",salsa_b_bins,dummy)
+         CALL fields2%NewField("P_Rwca","SALSA mean cloud droplet radius, regime A","m","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("P_Rwcb","SALSA mean cloud droplet radius, regime B","m","tttt",salsa_b_bins,dummy)
+         CALL fields2%NewField("P_Rwp","SALSA mean drizzle drop radius","m","tttt",.TRUE.,dummy)
+
+         ! Bin number concentrations
+         i = nvar2+nv2sbulk+1  ! binned
+         s2bool(i) = .TRUE.
+         CALL fields2%NewField("P_Naba","Aerosol number concentration in size bins A","kg^-1","ttztaea",lbinanl,dummy)
+
+         i = nvar2+nv2sbulk+nv2saa+1
+         s2bool(i) = .TRUE.
+         CALL fields2%NewField("P_Nabb","Aerosol number concentration in size bins B","kg^-1","ttztaeb",&
+            (lbinanl .and. salsa_b_bins),dummy)
+
+         i = nvar2+nv2sbulk+nv2saa+nv2sab+1
+         s2bool(i) = .TRUE.
+         CALL fields2%NewField("P_Ncba","Cloud droplet number concentration in size bins A","kg^-1","ttztcla",lbinanl,dummy)
+
+         i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+1
+         s2bool(i) = .TRUE.
+         CALL fields2%NewField("P_Ncbb","Cloud droplet number concentration in size bins B","kg^-1","ttztclb",&
+                               (lbinanl .and. salsa_b_bins),dummy)
+
+         i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+1
+         s2bool(i) = .TRUE.
+         CALL fields2%NewField("P_Npb","Number concentration of drizzle bins","kg^-1","ttztprc",lbinanl,dummy)
+
+         ! Water removal temporal statistics
+         i = nvar1+25; e = nvar1+27
+         CALL fields1%NewField("rmH2Oae","Deposition of H2O with aerosols","kg/m^2/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("rmH2Ocl","Deposition of H2O with cloud droplets","kg/m^2/s","time",.TRUE.,dummy)
+         CALL fields1%NewField("rmH2Opr","Deposition of H2O with rain","kg/m^2/s","time",.TRUE.,dummy)
+
+         s1bool(i:e) = .TRUE.
+
+         nvar_spec3 = 0
+
+         IF (IsUsed(prtcl,'SO4')) THEN
+
+            i = nvar1+4; e = nvar1+6
+            s1bool(i:e) = .TRUE.
+
+            CALL fields1%NewField("SO4_ic","Cloud droplet SO4 mass mixing ratio","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("SO4_int","SO4 mass mixing ratio in interstitial aerosols","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("SO4_oc","Aerosol SO4 mass mixing ratio outside clouds","kg/kg","time",.TRUE.,dummy)
+
+            i = nvar1+28; e = nvar1+32
+            s1bool(i:e) = .TRUE.
+
+            CALL fields1%NewField("rmSO4dr","Aerosol deposition of SO4","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSO4cl","Cloud deposition of SO4","kg/^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSO4pr","Precipitation deposition of SO4","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSO4wt","Total wet deposition of SO4","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSO4tt","Total deposition of SO4","kg/m^2/s","time",.TRUE.,dummy)
+
+
+            i = nvar2+16; e = nvar2+18
+            s2bool(i:e) = .TRUE.  ! Bulk sulphate
+
+            CALL fields2%NewField("P_cSO4a","SALSA total mass mixing ratio of SO4 in aerosols","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cSO4c","SALSA total mass mixing ratio of SO4 in cloud droplets","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cSO4p","SALSA total mass mixing ratio of SO4 in drizzle drops","kg/kg","tttt",.TRUE.,dummy)
+
+            i = nvar2+nv2sbulk+2  ! binned
+            s2bool(i) = .TRUE.
+            CALL fields2%NewField("P_SO4aa","Mass mixing ratio of SO4 in aerosol bins A","kg/kg","ttztaea",lbinanl,dummy)
+            i = nvar2+nv2sbulk+nv2saa+2
+            s2bool(i) = .TRUE.
+            CALL fields2%NewField("P_SO4ab","Mass mixing ratio of SO4 in aerosol bins B","kg/kg","ttztaeb",&
+               (lbinanl .and. salsa_b_bins),dummy)
+
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+2
+            s2bool(i) = .TRUE.
+            CALL fields2%NewField("P_SO4ca","Mass mixing ratio of SO4 in cloud bins A","kg/kg","ttztcla",lbinanl,dummy)
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+2
+            s2bool(i) = .TRUE.
+            CALL fields2%NewField("P_SO4cb","Mass mixing ratio of SO4 in cloud bins B","kg/kg","ttztclb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+2
+            s2bool(i) = .TRUE.
+            CALL fields2%NewField("P_SO4pb","Mass mixing ratio of SO4 in drizzle bins","kg/kg","ttztprc",lbinanl,dummy)
+
+            nvar_spec3 = nvar_spec3 +1
+            spec3(nvar_spec3) = 'SO4'
+         END IF
+         IF (IsUsed(prtcl,'OC')) THEN
+
+            i = nvar1+7; e = nvar1+9
+            s1bool(i:e) = .TRUE.
+            CALL fields1%NewField("OC_ic","Cloud droplet OC mass mixing ratio","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("OC_int","OC mass mixing ratio in interstitial aerosols","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("OC_oc","Aerosol OC mass mixing ratio outside clouds","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmOCdr","Aerosol deposition of OC","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmOCcl","Cloud deposition of OC","kg/^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmOCpr","Precipitation deposition of OC","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmOCwt","Total wet deposition of OC","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmOCtt","Total deposition of OC","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields2%NewField("P_cOCa","SALSA total mass mixing ratio of OC in aerosols","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cOCc","SALSA total mass mixing ratio of OC in cloud droplets","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cOCp","SALSA total mass mixing ratio of OC in drizzle drops","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_OCaa","Mass mixing ratio of OC in aerosol bins A","kg/kg","ttztaea",lbinanl,dummy)
+            CALL fields2%NewField("P_OCab","Mass mixing ratio of OC in aerosol bins B","kg/kg","ttztaeb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_OCca","Mass mixing ratio of OC in cloud bins A","kg/kg","ttztcla",lbinanl,dummy)
+            CALL fields2%NewField("P_OCcb","Mass mixing ratio of OC in cloud bins B","kg/kg","ttztclb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_OCpb","Mass mixing ratio of OC in drizzle bins","kg/kg","ttztprc",lbinanl,dummy)
+
+
+            i = nvar1+33; e = nvar1+37
+            s1bool(i:e) = .TRUE.
+
+            i = nvar2+19; e = nvar2+21
+            s2bool(i:e) = .TRUE.  ! Bulk OC
+            i = nvar2+nv2sbulk+3  ! binned
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+3
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+3
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+3
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+3
+            s2bool(i) = .TRUE.
+
+            nvar_spec3 = nvar_spec3 +1
+            spec3(nvar_spec3) = 'OC'
+         END IF
+         IF (IsUsed(prtcl,'BC')) THEN
+
+            i = nvar1+10; e = nvar1+12
+            s1bool(i:e) = .TRUE.
+            i = nvar1+38; e = nvar1+42
+            s1bool(i:e) = .TRUE.
+            CALL fields1%NewField("BC_ic","Cloud droplet BC mass mixing ratio","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("BC_int","BC mass mixing ratio in interstitial aerosols","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("BC_oc","Aerosol BC mass mixing ratio outside clouds","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmBCdr","Aerosol deposition of BC","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmBCcl","Cloud deposition of BC","kg/^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmBCpr","Precipitation deposition of BC","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmBCwt","Total wet deposition of BC","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmBCtt","Total deposition of BC","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields2%NewField("P_cBCa","SALSA total mass mixing ratio of BC in aerosols","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cBCc","SALSA total mass mixing ratio of BC in cloud droplets","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cBCp","SALSA total mass mixing ratio of BC in drizzle drops","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_BCaa","Mass mixing ratio of BC in aerosol bins A","kg/kg","ttztaea",lbinanl,dummy)
+            CALL fields2%NewField("P_BCab","Mass mixing ratio of BC in aerosol bins B","kg/kg","ttztaeb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_BCca","Mass mixing ratio of BC in cloud bins A","kg/kg","ttztcla",lbinanl,dummy)
+            CALL fields2%NewField("P_BCcb","Mass mixing ratio of BC in cloud bins B","kg/kg","ttztclb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_BCpb","Mass mixing ratio of BC in drizzle bins","kg/kg","ttztprc",lbinanl,dummy)
+
+            i = nvar2+22; e = nvar2+24
+            s2bool(i:e) = .TRUE.  ! Bulk BC
+            i = nvar2+nv2sbulk+4  ! binned
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+4
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+4
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+4
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+4
+            s2bool(i) = .TRUE.
+
+            nvar_spec3 = nvar_spec3 +1
+            spec3(nvar_spec3) = 'BC'
+         END IF
+         IF (IsUsed(prtcl,'DU')) THEN
+
+            i = nvar1+13; e = nvar1 + 15
+            s1bool(i:e) = .TRUE.
+            i = nvar1+43; e = nvar1+47
+            s1bool(i:e) = .TRUE.
+
+            CALL fields1%NewField("DU_ic","Cloud droplet DU mass mixing ratio","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("DU_int","DU mass mixing ratio in interstitial aerosols","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("DU_oc","Aerosol DU mass mixing ratio outside clouds","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmDUdr","Aerosol deposition of DU","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmDUcl","Cloud deposition of DU","kg/^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmDUpr","Precipitation deposition of DU","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmDUwt","Total wet deposition of DU","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmDUtt","Total deposition of DU","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields2%NewField("P_cDUa","SALSA total mass mixing ratio of DU in aerosols","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cDUc","SALSA total mass mixing ratio of DU in cloud droplets","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cDUp","SALSA total mass mixing ratio of DU in drizzle drops","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_DUaa","Mass mixing ratio of DU in aerosol bins A","kg/kg","ttztaea",lbinanl,dummy)
+            CALL fields2%NewField("P_DUab","Mass mixing ratio of DU in aerosol bins B","kg/kg","ttztaeb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_DUca","Mass mixing ratio of DU in cloud bins A","kg/kg","ttztcla",lbinanl,dummy)
+            CALL fields2%NewField("P_DUcb","Mass mixing ratio of DU in cloud bins B","kg/kg","ttztclb",&
+                                 (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_DUpb","Mass mixing ratio of DU in drizzle bins","kg/kg","ttztprc",lbinanl,dummy)
+
+
+            i = nvar2+25; e = nvar2+27
+            s2bool(i:e) = .TRUE.  ! Bulk DU
+            i = nvar2+nv2sbulk+5  ! binned
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+5
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+5
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+5
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+5
+            s2bool(i) = .TRUE.
+
+            nvar_spec3 = nvar_spec3 +1
+            spec3(nvar_spec3) = 'DU'
+         END IF
+         IF (IsUsed(prtcl,'SS')) THEN
+
+            i = nvar1+16; e = nvar1+18
+            s1bool(i:e) = .TRUE.
+            i = nvar1+48; e = nvar1+52
+            s1bool(i:e) = .TRUE.
+            CALL fields1%NewField("SS_ic","Cloud droplet SS mass mixing ratio","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("SS_int","SS mass mixing ratio in interstitial aerosols","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("SS_oc","Aerosol SS mass mixing ratio outside clouds","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSSdr","Aerosol deposition of SS","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSScl","Cloud deposition of SS","kg/^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSSpr","Precipitation deposition of SS","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSSwt","Total wet deposition of SS","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmSStt","Total deposition of SS","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields2%NewField("P_cSSa","SALSA total mass mixing ratio of SS in aerosols","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cSSc","SALSA total mass mixing ratio of SS in cloud droplets","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cSSp","SALSA total mass mixing ratio of SS in drizzle drops","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_SSaa","Mass mixing ratio of SS in aerosol bins A","kg/kg","ttztaea",lbinanl,dummy)
+            CALL fields2%NewField("P_SSab","Mass mixing ratio of SS in aerosol bins B","kg/kg","ttztaeb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_SSca","Mass mixing ratio of SS in cloud bins A","kg/kg","ttztcla",lbinanl,dummy)
+            CALL fields2%NewField("P_SScb","Mass mixing ratio of SS in cloud bins B","kg/kg","ttztclb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_SSpb","Mass mixing ratio of SS in drizzle bins","kg/kg","ttztprc",lbinanl,dummy)
+
+            i = nvar2+28; e = nvar2+30
+            s2bool(i:e) = .TRUE.  ! Bulk SS
+            i = nvar2+nv2sbulk+6  ! binned
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+6
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+6
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+6
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+6
+            s2bool(i) = .TRUE.
+
+            nvar_spec3 = nvar_spec3 +1
+            spec3(nvar_spec3) = 'SS'
+         END IF
+         IF (IsUsed(prtcl,'NH')) THEN
+
+            i = nvar1+19; e = nvar1+21
+            s1bool(i:e) = .TRUE.
+            i = nvar1+53; e = nvar1+57
+            s1bool(i:e) = .TRUE.
+            CALL fields1%NewField("NH3_ic","Cloud droplet NH3 mass mixing ratio","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("NH3_int","NH3 mass mixing ratio in interstitial aerosols","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("NH3_oc","Aerosol NH3 mass mixing ratio outside clouds","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNH3dr","Aerosol deposition of NH3","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNH3cl","Cloud deposition of NH3","kg/^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNH3pr","Precipitation deposition of NH3","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNH3wt","Total wet deposition of NH3","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNH3tt","Total deposition of NH3","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields2%NewField("P_cNH3a","SALSA total mass mixing ratio of NH3 in aerosols","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cNH3c","SALSA total mass mixing ratio of NH3 in cloud droplets","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cNH3p","SALSA total mass mixing ratio of NH3 in drizzle drops","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_NH3aa","Mass mixing ratio of NH3 in aerosol bins A","kg/kg","ttztaea",lbinanl,dummy)
+            CALL fields2%NewField("P_NH3ab","Mass mixing ratio of NH3 in aerosol bins B","kg/kg","ttztaeb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_NH3ca","Mass mixing ratio of NH3 in cloud bins A","kg/kg","ttztcla",lbinanl,dummy)
+            CALL fields2%NewField("P_NH3cb","Mass mixing ratio of NH3 in cloud bins B","kg/kg","ttztclb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_NH3pb","Mass mixing ratio of NH3 in drizzle bins","kg/kg","ttztprc",lbinanl,dummy)
+
+            i = nvar2+31; e = nvar2+33
+            s2bool(i:e) = .TRUE.  ! Bulk NH
+            i = nvar2+nv2sbulk+7  ! binned
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+7
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+7
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+7
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+7
+            s2bool(i) = .TRUE.
+
+            nvar_spec3 = nvar_spec3 +1
+            spec3(nvar_spec3) = 'NH'
+         END IF
+         IF (IsUsed(prtcl,'NO')) THEN
+
+            i = nvar1+22; e = nvar1+24
+            s1bool(i:e) = .TRUE.
+            i = nvar1+58; e = nvar1+62
+            s1bool(i:e) = .TRUE.
+            CALL fields1%NewField("NO3_ic","Cloud droplet NO3 mass mixing ratio","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("NO3_int","NO3 mass mixing ratio in interstitial aerosols","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("NO3_oc","Aerosol NO3 mass mixing ratio outside clouds","kg/kg","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNO3dr","Aerosol deposition of NO3","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNO3cl","Cloud deposition of NO3","kg/^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNO3pr","Precipitation deposition of NO3","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNO3wt","Total wet deposition of NO3","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields1%NewField("rmNO3tt","Total deposition of NO3","kg/m^2/s","time",.TRUE.,dummy)
+            CALL fields2%NewField("P_cNO3a","SALSA total mass mixing ratio of NO3 in aerosols","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cNO3c","SALSA total mass mixing ratio of NO3 in cloud droplets","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_cNO3p","SALSA total mass mixing ratio of NO3 in drizzle drops","kg/kg","tttt",.TRUE.,dummy)
+            CALL fields2%NewField("P_NO3aa","Mass mixing ratio of NO3 in aerosol bins A","kg/kg","ttztaea",lbinanl,dummy)
+            CALL fields2%NewField("P_NO3ab","Mass mixing ratio of NO3 in aerosol bins B","kg/kg","ttztaeb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_NO3ca","Mass mixing ratio of NO3 in cloud bins A","kg/kg","ttztcla",lbinanl,dummy)
+            CALL fields2%NewField("P_NO3cb","Mass mixing ratio of NO3 in cloud bins B","kg/kg","ttztclb",&
+                                  (lbinanl .and. salsa_b_bins),dummy)
+            CALL fields2%NewField("P_NO3pb","Mass mixing ratio of NO3 in drizzle bins","kg/kg","ttztprc",lbinanl,dummy)
+
+            i = nvar2+34; e = nvar2+36
+            s2bool(i:e) = .TRUE.  ! Bulk NO
+            i = nvar2+nv2sbulk+8  ! binned
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+8
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+8
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+8
+            s2bool(i) = .TRUE.
+            i = nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb+8
+            s2bool(i) = .TRUE.
+
+            nvar_spec3 = nvar_spec3 +1
+            spec3(nvar_spec3) = 'NO'
+         END IF
+
+         s2bool(nvar2+37:nvar2+40) = .TRUE.     ! Water mixing ratios
+         CALL fields2%NewField("P_rl","Level 4 cloud water mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("P_rr","Level 4 precipitation mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("P_rv","Level 4 water vapor mixing ratio","kg/kg","tttt",.TRUE.,dummy)
+         CALL fields2%NewField("P_RH","Level 4 relative humidity","%","tttt",.TRUE.,dummy)
+
+         s2bool(nvar2+41:nvar2+nv2sbulk) = cloudy_col_stats   ! Stats for cloudy columns
+         CALL fields2%NewField("P_Na_c","Aerosol number concentration in cloudy columns","kg^-1","tttt",cloudy_col_stats,dummy)
+         CALL fields2%NewField("P_Nc_c","Cloud droplet number concentration in cloudy columns","kg^-1","tttt",&
+                               cloudy_col_stats,dummy)
+         CALL fields2%NewField("P_Np_c","Rain drop number concentration in cloudy columns","kg^-1","tttt",&
+                               cloudy_col_stats,dummy)
+         CALL fields2%NewField("P_cfrac","Fraction of cloudy columns","","tttt",cloudy_col_stats,dummy)
+         CALL fields2%NewField("P_clw_c","Cloud liquid water in cloudy columns","kg/kg","tttt",cloudy_col_stats,dummy)
+         CALL fields2%NewField("P_thl_c","Liquid water potential temperature in cloudy columns","K","tttt",&
+                               cloudy_col_stats,dummy)
+
+         ! Bin statistics not always saved
+         IF (.not. lbinanl) &
+            s2bool(nvar2+nv2sbulk+1:nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb) = .FALSE.
+
+
+         ! b-bins are not always saved
+         IF (.not. salsa_b_bins) THEN
+            ! Concentrations and sizes
+            s2bool(nvar2+7) = .FALSE.
+            s2bool(nvar2+9) = .FALSE.
+            s2bool(nvar2+12) = .FALSE.
+            s2bool(nvar2+14) = .FALSE.
+
+            ! Mass concentrations for aerosol and cloud species
+            s2bool(nvar2+nv2sbulk+nv2saa+1:nvar2+nv2sbulk+nv2saa+nv2sab) = .FALSE.
+            s2bool(nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+1:nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb) = .FALSE.
+         END IF
+
+
+         IF (csflg .AND. level > 3) THEN
+            ! Allocate array for level 4 removal rate column statistics
+            ! Total number of outputs is 3 for warm (aerosol, cloud and precipitation)
+            ! and 5 (add ice and snow) for each species including water
+            IF (level == 4) THEN
+               ALLOCATE( scs_rm(3*(nvar_spec3+1),nxp,nyp) )
+            ELSE
+               ALLOCATE( scs_rm(5*(nvar_spec3+1),nxp,nyp) )
+            END IF
+            scs_rm = 0. ! Set to zero (during spinup)
+         END IF
+      END IF ! If level >=4
+
+      nnum = fields1%count
+
+      fname = trim(filprf)//'.ts'
+      IF(myid == 0) PRINT                                                  &
+         "(//' ',49('-')/,' ',/,'  Initializing: ',A20)",trim(fname)
+      CALL open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid1, nrec1, ver, author, info)
+      ! Juha: Modified for SALSA output
+      CALL define_nc( ncid1, nrec1, nnum, fields1)
+      IF (myid == 0) PRINT *, '   ...starting record: ', nrec1
+
+      nnum = fields2%count
+      DO i=1,nnum
+         CALL fields2%getField(i,ArrEl)
+         strn = ArrEl%name
+         !s1bool(i) = ArrEl%outputstatus
+      END DO
+
+      nnum = COUNT(s2bool)
+      DO i=1,nnum
+         CALL fields2%getField(i,ArrEl)
+         strn = ArrEl%name
+         !s1bool(i) = ArrEl%outputstatus
+      END DO
+      nnum = fields2%count
+      fname = trim(filprf)//'.ps'
+      IF(myid == 0) PRINT                                                  &
+         "(//' ',49('-')/,' ',/,'  Initializing: ',A20)",trim(fname)
+      CALL open_nc( fname, expnme, time,(nxp-4)*(nyp-4), ncid2, nrec2, ver, author, info)
+      ! Juha: Modified due to SALSA output
+      CALL define_nc( ncid2, nrec2, nnum, fields2, n1=nzp, inae_a=fn2a, inae_b=fn2b-fn2a, &
+                      incld_a=fca%cur, incld_b=fcb%cur-fca%cur, inprc=fra)
+      !CALL define_nc2( ncid2, nrec2, COUNT(s2bool), PACK(s2Total,s2bool), n1=nzp, inae_a=fn2a, inae_b=fn2b-fn2a, &
+      !                incld_a=fca%cur, incld_b=fcb%cur-fca%cur, inprc=fra)
+      IF (myid == 0) PRINT *, '   ...starting record: ', nrec2
+
+
+
+      ! Optional column statistics
+      IF (csflg) THEN
+         fname = trim(filprf)//'.cs'
+         IF(myid == 0) PRINT "(//' ',49('-')/,' ',/,'  Initializing: ',A20)",trim(fname)
+         CALL open_nc( fname, expnme, time,(nxp-4)*(nyp-4), ncid3, nrec3, ver, author, info)
+         IF (ncid3 >= 0) CALL define_nc_cs(ncid3, nrec3, nxp-4, nyp-4, level, iradtyp, spec3, nvar_spec3)
+         IF (myid == 0) PRINT *, '   ...starting record: ', nrec3
+      END IF
+
+   END SUBROUTINE init_stat
+
+   SUBROUTINE init_stat2(time, filprf, expnme, nzp)
 
       USE grid, ONLY          : nxp, nyp, iradtyp, prtcl
       USE mpi_interface, ONLY : myid, ver, author, info
@@ -460,22 +1311,22 @@ CONTAINS
 
          s2bool(nvar2+41:nvar2+nv2sbulk) = cloudy_col_stats   ! Stats for cloudy columns
 
-        ! Bin statistics not always saved
+         ! Bin statistics not always saved
          IF (.not. lbinanl) &
-             s2bool(nvar2+nv2sbulk+1:nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb) = .FALSE.
+            s2bool(nvar2+nv2sbulk+1:nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb) = .FALSE.
 
-        ! b-bins are not always saved
+         ! b-bins are not always saved
          IF (.not. salsa_b_bins) THEN
-           ! Concentrations and sizes
+            ! Concentrations and sizes
             s2bool(nvar2+7) = .FALSE.
             s2bool(nvar2+9) = .FALSE.
             s2bool(nvar2+12) = .FALSE.
             s2bool(nvar2+14) = .FALSE.
 
-           ! Mass concentrations for aerosol and cloud species
+            ! Mass concentrations for aerosol and cloud species
             s2bool(nvar2+nv2sbulk+nv2saa+1:nvar2+nv2sbulk+nv2saa+nv2sab) = .FALSE.
             s2bool(nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+1:nvar2+nv2sbulk+nv2saa+nv2sab+nv2sca+nv2scb) = .FALSE.
-        END IF
+         END IF
 
 
          IF (csflg .AND. level > 3) THEN
@@ -496,7 +1347,7 @@ CONTAINS
          "(//' ',49('-')/,' ',/,'  Initializing: ',A20)",trim(fname)
       CALL open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid1, nrec1, ver, author, info)
       ! Juha: Modified for SALSA output
-      CALL define_nc( ncid1, nrec1, COUNT(s1bool), PACK(s1Total,s1bool))
+      CALL define_nc2( ncid1, nrec1, COUNT(s1bool), PACK(s1Total,s1bool))
       IF (myid == 0) PRINT *, '   ...starting record: ', nrec1
 
 
@@ -506,8 +1357,8 @@ CONTAINS
          "(//' ',49('-')/,' ',/,'  Initializing: ',A20)",trim(fname)
       CALL open_nc( fname, expnme, time,(nxp-4)*(nyp-4), ncid2, nrec2, ver, author, info)
       ! Juha: Modified due to SALSA output
-      CALL define_nc( ncid2, nrec2, COUNT(s2bool), PACK(s2Total,s2bool), n1=nzp, inae_a=fn2a, inae_b=fn2b-fn2a, &
-                      incld_a=fca%cur, incld_b=fcb%cur-fca%cur, inprc=fra)
+      CALL define_nc2( ncid2, nrec2, COUNT(s2bool), PACK(s2Total,s2bool), n1=nzp, inae_a=fn2a, inae_b=fn2b-fn2a, &
+                       incld_a=fca%cur, incld_b=fcb%cur-fca%cur, inprc=fra)
       IF (myid == 0) PRINT *, '   ...starting record: ', nrec2
 
 
@@ -521,7 +1372,8 @@ CONTAINS
          IF (myid == 0) PRINT *, '   ...starting record: ', nrec3
       END IF
 
-   END SUBROUTINE init_stat
+   END SUBROUTINE init_stat2
+
    !
    ! ---------------------------------------------------------------------
    ! Subroutine Statistics:  This subroutine is the statistics driver
@@ -565,18 +1417,18 @@ CONTAINS
       ! profile statistics
       !
       CALL accum_stat(nzp, nxp, nyp, a_up, a_vp, a_wp, a_tp%data, a_press%data, umean, &
-                      vmean,th00)
+         vmean,th00)
       IF (iradtyp == 3) THEN
          CALL accum_rad(nzp, nxp, nyp, a_rflx, sflx=a_sflx, sup=a_fus, sdwn=a_fds, &
-                        irup=a_fuir, irdwn=a_fdir, alb=albedo)
+            irup=a_fuir, irdwn=a_fdir, alb=albedo)
       ELSE IF (iradtyp > 0) THEN
          CALL accum_rad(nzp, nxp, nyp, a_rflx)
       END IF
       IF (level >= 1) CALL accum_lvl1(nzp, nxp, nyp, rxt)
       IF (level >= 2) CALL accum_lvl2(nzp, nxp, nyp, th00, dn0, zm, a_wp,        &
-                                      a_theta%data, a_tp%data, a_rc%data, rxt   )
+         a_theta%data, a_tp%data, a_rc%data, rxt   )
       IF (level >= 3) CALL accum_lvl3(nzp, nxp, nyp, dn0, zm, a_rc%data, xrpp,  &
-                                      xnpp, precip, CCN                    )
+         xnpp, precip, CCN                    )
       IF (level >= 4) CALL accum_lvl4(nzp, nxp, nyp)
        !for Salsa output in ps files .. by Zubair Maalick
 
@@ -664,10 +1516,10 @@ CONTAINS
 
       INTEGER, INTENT(in) :: n2,n3,n4   ! Grid dimensions
       REAL, INTENT(in) :: raer(n2,n3,n4*nbins), & ! Removal arrays
-                          rcld(n2,n3,n4*ncld),  &
-                          rprc(n2,n3,n4*nprc),  &
-                          rice(n2,n3,n4*nice),  &
-                          rsnw(n2,n3,n4*nsnw)
+         rcld(n2,n3,n4*ncld),  &
+         rprc(n2,n3,n4*nprc),  &
+         rice(n2,n3,n4*nice),  &
+         rsnw(n2,n3,n4*nsnw)
 
       INTEGER :: si, i, end,str
 
@@ -768,7 +1620,7 @@ CONTAINS
       REAL, INTENT(in)    :: rc(n1,n2,n3),nc(n1,n2,n3),rp(n1,n2,n3),np(n1,n2,n3),th(n1,n2,n3)
       REAL, INTENT(in)    :: dn0(n1),zm(n1),zt(n1),dzm(n1),xt(n2),yt(n3),time
       REAL :: lwp(n2,n3), ncld(n2,n3), rwp(n2,n3), nrain(n2,n3), zb(n2,n3), zc(n2,n3), &
-              th1(n2,n3), lmax(n2,n3)
+         th1(n2,n3), lmax(n2,n3)
       INTEGER :: ncloudy(n2,n3), nrainy(n2,n3)
       INTEGER :: i, j, k
       REAL    :: cld, rn, sval, dmy
@@ -980,7 +1832,7 @@ CONTAINS
    !
    SUBROUTINE ts_lvl4(n1,n2,n3,rc)
       USE mo_submctl, ONLY : nlim
-      USE grid, ONLY       : prtcl, bulkNumc, bulkMixrat,dzt
+      USE grid,       ONLY : prtcl, bulkNumc, bulkMixrat,dzt
       USE class_componentIndex, ONLY : IsUsed
 
       IMPLICIT NONE
@@ -1094,14 +1946,14 @@ CONTAINS
       END IF
 
       IF (present(sup)) THEN
-        CALL get_avg3(n1,n2,n3,sup,a1)
-        svctr(:,93)=svctr(:,93) + a1(:)
-        CALL get_avg3(n1,n2,n3,sdwn,a1)
-        svctr(:,94)=svctr(:,94) + a1(:)
-        CALL get_avg3(n1,n2,n3,irup,a1)
-        svctr(:,95)=svctr(:,95) + a1(:)
-        CALL get_avg3(n1,n2,n3,irdwn,a1)
-        svctr(:,96)=svctr(:,96) + a1(:)
+         CALL get_avg3(n1,n2,n3,sup,a1)
+         svctr(:,93)=svctr(:,93) + a1(:)
+         CALL get_avg3(n1,n2,n3,sdwn,a1)
+         svctr(:,94)=svctr(:,94) + a1(:)
+         CALL get_avg3(n1,n2,n3,irup,a1)
+         svctr(:,95)=svctr(:,95) + a1(:)
+         CALL get_avg3(n1,n2,n3,irdwn,a1)
+         svctr(:,96)=svctr(:,96) + a1(:)
       END IF
 
    END SUBROUTINE accum_rad
@@ -1135,7 +1987,7 @@ CONTAINS
    ! on level 2 variables.
    !
    SUBROUTINE accum_lvl2(n1, n2, n3, th00, dn0, zm, w, th, tl, &
-                         rl, rt)
+      rl, rt)
 
       USE defs, ONLY : ep2
 
@@ -1348,14 +2200,14 @@ CONTAINS
                   nrcnt = nrcnt + 1.
                END IF
 
-              ! Surface precipitation for this column
+               ! Surface precipitation for this column
                IF (k == 2 .AND. rrate(k,i,j) > 3.65e-5) rrcnt = rrcnt + 1.
 
-              ! Precpitation at cloud base (no cloud = no precip.)
+               ! Precpitation at cloud base (no cloud = no precip.)
                IF (rc(k,i,j) > 1.e-5 .AND. below) THEN
-                 ! Take precpitation from level k-1 (>=2), which is just below cloud base
-                 rrcb = rrcb + rrate(max(2,k-1),i,j)
-                 below = .FALSE.
+                  ! Take precpitation from level k-1 (>=2), which is just below cloud base
+                  rrcb = rrcb + rrate(max(2,k-1),i,j)
+                  below = .FALSE.
                END IF
             END DO
          END DO
@@ -1377,11 +2229,11 @@ CONTAINS
    !
    SUBROUTINE accum_lvl4(n1,n2,n3)
       USE mo_submctl, ONLY : in1a,in2b,fn2a,fn2b,     &
-                             ica,fca,icb,fcb,ira,fra, &
-                             nprc,nlim,prlim
+         ica,fca,icb,fcb,ira,fra, &
+         nprc,nlim,prlim
       USE grid, ONLY : bulkNumc, bulkMixrat, meanRadius, binSpecMixrat, &
-                       a_rc, a_srp, a_rp, a_rh, prtcl,    &
-                       a_naerop, a_ncloudp, a_nprecpp, a_tp
+         a_rc, a_srp, a_rp, a_rh, prtcl,    &
+         a_naerop, a_ncloudp, a_nprecpp, a_tp
       USE class_ComponentIndex, ONLY : IsUsed
 
       IMPLICIT NONE
@@ -1569,14 +2421,14 @@ CONTAINS
          cloudmask(1,:,:)=ANY( (a1>nlim .AND. a_rc%data>1.e-5), DIM=1)
          ! Fill array
          DO ii = 2, n1
-             cloudmask(ii,:,:)=cloudmask(1,:,:)
+            cloudmask(ii,:,:)=cloudmask(1,:,:)
          END DO
 
          ! Save the fraction of cloudy columns
          WHERE (cloudmask)
             a1 = 1.
          ELSE WHERE
-             a1=0.
+            a1=0.
          END WHERE
          CALL get_avg3(n1,n2,n3,a1,a2(:,4),cond=cloudmask)
 
@@ -1603,7 +2455,7 @@ CONTAINS
 
          ! Save
          svctr_b(:,45:46) = svctr_b(:,45:46) + a2(:,1:2)
-     END IF
+      END IF
 
    END SUBROUTINE accum_lvl4
 
@@ -1703,11 +2555,11 @@ CONTAINS
          DO i = 3, n2-2
             DO k = 2, n1-1
                uw_shear = -(u(k,i,j)-ub(k))*fact*(                              &
-                           (w(k,i,j)  +w(k,i+1,j)  )*(ub(k+1)-ub(k)  )*dzm(k) +        &
-                           (w(k-1,i,j)+w(k-1,i+1,j))*(ub(k)  -ub(k-1))*dzm(k-1))
+                  (w(k,i,j)  +w(k,i+1,j)  )*(ub(k+1)-ub(k)  )*dzm(k) +        &
+                  (w(k-1,i,j)+w(k-1,i+1,j))*(ub(k)  -ub(k-1))*dzm(k-1))
                IF (j > 1) vw_shear = -(v(k,i,j)-vb(k))*fact*(                   &
-                                      (w(k,i,j)  +w(k,i,j+1)  )*(vb(k+1)-vb(k)  )*dzm(k) +  &
-                                      (w(k-1,i,j)+w(k-1,i,j+1))*(vb(k)  -vb(k-1))*dzm(k-1))
+                  (w(k,i,j)  +w(k,i,j+1)  )*(vb(k+1)-vb(k)  )*dzm(k) +  &
+                  (w(k-1,i,j)+w(k-1,i,j+1))*(vb(k)  -vb(k-1))*dzm(k-1))
 
                svctr(k,48) = svctr(k,48)+uw_shear
                svctr(k,36) = svctr(k,36)+uw_shear+vw_shear
@@ -1756,7 +2608,7 @@ CONTAINS
       USE netcdf
       USE defs, ONLY : alvl, cp
       USE mo_submctl, ONLY : in1a,in2b,fn2a,fn2b,fca,ica,fcb,icb,fra,ira, &
-                             aerobins,cloudbins,precpbins
+         aerobins,cloudbins,precpbins
 
       INTEGER, INTENT (in) :: n1
       REAL, INTENT (in)    :: time
@@ -1776,9 +2628,9 @@ CONTAINS
          svctr(k,54) = svctr(k,54)*alvl
          svctr(k,62) = svctr(k,62)*alvl
          svctr(k,37) = svctr(k,44) + svctr(k,47) +(                         &
-                       +svctr(k,45) + svctr(kp1,45) + svctr(k,46) + svctr(kp1,46)    &
-                       +svctr(k,42) + svctr(kp1,42) + svctr(k,43) + svctr(kp1,43)    &
-                       -svctr(k,36) - svctr(kp1,36)   )*0.5
+            +svctr(k,45) + svctr(kp1,45) + svctr(k,46) + svctr(kp1,46)    &
+            +svctr(k,42) + svctr(kp1,42) + svctr(k,43) + svctr(kp1,43)    &
+            -svctr(k,36) - svctr(kp1,36)   )*0.5
          IF (lsttm > fsttm) THEN
             svctr(k,49) = (tke_res(k) - tke0(k))/(lsttm-fsttm)
          ELSE
@@ -1839,7 +2691,7 @@ CONTAINS
       DO n = 10, nvar2
          iret = nf90_inq_varid(ncid2, s2(n), VarID)
          iret = nf90_put_var(ncid2,VarID,svctr(:,n), start=(/1,nrec2/),    &
-                             count=(/n1,1/))
+            count=(/n1,1/))
       END DO
 
       IF (level >= 4) THEN
@@ -1848,7 +2700,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2SalsaBulk(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! This is intended to mainly keep track of which variables are used
             iret = nf90_put_var(ncid2,VarID,svctr_b(:,n), start=(/1,nrec2/),  &
-                                count=(/n1,1/))
+               count=(/n1,1/))
          END DO
 
          ! Binned aerosols, regime a
@@ -1856,7 +2708,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Aeroa(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! keep track of used vars
             iret = nf90_put_var(ncid2,VarID,svctr_aa(:,:,n), start=(/1,1,nrec2/),  &
-                                count=(/n1,fn2a,1/))
+               count=(/n1,fn2a,1/))
          END DO
 
          ! Aerosols, regime b
@@ -1864,7 +2716,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Aerob(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! Keep track of used variables
             iret = nf90_put_var(ncid2,VarID,svctr_ab(:,:,n), start=(/1,1,nrec2/),  &
-                                count=(/n1,fn2b-fn2a,1/))
+               count=(/n1,fn2b-fn2a,1/))
          END DO
 
          ! Cloud droplets, regime a
@@ -1872,7 +2724,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Clouda(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! Keep track of used variables
             iret = nf90_put_var(ncid2,VarID,svctr_ca(:,:,n), start=(/1,1,nrec2/),  &
-                                count=(/n1,fca%cur,1/))
+               count=(/n1,fca%cur,1/))
          END DO
 
          ! Cloud droplets, regime b
@@ -1880,7 +2732,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Cloudb(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! Keep track of used variables
             iret = nf90_put_var(ncid2,VarID,svctr_cb(:,:,n), start=(/1,1,nrec2/),  &
-                                count=(/n1,fcb%cur-fca%cur,1/))
+               count=(/n1,fcb%cur-fca%cur,1/))
          END DO
 
          ! Precipitation
@@ -1888,7 +2740,7 @@ CONTAINS
             iret = nf90_inq_varid(ncid2,s2Precp(n),VarID)
             IF (iret /= NF90_NOERR) CYCLE ! Keep track of used variables
             iret = nf90_put_var(ncid2,VarID,svctr_p(:,:,n), start=(/1,1,nrec2/),   &
-                                count=(/n1,fra,1/))
+               count=(/n1,fra,1/))
          END DO
 
       END IF
@@ -1994,8 +2846,8 @@ CONTAINS
                DO k = 1, n1-1
                   IF (rl(k+1,i,j) > 0.) THEN
                      fctt = rnpts*(1. + rv(k,i,j)*(1.+ep2 +ep2*rv(k,i,j)*alvl     &
-                                   /(rm*th(k,i,j))))                              &
-                            /(1.+(rv(k,i,j)*(alvl/th(k,i,j))**2)/(rm*cp))
+                        /(rm*th(k,i,j))))                              &
+                        /(1.+(rv(k,i,j)*(alvl/th(k,i,j))**2)/(rm*cp))
                      SELECT CASE (type)
                         CASE ('tl')
                            fctl = -rnpts/(rm*th(k,i,j)**2/(rv(k,i,j)*alvl)+alvl/cp)
@@ -2193,9 +3045,9 @@ CONTAINS
       INTEGER, INTENT(in)        :: n2,n3,n4                     ! Grid dimensions
       REAL, INTENT(in)           :: raer(n2,n3,n4*nbins)        ! Array containing the binned 2d-field
       REAL, OPTIONAL, INTENT(in) :: rcld(n2,n3,n4*ncld), &
-                                    rprc(n2,n3,n4*nprc), &     ! 2 optional arrays for calculating total removals
-                                    rice(n2,n3,n4*nice), &
-                                    rsnw(n2,n3,n4*nsnw)
+         rprc(n2,n3,n4*nprc), &     ! 2 optional arrays for calculating total removals
+         rice(n2,n3,n4*nice), &
+         rsnw(n2,n3,n4*nsnw)
 
       CHARACTER(len=3), PARAMETER :: zspec(7) = (/'SO4','OC ','BC ','DU ','SS ','NH ','NO '/)
       INTEGER, PARAMETER          :: sstrt(7) = (/28,    33,   38,   43,   48,   53,   58/)
@@ -2348,7 +3200,7 @@ CONTAINS
    ! Juha Tonttila, FMI, 2016
    !
    SUBROUTINE acc_massbudged(n1,n2,n3,type,tstep,dz,dn,    &
-                             rv,rc,prc,revap,rdep,ApVdom   )
+      rv,rc,prc,revap,rdep,ApVdom   )
 
       IMPLICIT NONE
 
@@ -2362,10 +3214,10 @@ CONTAINS
 
       REAL, INTENT(in), OPTIONAL :: rv(n1,n2,n3)      ! Water vapor mixing ratio
       REAL, INTENT(in), OPTIONAL :: rc(n1,n2,n3), &   ! Cloud water mixing ratio
-                                    prc(n1,n2,n3)     ! Precipitation mixing ratio
+         prc(n1,n2,n3)     ! Precipitation mixing ratio
 
       REAL, INTENT(in), OPTIONAL :: revap(n2,n3), &   ! Gain of water through evaporation at the surface
-                                    rdep(n2,n3)       ! Loss of water through deposition
+         rdep(n2,n3)       ! Loss of water through deposition
 
       REAL, INTENT(in), OPTIONAL :: ApVdom            ! Domain surface area / Domain atm volume
 
@@ -2422,7 +3274,7 @@ CONTAINS
       OPEN(88,FILE='MASSBUDGED.TXT')
       WRITE(88,*) 'Initial mass (atm), Final mass (atm), Final-Initial, Total evpaoration, Total deposition, Evap-Dep  '
       WRITE(88,*) massbdg(1), massbdg(2), massbdg(2)-massbdg(1),  &
-                  massbdg(3), massbdg(4), massbdg(3)-massbdg(4)
+         massbdg(3), massbdg(4), massbdg(3)-massbdg(4)
       CLOSE(88)
 
    END SUBROUTINE write_massbudged
@@ -2463,8 +3315,8 @@ CONTAINS
                   END DO
                   IF (k == n1-2) zibar = -999.
                   IF (zibar /= -999.) zibar = zibar + z(k-1) +  &
-                                             (threshold - sx(k-1,i,j))/xx(k-1)     /  &
-                                             (sx(k,i,j) - sx(k-1,i,j) + epsilon(1.))
+                     (threshold - sx(k-1,i,j))/xx(k-1)     /  &
+                     (sx(k,i,j) - sx(k-1,i,j) + epsilon(1.))
                END DO
             END DO
             IF (zibar /= -999.) get_zi = zibar/REAL((n3-4)*(n2-4))

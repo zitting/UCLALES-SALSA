@@ -79,7 +79,7 @@ MODULE mo_structured_datatypes
           FloatArray1d_constructor%alloc = trgt
           ! Associate "data" with the allocated array 
           FloatArray1d_constructor%data => FloatArray1d_constructor%alloc          
-     END IF
+    END IF
 
   END FUNCTION FloatArray1d_constructor
 

@@ -10,9 +10,9 @@ IMPLICIT NONE
 
   TYPE ArrayElement
      CHARACTER(len=10)  :: name          ! Short name: for output variable name and for fetching data using getData  
-     CHARACTER(len=100) :: long_name     ! Long name, mainly for output attributes                                   !! EI ASETETTU
-     CHARACTER(len=10)  :: unit          ! Unit of the variable, e.g. "kg/kg"; used mainly for output attributes     !! EI ASETETTU
-     CHARACTER(len=10)  :: dimension     ! String that gives the dimension environment for output (see ncio.f90)     !! EI ASETETTU
+     CHARACTER(len=100) :: long_name     ! Long name, mainly for output attributes
+     CHARACTER(len=10)  :: unit          ! Unit of the variable, e.g. "kg/kg"; used mainly for output attributes
+     CHARACTER(len=10)  :: dimension     ! String that gives the dimension environment for output (see ncio.f90)
      LOGICAL            :: outputstatus  ! TRUE: write this variable to an output file. FALSE: don't.
 
      ! Below are pointers to scalar variable arrays. In U-S, scalars have two definitions: 
@@ -101,23 +101,15 @@ IMPLICIT NONE
     CLASS(*), INTENT(in), POINTER             :: in_p_data      ! Polymorphic pointer to data (values)
     CLASS(*), INTENT(in), POINTER, OPTIONAL   :: in_t_data      ! - '' - (tendencies)
 
-write(*,*) "GHPY"
 
     ArrayElement_constructor%name = in_name
-    write(*,*) "GHPY"
     ArrayElement_constructor%long_name = in_long_name
-    write(*,*) "GHPY"
     ArrayElement_constructor%unit = in_unit
-    write(*,*) "GHPY"
     ArrayElement_constructor%dimension = in_dimension
-    write(*,*) "GHPY"
     ArrayElement_constructor%outputstatus = in_outputstatus
-    write(*,*) "GHPY"
     ArrayElement_constructor%p => in_p_data
-    write(*,*) "GHPY22"
 
     IF (PRESENT(in_t_data)) ArrayElement_constructor%t => in_t_data
-write(*,*) "GHPY11"
 
   END FUNCTION ArrayElement_constructor
 
@@ -149,19 +141,18 @@ write(*,*) "GHPY11"
     IMPLICIT NONE
     CLASS(FieldArray), INTENT(inout)         :: SELF
     CHARACTER(len=*), INTENT(in)             :: in_name     ! Variable name
-    CHARACTER(len=*), INTENT(in) :: in_long_name     ! Long name, mainly for output attributes
+    CHARACTER(len=*), INTENT(in)  :: in_long_name     ! Long name, mainly for output attributes
     CHARACTER(len=*), INTENT(in)  :: in_unit          ! Unit of the variable, e.g. "kg/kg"; used mainly for output attributes
     CHARACTER(len=*), INTENT(in)  :: in_dimension     ! String that gives the dimension environment for output (see ncio.f90)
-    LOGICAL, INTENT(in)            :: in_outputstatus
+    LOGICAL, INTENT(in)           :: in_outputstatus
     CLASS(*), INTENT(in), POINTER            :: in_p_data   ! Polymorphic pointer to data (values)
     CLASS(*), INTENT(in), POINTER, OPTIONAL  :: in_t_data   ! - '' - (tendencies)
  
     ! Extend the variable list allocation in FieldArray
     CALL SELF%Extend()
     ! Pass the input data and parameters to ArrayElement constructor
-    write(*,*) "GasdPY"
     SELF%list(SELF%count) = ArrayElement(in_name,in_long_name,in_unit,in_dimension,in_outputstatus,in_p_data,in_t_data)
-write(*,*) "GHPdasdasY"
+
   END SUBROUTINE newField
 
   ! ------------------------------------------------------------
