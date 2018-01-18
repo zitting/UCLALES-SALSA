@@ -6,7 +6,7 @@ MODULE ncio
   IMPLICIT NONE
   PRIVATE
 
-  PUBLIC :: open_nc, define_nc, define_nc2, define_nc_cs, &
+  PUBLIC :: open_nc, define_nc, define_nc_cs, &
             open_aero_nc, read_aero_nc_1d, read_aero_nc_2d, close_aero_nc
 
 CONTAINS
@@ -209,110 +209,110 @@ CONTAINS
        DO n = 1, nVar
           CALL fields%getField(n,ArrEl)
           IF (ArrEl%outputstatus) THEN
-          sx = Arrel%name
+            sx = Arrel%name
 
-          SELECT CASE(Arrel%dimension)
+            SELECT CASE(Arrel%dimension)
 
-          CASE ('time')
-             iret = nf90_def_var(ncID,Arrel%name,NF90_FLOAT,timeID  ,VarID)
-          CASE ('zt')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,ztID    ,VarID)
-          CASE ('zm')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,zmID    ,VarID)
-          CASE ('xt')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,xtID    ,VarID)
-          CASE ('xm')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,xmID    ,VarID)
-          CASE ('yt')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,ytID    ,VarID)
-          CASE ('ym')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,ymID    ,VarID)
-          ! Juha: added for size distributions
-          CASE ('aea')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,aeaID   ,VarID)
-          CASE ('aeb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,aebID   ,VarID)
-          CASE ('cla')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,claID   ,VarID)
-          CASE ('clb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,clbID   ,VarID)
-          CASE ('prc')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,prcID   ,VarID)
-          !Jaakko added for ice and snow
-          CASE ('ica')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,icaID   ,VarID)
-          CASE ('icb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,icbID   ,VarID)
-          CASE ('snow')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,snowID   ,VarID)
-          !Juha added
-          CASE ('ttttaea')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttaea,VarID)
-          CASE ('ttttaeb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttaeb,VarID)
-          CASE ('ttttcla')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttcla,VarID)
-          CASE ('ttttclb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttclb,VarID)
-          CASE ('ttttprc')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttprc,VarID)
-          !Jaakko added
-          CASE ('ttttica')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttica,VarID)
-          CASE ('tttticb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tttticb,VarID)
-          CASE ('ttttsnw')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttsnw,VarID)
-          ! ---
-          CASE ('tttt')
-             IF (present(n2) .AND. present(n3)) THEN
-                iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tttt,VarID)
-             ELSE
-                iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tt,VarID)
-             END IF
-          CASE ('mttt')
-             IF (present(n2) .AND. present(n3)) THEN
-                iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_mttt,VarID)
-             ELSE
-                iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tt,VarID)
-             END IF
-          CASE ('tmtt')
-             IF (present(n2) .AND. present(n3)) THEN
-                iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tmtt,VarID)
-             ELSE
-                iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tt,VarID)
-             END IF
-          CASE ('ttmt')
-             IF (present(n2) .AND. present(n3)) THEN
-                iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttmt,VarID)
-             ELSE
-                iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_mt,VarID)
-             END IF
-          CASE ('ttaea')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttaea,VarID)
-          CASE ('ttaeb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttaeb,VarID)
-          CASE ('ttcla')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttcla,VarID)
-          CASE ('ttclb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttclb,VarID)
-          CASE ('ttprc')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttprc,VarID)
-          CASE ('ttztaea')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztaea,VarID)
-          CASE ('ttztaeb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztaeb,VarID)
-          CASE ('ttztcla')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztcla,VarID)
-          CASE ('ttztclb')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztclb,VarID)
-          CASE ('ttztprc')
-             iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztprc,VarID)
-          CASE DEFAULT
-             IF (myid == 0) PRINT *, '  ABORTING: NCIO: Bad dimensional information ',Arrel%dimension,Arrel%long_name,&
-             Arrel%name,Arrel%outputstatus
-             CALL appl_abort(0)
-       END SELECT
+            CASE ('time')
+               iret = nf90_def_var(ncID,Arrel%name,NF90_FLOAT,timeID  ,VarID)
+            CASE ('zt')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,ztID    ,VarID)
+            CASE ('zm')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,zmID    ,VarID)
+            CASE ('xt')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,xtID    ,VarID)
+            CASE ('xm')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,xmID    ,VarID)
+            CASE ('yt')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,ytID    ,VarID)
+            CASE ('ym')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,ymID    ,VarID)
+            ! Juha: added for size distributions
+            CASE ('aea')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,aeaID   ,VarID)
+            CASE ('aeb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,aebID   ,VarID)
+            CASE ('cla')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,claID   ,VarID)
+            CASE ('clb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,clbID   ,VarID)
+            CASE ('prc')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,prcID   ,VarID)
+            !Jaakko added for ice and snow
+            CASE ('ica')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,icaID   ,VarID)
+            CASE ('icb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,icbID   ,VarID)
+            CASE ('snow')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,snowID   ,VarID)
+            !Juha added
+            CASE ('ttttaea')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttaea,VarID)
+            CASE ('ttttaeb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttaeb,VarID)
+            CASE ('ttttcla')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttcla,VarID)
+            CASE ('ttttclb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttclb,VarID)
+            CASE ('ttttprc')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttprc,VarID)
+            !Jaakko added
+            CASE ('ttttica')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttica,VarID)
+            CASE ('tttticb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tttticb,VarID)
+            CASE ('ttttsnw')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttttsnw,VarID)
+            ! ---
+            CASE ('tttt')
+               IF (present(n2) .AND. present(n3)) THEN
+                  iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tttt,VarID)
+               ELSE
+                  iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tt,VarID)
+               END IF
+            CASE ('mttt')
+               IF (present(n2) .AND. present(n3)) THEN
+                  iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_mttt,VarID)
+               ELSE
+                  iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tt,VarID)
+               END IF
+            CASE ('tmtt')
+               IF (present(n2) .AND. present(n3)) THEN
+                  iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tmtt,VarID)
+               ELSE
+                  iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_tt,VarID)
+               END IF
+            CASE ('ttmt')
+               IF (present(n2) .AND. present(n3)) THEN
+                  iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttmt,VarID)
+               ELSE
+                  iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_mt,VarID)
+               END IF
+            CASE ('ttaea')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttaea,VarID)
+            CASE ('ttaeb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttaeb,VarID)
+            CASE ('ttcla')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttcla,VarID)
+            CASE ('ttclb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttclb,VarID)
+            CASE ('ttprc')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttprc,VarID)
+            CASE ('ttztaea')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztaea,VarID)
+            CASE ('ttztaeb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztaeb,VarID)
+            CASE ('ttztcla')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztcla,VarID)
+            CASE ('ttztclb')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztclb,VarID)
+            CASE ('ttztprc')
+               iret = nf90_def_var(ncID,sx,NF90_FLOAT,dim_ttztprc,VarID)
+            CASE DEFAULT
+               IF (myid == 0) PRINT *, '  ABORTING: NCIO: Bad dimensional information ',Arrel%dimension,Arrel%long_name,&
+               Arrel%name,Arrel%outputstatus
+               CALL appl_abort(0)
+            END SELECT
        iret = nf90_put_att(ncID,VarID,'longname',Arrel%long_name)
        iret = nf90_put_att(ncID,VarID,'units'   ,Arrel%unit)
        END IF
@@ -347,252 +347,6 @@ CONTAINS
 
  END SUBROUTINE define_nc
 
-  SUBROUTINE define_nc2(ncID, nRec, nVar, sx, n1, n2, n3, &
-                       inae_a,incld_a,inprc,             &
-                       inae_b,incld_b,inice_a,inice_b,insnw         )
-    INTEGER, INTENT (in)           :: nVar, ncID
-    INTEGER, OPTIONAL, INTENT (in) :: n1, n2, n3
-    ! Juha: Added
-    INTEGER, OPTIONAL, INTENT(in)  :: inae_a,incld_a,inprc, &
-                                      inae_b,incld_b,       &
-                                      inice_a,inice_b,insnw
-    ! --
-    INTEGER, INTENT (inout)        :: nRec
-    CHARACTER (len=7), INTENT (in) :: sx(nVar)
-
-    INTEGER, SAVE :: timeID=0, ztID=0, zmID=0, xtID=0, xmID=0, ytID=0, ymID=0,            &
-                     dim_mttt(4) = 0, dim_tmtt(4) = 0, dim_ttmt(4) = 0, dim_tttt(4) = 0,  &
-                     dim_tt(2)  = 0, dim_mt(2)  = 0
-
-    ! Juha: added
-    INTEGER, SAVE :: aeaID=0, claID=0, aebID=0, clbID=0, prcID=0,   &
-                     icaID=0, icbID=0,snowID=0,                     &
-                     dim_ttttaea(5) = 0, dim_ttttcla(5) = 0,    &
-                     dim_ttttaeb(5) = 0, dim_ttttclb(5) = 0,    &
-                     dim_ttttprc(5) = 0,                        &
-                     dim_ttttica(5) = 0, dim_tttticb(5) = 0,    &
-                     dim_ttttsnw(5) = 0,                        &
-                     dim_ttaea(2) = 0, dim_ttcla(2) = 0,        &
-                     dim_ttaeb(2) = 0, dim_ttclb(2) = 0,        &
-                     dim_ttprc(2) = 0,                          &
-                     dim_ttica(2) = 0, dim_tticb(2) = 0,        &
-                     dim_ttsnw(2) = 0,                          &
-                     dim_ttztaea(3) = 0, dim_ttztcla(3) = 0,    &
-                     dim_ttztaeb(3) = 0, dim_ttztclb(3) = 0,    &
-                     dim_ttztprc(3) = 0,                        &
-                     dim_ttztica(3) = 0, dim_ttzticb(3) = 0,    &
-                     dim_ttztsnw(3) = 0
-    !--
-
-    CHARACTER (len=7) :: xnm
-    INTEGER :: iret, n, VarID
-
-    IF (nRec == 0) THEN
-       iret = nf90_def_dim(ncID, 'time', NF90_UNLIMITED, timeID)
-       IF (present(n1)) THEN
-          iret = nf90_def_dim(ncID, 'zt', n1, ztID)
-          iret = nf90_def_dim(ncID, 'zm', n1, zmID)
-       END IF
-       IF (present(n2)) THEN
-          iret = nf90_def_dim(ncID, 'xt', n2, xtID)
-          iret = nf90_def_dim(ncID, 'xm', n2, xmID)
-       END IF
-       IF (present(n3)) THEN
-          iret = nf90_def_dim(ncID, 'yt', n3, ytID)
-          iret = nf90_def_dim(ncID, 'ym', n3, ymID)
-       END IF
-       ! IF this is analysis file, dont write binned output by default!
-       ! --------------------------------------------------------------
-       IF (present(inae_a)) THEN
-          iret = nf90_def_dim(ncID, 'aea', inae_a, aeaID)
-       END IF
-       IF (present(inae_b)) THEN
-          iret = nf90_def_dim(ncID, 'aeb', inae_b, aebID)
-       END IF
-       IF (present(incld_a)) THEN
-          iret = nf90_def_dim(ncID, 'cla', incld_a, claID)
-       END IF
-       IF (present(incld_b)) THEN
-          iret = nf90_def_dim(ncID, 'clb', incld_b, clbID)
-       END IF
-       IF (present(inprc)) THEN
-          iret = nf90_def_dim(ncID, 'prc', inprc, prcID)
-       END IF
-       IF (present(inice_a)) THEN
-          iret = nf90_def_dim(ncID, 'ica', inice_a, icaID)
-       END IF
-       IF (present(inice_b)) THEN
-          iret = nf90_def_dim(ncID, 'icb', inice_b, icbID)
-       END IF
-       IF (present(insnw)) THEN
-          iret = nf90_def_dim(ncID, 'snow', insnw, snowID)
-       END IF
-
-       dim_tt = (/ztID,timeID/)
-       dim_mt = (/zmID,timeID/)
-       dim_tttt = (/ztID,xtID,ytID,timeID/)  ! thermo point
-       dim_mttt = (/zmID,xtID,ytID,timeID/)  ! zpoint
-       dim_tmtt = (/ztID,xmID,ytID,timeID/)  ! upoint
-       dim_ttmt = (/ztID,xtID,ymID,timeID/)  ! ypoint
-
-       ! Juha: dimension environments for size distribution variables
-       dim_ttttaea = (/ztID,xtID,ytID,aeaID,timeID/)
-       dim_ttttaeb = (/ztID,xtID,ytID,aebID,timeID/)
-       dim_ttttcla = (/ztID,xtID,ytID,claID,timeID/)
-       dim_ttttclb = (/ztID,xtID,ytID,clbID,timeID/)
-       dim_ttttprc = (/ztID,xtID,ytID,prcID,timeID/)
-
-       ! Jaakko: ice & snow
-       dim_ttttica = (/ztID,xtID,ytID,icaID,timeID/)
-       dim_tttticb = (/ztID,xtID,ytID,icbID,timeID/)
-       dim_ttttsnw = (/ztID,xtID,ytID,snowID,timeID/)
-       ! ---
-       ! Zubair: dimension environments for avegare size distribution variables per bin - ts files
-       dim_ttaea = (/aeaID,timeID/)
-       dim_ttaeb = (/aebID,timeID/)
-       dim_ttcla = (/claID,timeID/)
-       dim_ttclb = (/clbID,timeID/)
-       dim_ttprc = (/prcID,timeID/)
-       ! Jaakko:
-       dim_ttica = (/icaID,timeID/)
-       dim_tticb = (/icbID,timeID/)
-       dim_ttsnw = (/snowID,timeID/)
-       ! Zubair: dimension environments for avegare size distribution variables per bin - ps files
-       dim_ttztaea = (/ztID,aeaID,timeID/)
-       dim_ttztaeb = (/ztID,aebID,timeID/)
-       dim_ttztcla = (/ztID,claID,timeID/)
-       dim_ttztclb = (/ztID,clbId,timeID/)
-       dim_ttztprc = (/ztID,prcID,timeID/)
-       ! Jaakko
-       dim_ttztica = (/ztID,icaID,timeID/)
-       dim_ttzticb = (/ztID,icbId,timeID/)
-       dim_ttztsnw = (/ztID,snowID,timeID/)
-
-       DO n = 1, nVar
-
-          SELECT CASE(trim(ncinfo(2,sx(n))))
-
-          CASE ('time')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,timeID  ,VarID)
-          CASE ('zt')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,ztID    ,VarID)
-          CASE ('zm')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,zmID    ,VarID)
-          CASE ('xt')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,xtID    ,VarID)
-          CASE ('xm')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,xmID    ,VarID)
-          CASE ('yt')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,ytID    ,VarID)
-          CASE ('ym')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,ymID    ,VarID)
-          ! Juha: added for size distributions
-          CASE ('aea')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,aeaID   ,VarID)
-          CASE ('aeb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,aebID   ,VarID)
-          CASE ('cla')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,claID   ,VarID)
-          CASE ('clb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,clbID   ,VarID)
-          CASE ('prc')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,prcID   ,VarID)
-          !Jaakko added for ice and snow
-          CASE ('ica')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,icaID   ,VarID)
-          CASE ('icb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,icbID   ,VarID)
-          CASE ('snow')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,snowID   ,VarID)
-          !Juha added
-          CASE ('ttttaea')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttttaea,VarID)
-          CASE ('ttttaeb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttttaeb,VarID)
-          CASE ('ttttcla')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttttcla,VarID)
-          CASE ('ttttclb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttttclb,VarID)
-          CASE ('ttttprc')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttttprc,VarID)
-          !Jaakko added
-          CASE ('ttttica')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttttica,VarID)
-          CASE ('tttticb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_tttticb,VarID)
-          CASE ('ttttsnw')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttttsnw,VarID)
-          ! ---
-          CASE ('tttt')
-             IF (present(n2) .AND. present(n3)) THEN
-                iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_tttt,VarID)
-             ELSE
-                iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_tt,VarID)
-             END IF
-          CASE ('mttt')
-             IF (present(n2) .AND. present(n3)) THEN
-                iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_mttt,VarID)
-             ELSE
-                iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_tt,VarID)
-             END IF
-          CASE ('tmtt')
-             IF (present(n2) .AND. present(n3)) THEN
-                iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_tmtt,VarID)
-             ELSE
-                iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_tt,VarID)
-             END IF
-          CASE ('ttmt')
-             IF (present(n2) .AND. present(n3)) THEN
-                iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttmt,VarID)
-             ELSE
-                iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_mt,VarID)
-             END IF
-          CASE ('ttaea')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttaea,VarID)
-          CASE ('ttaeb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttaeb,VarID)
-          CASE ('ttcla')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttcla,VarID)
-          CASE ('ttclb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttclb,VarID)
-          CASE ('ttprc')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttprc,VarID)
-          CASE ('ttztaea')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttztaea,VarID)
-          CASE ('ttztaeb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttztaeb,VarID)
-          CASE ('ttztcla')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttztcla,VarID)
-          CASE ('ttztclb')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttztclb,VarID)
-          CASE ('ttztprc')
-             iret = nf90_def_var(ncID,sx(n),NF90_FLOAT,dim_ttztprc,VarID)
-          CASE DEFAULT
-             IF (myid == 0) PRINT *, '  ABORTING: NCIO: Bad DIMENSIONal information ',trim(ncinfo(2,sx(n)))
-             CALL appl_abort(0)
-       END SELECT
-       iret = nf90_put_att(ncID,VarID,'longname',ncinfo(0,sx(n)))
-       iret = nf90_put_att(ncID,VarID,'units'   ,ncinfo(1,sx(n)))
-    END DO
-    iret = nf90_enddef(ncID)
-    iret = nf90_sync(ncID)
-    nRec = 1
- ELSE
-    iret = nf90_inquire(ncID, nVariables=n)
-    IF (n /= nVar) THEN
-       iret = nf90_close(ncID)
-       IF (myid == 0) PRINT *, '  ABORTING: Incompatible Netcdf File',n,nVar
-       CALL appl_abort(0)
-    ELSE
-       DO n = 1, nVar
-          xnm = sx(n)
-          iret = nf90_inquire_variable(ncID, n, name=xnm)
-       END DO
-       iret = nf90_sync(ncID)
-    END IF
- END IF
-
- END SUBROUTINE define_nc2
  !
  ! ----------------------------------------------------------------------
  ! Subroutine define_nc_cs: Defines the structure of a column statistics nc file
@@ -1639,7 +1393,7 @@ CONTAINS
        CASE('S_Nibb')
           IF (itype == 0) ncinfo = 'SALSA ice particle size distribution, regime b'
           IF (itype == 1) ncinfo = 'm^-3'
-          IF (itype == 2) ncinfo = 'ttttica'
+          IF (itype == 2) ncinfo = 'tttticb' !wass ica, assuming incorrect
        CASE('S_Rwia')
           IF (itype == 0) ncinfo = 'SALSA number mean radius of ice particles, regime a'
           IF (itype == 1) ncinfo = 'm'
@@ -1651,11 +1405,11 @@ CONTAINS
        CASE('S_Rwiba')
           IF (itype == 0) ncinfo = 'SALSA bin ice particle radius, regime a'
           IF (itype == 1) ncinfo = 'm'
-          IF (itype == 2) ncinfo = 'ttttcla'
+          IF (itype == 2) ncinfo = 'ttttica' !used to be ttttcla, assuming incorrect
        CASE('S_Rwibb')
           IF (itype == 0) ncinfo = 'SALSA bin ice particle radius, regime b'
           IF (itype == 1) ncinfo = 'm'
-          IF (itype == 2) ncinfo = 'ttttcla'
+          IF (itype == 2) ncinfo = 'tttticb' !used to be ttttcla, assuming incorrect
        CASE('S_Ns')
           IF (itype == 0) ncinfo = 'SALSA sdnc'
           IF (itype == 1) ncinfo = 'm^-3'

@@ -126,7 +126,7 @@ CONTAINS
      !   -nucleation set to produce particles to b bins (currently only a bins)
 
      IF (level >= 4 .AND. (.NOT. salsa_b_bins)) &
-        salsa_b_bins=any( a_naerop%data(:,:,:,in2b:fn2b)>nlim ) .OR. any( a_nicep%data(:,:,:,iib%cur:fib%cur)>prlim )
+        salsa_b_bins = any( a_naerop%data(:,:,:,in2b:fn2b)>nlim ) .OR. any( a_nicep%data(:,:,:,iib%cur:fib%cur)>prlim )
 
       CALL sponge_init
       CALL init_stat(time+dtl,filprf,expnme,nzp)
@@ -149,6 +149,7 @@ CONTAINS
             CALL write_hist(1, time)
             CALL init_anal(time,salsa_b_bins)
             CALL thermo(level)
+           ! CALL calc_anal()
             CALL write_anal(time)
          ELSE
             CALL init_anal(time+dtl,salsa_b_bins)

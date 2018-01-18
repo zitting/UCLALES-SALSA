@@ -59,7 +59,7 @@ CONTAINS
                        a_uc, a_vc, a_wc, write_hist, write_anal, close_anal, dtlt,  &
                        dtlv, dtlong, nzp, nyp, nxp, level,                          &
                        ! For mass budged
-                       a_rp, a_rc, a_srp, a_dn
+                       a_rp, a_rc, a_srp, a_dn, calc_anal
 
       USE stat, ONLY : sflg, savg_intvl, ssam_intvl, write_ps, close_stat, mcflg, acc_massbudged,  &
                        write_massbudged
@@ -114,6 +114,7 @@ CONTAINS
 
          IF ((mod(tplsdt,frqanl) < dtl .OR. time >= timmax) .AND. outflg) THEN
             CALL thermo(level)
+            !CALL calc_anal()
             CALL write_anal(time)
          END IF
 
