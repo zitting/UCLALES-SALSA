@@ -17,7 +17,7 @@ MODULE mo_salsa
 CONTAINS
 
    SUBROUTINE salsa(kbdim,    klev,           &
-                    ppres,    prv, prs, prsi,    ptemp, ptt, ptstep,     &
+                    ppres,    prv, prs, prsi,    ptemp, ptstep,     &
                     pc_h2so4, pc_ocnv,  pc_ocsv, pc_hno3,    &
                     pc_nh3,   paero,    pcloud,  pprecp,     &
                     pice,     psnow,                         &
@@ -26,27 +26,24 @@ CONTAINS
       USE mo_salsa_dynamics, ONLY : coagulation, condensation
       USE mo_salsa_update,   ONLY : distr_update
       USE mo_salsa_cloud,    ONLY : cloud_activation, autoconv2, &
-                                    ice_immers_nucl,ice_hom_nucl,ice_het_nucl,ice_melt, &
-                                    autosnow
+                                    autosnow, ice_fixed_NC, ice_nucl_driver, ice_melt
 
       USE mo_submctl, ONLY :      &
          fn2b,                      & ! size section and composition indices
          t_section,                 & ! For cloud bins
          ncld,                      &
          nprc,                      &
-         nice,                      & ! ice
-         nsnw,                      & ! snow
+         nice,                      &
+         nsnw,                      &
          lscoag,                    &
          lscnd,                     &
          lsauto,                    &
          lsautosnow,                &
          lsactiv,                   &
-         lsichom,                   &
-         lsichet,                   &
-         lsicimmers,                &
+         lsicenucl,                 &
+         lsfixinc,                  &
          lsicmelt,                  &
-         lsdistupdate,              &
-         debug
+         lsdistupdate
 
       USE class_componentIndex, ONLY : ComponentIndex
 
@@ -61,7 +58,6 @@ CONTAINS
       REAL, INTENT(in) ::            &
          ppres(kbdim,klev),            & ! atmospheric pressure at each grid point [Pa]
          ptemp(kbdim,klev),            & ! temperature at each grid point [K]
-         ptt(kbdim,klev),              & ! temperature tendency
          ptstep                          ! time step [s]
 
       TYPE(ComponentIndex), INTENT(in) :: prtcl
@@ -76,9 +72,9 @@ CONTAINS
          pc_nh3  (kbdim,klev),      & ! ammonia
          pc_ocnv (kbdim,klev),      & ! nonvolatile organic compound
          pc_ocsv (kbdim,klev),      & ! semivolatile organic compound
-         prv(kbdim,klev),           & ! Water vapour mixing ratio  [kg/m3]
-         prs(kbdim,klev),           & ! Saturation mixing ratio    [kg/m3]
-         prsi(kbdim,klev)              ! Saturation mixing ratio over ice   [kg/m3]
+         prv(kbdim,klev),           & ! Water vapour mixing ratio  [kg/kg]
+         prs(kbdim,klev),           & ! Saturation mixing ratio    [kg/kg]
+         prsi(kbdim,klev)              ! Saturation mixing ratio over ice   [kg/kg]
 
       TYPE(t_section), INTENT(inout) :: &
          pcloud(kbdim,klev,ncld),     &
@@ -95,8 +91,6 @@ CONTAINS
       !-- Local variables ------------------------------------------------------------------
 
       INTEGER :: zpbl(kbdim)            ! Planetary boundary layer top level
-
-      IF (debug) WRITE(*,*) 'start salsa'
 
       zpbl(:) = 1
 
@@ -126,34 +120,30 @@ CONTAINS
                                ptemp,  ppres, prv,    &
                                prs,    pw,    paero,  &
                                pcloud, pactd          )
+    ! Fixed ice number concentration
 
-      ! Immersion freezing
-      IF (lsicimmers) &
-         CALL ice_immers_nucl(kbdim,klev,            &
-                              pcloud,pice,            &
-                              ptemp,ptt,ptstep )
+    IF (lsfixinc) &
+          CALL  ice_fixed_NC(kbdim, klev,   &
+                             pcloud,   pice,   &
+                             ptemp,  ppres,  prv,  prsi)
 
-      ! Homogenous nucleation Morrison et al. 2005 eq. (25)
-      IF (lsichom) &
-         CALL ice_hom_nucl(kbdim,klev,       &
-                           pcloud,pice,paero, &
-                           ptemp,ptstep)
+    ! Ice nucleation
 
-      !! heterogenous nucleation Morrison et al. 2005 eq. (27)
-      IF (lsichet) &
-         CALL ice_het_nucl(kbdim,klev,       &
-                           pcloud,pice,paero, &
-                           ptemp,prv,prs,ptstep)
-    
-      ! Melting of ice
+      IF (lsicenucl) &
+        CALL ice_nucl_driver(kbdim,klev,   &
+                             paero,pcloud,pprecp,pice,psnow, &
+                             ptemp,ppres,prv,prsi,ptstep)
+
+      ! Melting of ice and snow
+
       IF (lsicmelt) &
          CALL ice_melt(kbdim,klev,              &
-                       pcloud,pice,pprecp,psnow, ptemp)
+                       pcloud,pice,pprecp,psnow,ptemp)
 
-      ! Snow formation ~ autoconversion for ice
+      ! ! Snow formation ~ autoconversion from ice
       IF (lsautosnow) &
          CALL autosnow(kbdim,klev, &
-                       pice, psnow        )
+                        pice, psnow, ptstep )
 
       ! Size distribution bin update
       IF (lsdistupdate ) &

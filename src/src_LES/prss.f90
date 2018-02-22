@@ -74,8 +74,6 @@ CONTAINS
       !
       CALL asselin(2)
       CALL velocity_bcs
-      CALL get_diverg(nzp,nxp,nyp,ix,iy,s1,a_up,a_vp,a_wp,dn0,dzt,dxi,dyi,  &
-                      dtlt,mxdiv)
 
       IF (sflg) THEN
          CALL get_diverg(nzp,nxp,nyp,ix,iy,s1,a_up,a_vp,a_wp,dn0,dzt,dxi,dyi,  &
@@ -96,9 +94,9 @@ CONTAINS
 
       USE util, ONLY : velset
 
-      INTEGER :: n1,n2,n3,i,k,j
-      REAL    :: u(n1,n2,n3),v(n1,n2,n3),w(n1,n2,n3)
-      REAL    :: ut(n1,n2,n3),vt(n1,n2,n3),wt(n1,n2,n3),dtlt,dt
+      INTEGER :: n1, n2, n3, i, k, j
+      REAL    :: u(n1,n2,n3), v(n1,n2,n3), w(n1,n2,n3)
+      REAL    :: ut(n1,n2,n3), vt(n1,n2,n3), wt(n1,n2,n3), dtlt, dt
 
       dt = dtlt*2.
 
@@ -128,10 +126,10 @@ CONTAINS
 
       USE util, ONLY  : velset, get_fft_twodim
 
-      INTEGER :: n1,n2,n3,ix,iy
-      REAL    :: pp(n1,n2,n3),pc(n1,n2,n3),dmy
-      REAL    :: u(n1,n2,n3),v(n1,n2,n3),w(n1,n2,n3)
-      REAL    :: wsvx(1:),wsvy(1:),dn0(n1),dzt(n1),dzm(n1),dx,dy,dtlt,th00
+      INTEGER :: n1, n2, n3, ix, iy
+      REAL    :: pp(n1,n2,n3), pc(n1,n2,n3), dmy
+      REAL    :: u(n1,n2,n3), v(n1,n2,n3), w(n1,n2,n3)
+      REAL    :: wsvx(1:), wsvy(1:), dn0(n1), dzt(n1), dzm(n1), dx, dy, dtlt, th00
       COMPLEX :: s1(ix,iy,n1)
 
       CALL get_diverg(n1,n2,n3,ix,iy,s1,u,v,w,dn0,dzt,dx,dy,dtlt,dmy)
@@ -155,14 +153,14 @@ CONTAINS
    !
    SUBROUTINE get_diverg(n1,n2,n3,ix,iy,s1,u,v,w,dn0,dz,dx,dy,dt,mxdiv)
 
-      INTEGER, INTENT (in)  :: n1,n2,n3,ix,iy
-      REAL, INTENT (in)     :: dz(n1),dn0(n1),dx,dy,dt
-      REAL, INTENT (in)     :: u(n1,n2,n3),v(n1,n2,n3),w(n1,n2,n3)
+      INTEGER, INTENT (in)  :: n1, n2, n3, ix, iy
+      REAL, INTENT (in)     :: dz(n1), dn0(n1), dx, dy, dt
+      REAL, INTENT (in)     :: u(n1,n2,n3), v(n1,n2,n3), w(n1,n2,n3)
       REAL, INTENT (out)    :: mxdiv
       COMPLEX, INTENT (out) :: s1(ix,iy,n1)
 
-      INTEGER :: k,i,j,l,m
-      REAL    :: xf,yf,zf,wf1,wf2,dtv,dti
+      INTEGER :: k, i, j, l, m
+      REAL    :: xf, yf, zf, wf1, wf2, dtv, dti
 
       s1(:,:,:) = (0.0,0.0)
       dtv = dt*2.
@@ -203,7 +201,7 @@ CONTAINS
 
       USE mpi_interface, ONLY : cyclics,cyclicc
 
-      INTEGER :: n1,n2,n3,ix,iy,k,i,j,l,m,req(16)
+      INTEGER :: n1, n2, n3, ix, iy, k, i, j, l, m, req(16)
       REAL    :: pp(n1,n2,n3)
       COMPLEX :: s1(ix,iy,n1)
 
@@ -233,15 +231,15 @@ CONTAINS
       USE mpi_interface, ONLY : yoffset, nypg, xoffset, wrxid, wryid, nxpg
       USE util, ONLY          : tridiff
 
-      INTEGER, INTENT (in)    :: n1,ix,iy
-      REAL, INTENT (in)       :: dn0(n1),dzt(n1),dzm(n1),dx,dy
+      INTEGER, INTENT (in)    :: n1, ix, iy
+      REAL, INTENT (in)       :: dn0(n1), dzt(n1), dzm(n1), dx, dy
       COMPLEX, INTENT (inout) :: s1(ix,iy,n1)
 
-      REAL    :: ak(ix,n1),dk(ix,n1),bk(ix,n1),ck(ix,n1)
-      REAL    :: xk(ix,n1),yk(ix,n1),wv(ix,iy)
+      REAL    :: ak(ix,n1), dk(ix,n1), bk(ix,n1), ck(ix,n1)
+      REAL    :: xk(ix,n1), yk(ix,n1), wv(ix,iy)
 
-      INTEGER :: k,l,m
-      REAL    :: fctl,fctm,xl,xm,af,cf
+      INTEGER :: k, l, m
+      REAL    :: fctl, fctm, xl, xm, af, cf
       fctl = 2.*pi/float(nxpg-4)
       fctm = 2.*pi/float(nypg-4)
 
@@ -315,16 +313,16 @@ CONTAINS
    !
    SUBROUTINE prs_grd(n1,n2,n3,p,u,v,w,dz,dx,dy,dtlt)
 
-      INTEGER, INTENT (in) :: n1,n2,n3
-      REAL, INTENT (in)    :: p(n1,n2,n3),dz(n1),dx,dy,dtlt
-      REAL, INTENT (inout) :: u(n1,n2,n3),v(n1,n2,n3),w(n1,n2,n3)
+      INTEGER, INTENT (in) :: n1, n2, n3
+      REAL, INTENT (in)    :: p(n1,n2,n3), dz(n1), dx, dy, dtlt
+      REAL, INTENT (inout) :: u(n1,n2,n3), v(n1,n2,n3), w(n1,n2,n3)
 
-      INTEGER :: i,j,k
+      INTEGER :: i, j, k
 
       DO j = 1, n3-1
          DO i = 1, n2-1
             DO k = 2, n1-1
-               IF(k /= n1-1)w(k,i,j) = w(k,i,j)-dz(k)*2.*dtlt*(p(k+1,i,j)-p(k,i,j))
+               IF(k /= n1-1) w(k,i,j) = w(k,i,j)-dz(k)*2.*dtlt*(p(k+1,i,j)-p(k,i,j))
                u(k,i,j) = u(k,i,j)-dx*2.*dtlt*(p(k,i+1,j)-p(k,i,j))
                v(k,i,j) = v(k,i,j)-dy*2.*dtlt*(p(k,i,j+1)-p(k,i,j))
             END DO
@@ -342,13 +340,13 @@ CONTAINS
       USE stat, ONLY : updtst
       USE util, ONLY : get_cor
 
-      INTEGER, INTENT (in) :: n1,n2,n3
-      REAL, INTENT (in)    :: p(n1,n2,n3),dz(n1),dx,dy,th00
-      REAL, INTENT (in)    :: u(n1,n2,n3),v(n1,n2,n3),w(n1,n2,n3)
+      INTEGER, INTENT (in) :: n1, n2, n3
+      REAL, INTENT (in)    :: p(n1,n2,n3), dz(n1), dx, dy, th00
+      REAL, INTENT (in)    :: u(n1,n2,n3), v(n1,n2,n3), w(n1,n2,n3)
 
       REAL, DIMENSION (n2,n3) :: pgx, pgy, pgz, ufld, vfld, wfld
       REAL                    :: fx, fy, fz, v1da(n1), v1db(n1), v1dc(n1)
-      INTEGER                 :: i,j,k,ip1,jp1
+      INTEGER                 :: i, j, k, ip1, jp1
 
       v1da = 0.0
       v1db = 0.0
@@ -385,11 +383,11 @@ CONTAINS
    !
    SUBROUTINE chk_tsplt(n1,n2,n3,up,vp,wp,uc,vc,wc)
 
-      INTEGER, INTENT (in) :: n1,n2,n3
-      REAL, INTENT (in)    :: up(n1,n2,n3),vp(n1,n2,n3),wp(n1,n2,n3)
-      REAL, INTENT (in)    :: uc(n1,n2,n3),vc(n1,n2,n3),wc(n1,n2,n3)
+      INTEGER, INTENT (in) :: n1, n2, n3
+      REAL, INTENT (in)    :: up(n1,n2,n3), vp(n1,n2,n3), wp(n1,n2,n3)
+      REAL, INTENT (in)    :: uc(n1,n2,n3), vc(n1,n2,n3), wc(n1,n2,n3)
 
-      REAL :: wmx,umx,vmx
+      REAL :: wmx, umx, vmx
 
       wmx = maxval((wp-wc)/(wp+wc+1.e-5))
       umx = maxval((up-uc)/(up+uc+1.e-5))
@@ -403,7 +401,7 @@ CONTAINS
    !
    SUBROUTINE asselin(iac)
 
-      USE grid, ONLY : a_up,a_vp,a_wp,a_uc,a_vc,a_wc, nxyzp, runtype
+      USE grid, ONLY : a_up, a_vp, a_wp, a_uc, a_vc, a_wc, nxyzp, runtype
 
       INTEGER :: iac
       INTEGER, SAVE :: ncall = 0
@@ -433,15 +431,15 @@ CONTAINS
    !
    SUBROUTINE predict(npts,ac,ap,iac,iflag)
 
-      INTEGER :: m,npts,iac,iflag
-      REAL    :: ac(npts),ap(npts),af(npts),epsu
+      INTEGER :: m, npts, iac, iflag
+      REAL    :: ac(npts), ap(npts), af(npts), epsu
       REAL, PARAMETER :: eps = 0.1
 
       epsu = eps
       IF (iflag == 0) epsu = 0.5
       IF (iac == 1) THEN
          DO m = 1, npts
-            ac(m)=ac(m)+epsu*(ap(m)-2.*ac(m))
+            ac(m) = ac(m)+epsu*(ap(m)-2.*ac(m))
          END DO
       ELSE IF (iac == 2) THEN
          DO m = 1, npts
@@ -458,7 +456,7 @@ CONTAINS
    !
    SUBROUTINE velocity_bcs
 
-      USE grid, ONLY : a_up,a_vp,a_wp,a_uc,a_vc,a_wc,a_pexnr,a_press,           &
+      USE grid, ONLY : a_up, a_vp, a_wp, a_uc, a_vc, a_wc, a_pexnr, a_press,           &
                        nxp, nyp, nzp, dzm
       USE util, ONLY : velset, sclrset
 

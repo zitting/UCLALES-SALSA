@@ -50,12 +50,15 @@ CONTAINS
 
     OPEN( unit = 71, file = 'datafiles/cldwtr.dat', status = 'old', recl=nrec)
     READ(71,'(2I3)') nsizes, nbands
+
     IF (nbands /= mb .OR. nsizes*nbands*15 > nrec) &
          STOP 'TERMINATING: incompatible cldwtr.dat file'
 
     ALLOCATE (re(nsizes),fl(nsizes),bz(nsizes,mb),wz(nsizes,mb),gz(nsizes,mb))
+
     WRITE(frmt,'(A1,I2.2,A8)') '(',mb,'E15.7)    '
     READ(71,frmt) (cntrs(i), i=1,mb)
+
     DO i = 1, mb
        IF (spacing(1.) < abs(cntrs(i)- center(band(i))) ) &
             STOP 'TERMINATING: cloud properties not matched to band structure'
@@ -89,13 +92,14 @@ CONTAINS
     INTEGER, PARAMETER :: nrec = 21600
 
 
-    INTEGER            :: i, j
+    INTEGER :: i, j
 
     mbs  = 6
     mbir = 12
 
     ALLOCATE (ap(3,mb),bp(4,mb),cps(4,4,mbs),dps(4,mbs),cpir(4,mbir))
     OPEN( unit = 71, file = 'datafiles/cldice.dat', status = 'old', recl=nrec)
+
     DO i = 1, mb
        READ(71,'(3E10.3)') ap(1,i), ap(2,i), ap(3,i)
     END DO
@@ -168,11 +172,13 @@ CONTAINS
 
     DO k = 1, nv
        cwmks = pcw(k)*1.e-3
+
        IF ( cwmks >= 1.e-8) THEN
           j = 0
           DO WHILE (j < nsizes .AND. pre(k) > re(MIN(j+1,nsizes))) ! Juha: purkkafix for (too) large pre
              j = j + 1
           END DO
+
           IF (j >= 1 .AND. j < nsizes) THEN
              j1 = j+1
              wght = (pre(k)-re(j))/(re(j1)-re(j))
@@ -188,6 +194,7 @@ CONTAINS
              ww(k) = wz(j0,ib)
              gg    = gz(j0,ib)
           END IF
+
           www(k,1) = 3.0 * gg
           DO j = 2, 4
              wght = REAL(2*j+1)/REAL(2*j-1)
@@ -199,6 +206,7 @@ CONTAINS
           ww(k) = 0.0
           gg    = 0.
        END IF
+
        IF (ww(k) < 0.) PRINT*,'bad ww, ',ww(k),ib,k,cwmks
        IF (tw(k) < 0.) PRINT*,'bad tw, ',tw(k),ib,k,cwmks
     END DO
@@ -212,7 +220,7 @@ CONTAINS
   ! ice [g/m^3] and effective radius [microns] by interpolating based on
   ! known optical properties at predefined sizes
   !
-  SUBROUTINE cloud_ice ( ib, pde, pci, dz, ti, wi, wwi )
+  SUBROUTINE cloud_ice( ib, pde, pci, dz, ti, wi, wwi )
 
     IMPLICIT NONE
 
@@ -222,7 +230,7 @@ CONTAINS
 
     INTEGER :: ibr,k
     REAL    :: gg, cwmks
-    REAL    :: fw1, fw2, fw3, wf1, wf2, wf3, wf4, x1, x2, x3, x4,  fd
+    REAL    :: fw1, fw2, fw3, wf1, wf2, wf3, wf4, x1, x2, x3, x4, fd
 
     IF (.NOT. iceInitialized) STOP 'TERMINATING: Ice not Initialized'
 

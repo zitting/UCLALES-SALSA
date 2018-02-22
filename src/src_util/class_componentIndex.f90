@@ -55,6 +55,7 @@ CONTAINS
       ELSE IF ( incomp == 'H2O' ) THEN
          GetIndex = SELF%ncomp + 1
       ELSE
+                  write(*,*) incomp
          STOP 'getIndex: FAILED, no such component - '
       END IF
 

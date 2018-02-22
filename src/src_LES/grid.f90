@@ -25,7 +25,7 @@ MODULE grid
    USE class_componentIndex, ONLY : componentIndex
 
    IMPLICIT NONE
-   !
+
    INTEGER :: nxp = 132           ! number of x points
    INTEGER :: nyp = 132           ! number of y points
    INTEGER :: nzp = 105           ! number of z points
@@ -44,6 +44,7 @@ MODULE grid
    REAL    :: CCN = 150.e6
 
    LOGICAL :: lbinanl = .FALSE.   ! Whether to write binned data to analysis files (takes a lot of space + mainly used for debugging)
+   LOGICAL :: lbinprof = .TRUE.   ! Same for profile statistics
    INTEGER :: igrdtyp = 1         ! vertical grid type
    INTEGER :: isgstyp = 1         ! sgs model type
    INTEGER :: iradtyp = 0         ! radiation model type
@@ -77,12 +78,13 @@ MODULE grid
    REAL, ALLOCATABLE :: xt(:), xm(:), yt(:), ym(:), zt(:), zm(:), dzt(:), dzm(:)
    REAL, ALLOCATABLE :: u0(:), v0(:), pi0(:), pi1(:), th0(:), dn0(:), rt0(:)
    REAL, ALLOCATABLE :: spng_wfct(:), spng_tfct(:)
+   REAL, ALLOCATABLE, target :: tmp_icep(:,:,:,:), tmp_icet(:,:,:,:)
    !
    ! velocity variables (past, current and tendency)
    !
-   REAL, ALLOCATABLE, TARGET :: a_up(:,:,:),a_uc(:,:,:),a_ut(:,:,:)
-   REAL, ALLOCATABLE, TARGET :: a_vp(:,:,:),a_vc(:,:,:),a_vt(:,:,:)
-   REAL, ALLOCATABLE, TARGET :: a_wp(:,:,:),a_wc(:,:,:),a_wt(:,:,:)
+   REAL, ALLOCATABLE, TARGET :: a_up(:,:,:), a_uc(:,:,:), a_ut(:,:,:)
+   REAL, ALLOCATABLE, TARGET :: a_vp(:,:,:), a_vc(:,:,:), a_vt(:,:,:)
+   REAL, ALLOCATABLE, TARGET :: a_wp(:,:,:), a_wc(:,:,:), a_wt(:,:,:)
    !
    ! wsave variables used in fft in x and y directons
    !
@@ -101,7 +103,7 @@ MODULE grid
    TYPE(FieldArray) :: fields
 
    TYPE(FloatArray3D), TARGET :: a_qp, a_qt
-   REAL, POINTER :: a_sp(:,:,:),a_st(:,:,:)  !dont touch yet AZ
+   REAL, POINTER :: a_sp(:,:,:), a_st(:,:,:)  !dont touch yet AZ
 
    ! Juha: SALSA tracers
    !---------------------------------------------------------------------------
@@ -139,7 +141,7 @@ MODULE grid
                                 ! 5:SS, 6:NO, 7:NH, 8:H2O
 
    ! Physical properties for the selected aerosol components
-   REAL, ALLOCATABLE :: dens(:), mws(:), mvol(:), diss(:)
+   REAL, ALLOCATABLE :: dens(:), mws(:), diss(:), dens_ice(:), dens_snow(:)
 
    !---------------------------------------------------------------------------
 
@@ -150,24 +152,24 @@ MODULE grid
    TYPE(FloatArray3D), TARGET :: a_theta  ! dry potential temp (k)
    TYPE(FloatArray3D), TARGET :: a_pexnr  ! perturbation exner func
    TYPE(FloatArray3D), TARGET :: a_press  ! pressure (hpa)
-   TYPE(FloatArray3D), TARGET :: a_rc     ! Total cloud water
-   TYPE(FloatArray3D), TARGET :: a_ri     ! Total ice cloud content
-   TYPE(FloatArray3D), TARGET :: a_rv     ! water vapor (used only for levels < 4!)
-   TYPE(FloatArray3D), TARGET :: a_srp    ! Total rain water for use with LEVEL 4 (Diagnostic scalar!!)
-   TYPE(FloatArray3D), TARGET :: a_snrp   ! Total number of rain drops for use with LEVEL 4 (Diagnostic scalar!!)
-   TYPE(FloatArray3D), TARGET :: a_srs    ! Total snow for use with SALSA
-   TYPE(FloatArray3D), TARGET :: a_snrs   ! Total number of snow particles for use with LEVEL 5 (Diagnostic scalar!!)
+   TYPE(FloatArray3D), TARGET :: a_rc     ! Total cloud water +rain (level<=3) or aerosol+cloud (level>=4) water mixing ratio
+   TYPE(FloatArray3D), TARGET :: a_ri     ! Total ice water mixing ratio
+   TYPE(FloatArray3D), TARGET :: a_rv     ! Water vapor mixing ratio  (used only for levels < 4!)
+   TYPE(FloatArray3D), TARGET :: a_srp    ! Total rain water mixing ratio (levels >= 4)(Diagnostic scalar!!)
+   TYPE(FloatArray3D), TARGET :: a_snrp   ! Total number drop number mixing ratio (levels >=4) (Diagnostic scalar!!)
+   TYPE(FloatArray3D), TARGET :: a_srs    ! Total snow water mixing ratio (level 5)
+   TYPE(FloatArray3D), TARGET :: a_snrs   ! Total snow number mixing ratio (level 5) (Diagnostic scalar!!)
    TYPE(FloatArray3D), TARGET :: a_rh     ! Relative humidity
-   TYPE(FloatArray3D), TARGET :: a_rsl    ! water saturation vapor mixing ratio
+   TYPE(FloatArray3D), TARGET :: a_rsl    ! Water vapor saturation mixing ratio
    TYPE(FloatArray3D), TARGET :: a_rhi    ! Relative humidity over ice
-   TYPE(FloatArray3D), TARGET :: a_rsi    ! ice saturation vapor mixing ratio
+   TYPE(FloatArray3D), TARGET :: a_rsi    ! Water vapor saturation mixing ratio over ice
    TYPE(FloatArray3D), TARGET :: a_dn     ! Air density (for normalizing concentrations according to mass, levels < 4!)
    !
    ! scratch arrays
    !
    REAL, ALLOCATABLE, DIMENSION (:,:,:) :: a_rflx, a_sflx, &
                                            a_fus, a_fds, a_fuir, a_fdir, &
-                                           a_temp, a_temp0 ! store temperatures of previous timestep
+                                           a_temp
    !
    !
    REAL, ALLOCATABLE :: a_ustar(:,:)
@@ -203,7 +205,7 @@ MODULE grid
 
    TYPE(FloatArray3D), TARGET :: a_Nac, a_Na,   a_Rwaa, a_Nb, a_Rwab, &
                                  a_Nc,  a_Rwca, a_Rwcb, a_Np, a_Rwpa, &
-                                 a_Nic, a_Rwia, a_Rwib, a_Ns, a_Rwsa, &
+                                 a_Ni,  a_Rwia, a_Rwib, a_Ns, a_Rwsa, &
                                  a_aSO4a, a_aNH3a, a_aNO3a, a_aOCa, a_aBCa, a_aDUa, a_aSSa, &
                                  a_aSO4b, a_aNH3b, a_aNO3b, a_aOCb, a_aBCb, a_aDUb, a_aSSb, &
                                  a_cSO4a, a_cNH3a, a_cNO3a, a_cOCa, a_cBCa, a_cDUa, a_cSSa, &
@@ -230,11 +232,11 @@ CONTAINS
    SUBROUTINE define_vars
 
       USE mpi_interface, ONLY : myid
-      USE mo_submctl, ONLY : nbins,ncld,nprc,  & ! Number of aerosol and hydrometeor size bins for SALSA
-                             nice,nsnw,        & ! number of ice and snow size bins for SALSA
+      USE mo_submctl, ONLY : nbins, ncld, nprc,  & ! Number of aerosol and hydrometeor size bins for SALSA
+                             nice,  nsnw,        & ! number of ice and snow size bins for SALSA
                              nspec, maxspec, listspec, &
-                             rhosu,rhooc,rhobc,rhono,rhonh,rhoss,rhodu,rhowa,  &
-                             msu,moc,mbc,mno,mnh,mss,mdu,mwa
+                             rhosu, rhooc, rhobc, rhono, rhonh, rhoss, rhodu, rhowa, rhoic, rhosn,  &
+                             msu,   moc,   mbc,   mno,   mnh,   mss,   mdu,   mwa
 
       USE class_ComponentIndex, ONLY : ComponentIndexConstructor,  &
                                        GetNcomp, IsUsed
@@ -259,7 +261,8 @@ CONTAINS
          CALL ComponentIndexConstructor(prtcl, nspec, maxspec, listspec)
          nc = GetNcomp(prtcl)
 
-         nsalsa = (nc+2)*nbins + (nc+2)*ncld + (nc+2)*nprc + (nc+2)*nice + (nc+2)*nsnw + 5
+         nsalsa = (nc+2)*nbins + (nc+2)*ncld + (nc+2)*nprc + 5
+         IF (level>=5) nsalsa = nsalsa + (nc+2)*nice + (nc+2)*nsnw
 
       END IF
 
@@ -316,9 +319,8 @@ CONTAINS
       END IF
 
 
-      ALLOCATE (a_temp(nzp,nxp,nyp),a_temp0(nzp,nxp,nyp))
+      ALLOCATE (a_temp(nzp,nxp,nyp))
       a_temp(:,:,:) = 0.
-      a_temp0(:,:,:) = 0.
 
       a_rsl = FloatArray3D(zeros3d,store=.TRUE.)
       dummy => a_rsl
@@ -539,42 +541,74 @@ CONTAINS
          dummyt => a_gaerot
          CALL ProgF%NewField("gaero"," "," "," ",.FALSE.,dummyp,dummyt)
 
-         ! Level 5
-         zz = zz+5
-         a_nicep = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+nice),store=.FALSE.)
-         a_nicet = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+nice),store=.FALSE.)
-         dummyp => a_nicep
-         dummyt => a_nicet
-         CALL ProgF%NewField("nice"," "," "," ",.FALSE.,dummyp,dummyt)
+         IF (level >= 5) THEN
+            ! Level 5
+            zz = zz+5
+            a_nicep = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+nice),store=.FALSE.)
+            a_nicet = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+nice),store=.FALSE.)
+            dummyp => a_nicep
+            dummyt => a_nicet
+            CALL ProgF%NewField("nice"," "," "," ",.FALSE.,dummyp,dummyt)
 
-         zz = zz+nice
+            zz = zz+nice
 
-         a_micep = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*nice),store=.FALSE.)
-         a_micet = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*nice),store=.FALSE.)
-         dummyp => a_micep
-         dummyt => a_micet
-         CALL ProgF%NewField("mice"," "," "," ",.FALSE.,dummyp,dummyt)
+            a_micep = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*nice),store=.FALSE.)
+            a_micet = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*nice),store=.FALSE.)
+            dummyp => a_micep
+            dummyt => a_micet
+            CALL ProgF%NewField("mice"," "," "," ",.FALSE.,dummyp,dummyt)
 
-         zz = zz+(nc+1)*nice
+            zz = zz+(nc+1)*nice
 
-         a_nsnowp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+nsnw),store=.FALSE.)
-         a_nsnowt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+nsnw),store=.FALSE.)
-         dummyp => a_nsnowp
-         dummyt => a_nsnowt
-         CALL ProgF%NewField("nsnow"," "," "," ",.FALSE.,dummyp,dummyt)
+            a_nsnowp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+nsnw),store=.FALSE.)
+            a_nsnowt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+nsnw),store=.FALSE.)
+            dummyp => a_nsnowp
+            dummyt => a_nsnowt
+            CALL ProgF%NewField("nsnow"," "," "," ",.FALSE.,dummyp,dummyt)
 
-         zz = zz+nsnw
+            zz = zz+nsnw
 
-         a_msnowp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*nsnw),store=.FALSE.)
-         a_msnowt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*nsnw),store=.FALSE.)
-         dummyp => a_msnowp
-         dummyt => a_msnowt
-         CALL ProgF%NewField("msnow"," "," "," ",.FALSE.,dummyp,dummyt)
+            a_msnowp = FloatArray4D(a_sclrp(:,:,:,zz+1:zz+(nc+1)*nsnw),store=.FALSE.)
+            a_msnowt = FloatArray4D(a_sclrt(:,:,:,zz+1:zz+(nc+1)*nsnw),store=.FALSE.)
+            dummyp => a_msnowp
+            dummyt => a_msnowt
+            CALL ProgF%NewField("msnow"," "," "," ",.FALSE.,dummyp,dummyt)
+         ELSE
+            ! Ice not included so allocate zero arrays for ice pointers
+            ALLOCATE (tmp_icep(nzp,nxp,nyp,(nc+1)*MAX(nice,nsnw)), &
+                          tmp_icet(nzp,nxp,nyp,(nc+1)*MAX(nice,nsnw)))
+            tmp_icep = 0.
+            tmp_icet = 0.
+            a_nicep = FloatArray4D(tmp_icep(:,:,:,1:nice),store=.FALSE.)
+            a_nicet = FloatArray4D(tmp_icet(:,:,:,1:nice),store=.FALSE.)
+            dummyp => a_nicep
+            dummyt => a_nicet
+            CALL ProgF%NewField("nice"," "," "," ",.FALSE.,dummyp,dummyt)
 
-         zz = zz+(nc+1)*nsnw
+            a_micep = FloatArray4D(tmp_icep(:,:,:,1:(nc+1)*nice),store=.FALSE.)
+            a_micet = FloatArray4D(tmp_icet(:,:,:,1:(nc+1)*nice),store=.FALSE.)
+            dummyp => a_micep
+            dummyt => a_micet
+            CALL ProgF%NewField("mice"," "," "," ",.FALSE.,dummyp,dummyt)
+
+            a_nsnowp = FloatArray4D(tmp_icep(:,:,:,1:nsnw),store=.FALSE.)
+            a_nsnowt = FloatArray4D(tmp_icet(:,:,:,1:nsnw),store=.FALSE.)
+            dummyp => a_nsnowp
+            dummyt => a_nsnowt
+            CALL ProgF%NewField("nsnow"," "," "," ",.FALSE.,dummyp,dummyt)
+
+            a_msnowp = FloatArray4D(tmp_icep(:,:,:,1:(nc+1)*nsnw),store=.FALSE.)
+            a_msnowt = FloatArray4D(tmp_icet(:,:,:,1:(nc+1)*nsnw),store=.FALSE.)
+            dummyp => a_msnowp
+            dummyt => a_msnowt
+            CALL ProgF%NewField("msnow"," "," "," ",.FALSE.,dummyp,dummyt)
+
+         END IF
+
+
          ! Density, molecular weight, dissociation factor and molar volume arrays for the used species
          !   1:SO4, 2:OC, 3:BC, 4:DU, 5:SS, 6:NO, 7:NH, 8:H2O
-         ALLOCATE ( dens(nc+1), mws(nc+1), diss(nc+1), mvol(nc+1) )
+         ALLOCATE ( dens(nc+1), mws(nc+1), diss(nc+1), dens_ice(nc+1), dens_snow(nc+1) )
          zz = 0
          IF (IsUsed(prtcl,'SO4')) THEN
             zz = zz+1
@@ -618,11 +652,16 @@ CONTAINS
             diss(zz) = 1.  ! NH4+ ??
             mws(zz) = mnh
          END IF
+
          ! Water is always there
          zz = zz+1
          dens(zz) = rhowa
          diss(zz) = 1.
          mws(zz) = mwa
+
+         ! .. but sometimes it is frozen
+         dens_ice=dens; dens_ice(zz)=rhoic
+         dens_snow=dens; dens_snow(zz)=rhosn
 
          IF (zz /= nc+1) THEN
             WRITE(*,*) 'Physical properties not found for all species!'
@@ -650,7 +689,7 @@ CONTAINS
          a_Rwaba = FloatArray4D(zeros4d,store=.TRUE.)
          a_Nb = FloatArray3D(zeros3d,store=.TRUE.)
          a_Nabb = FloatArray4D(zeros4d,store=.TRUE.)
-         a_rwab = FloatArray3D(zeros3d,store=.TRUE.)
+         a_Rwab = FloatArray3D(zeros3d,store=.TRUE.)
          a_Rwabb = FloatArray4D(zeros4d,store=.TRUE.)
 
          a_Nc = FloatArray3D(zeros3d,store=.TRUE.)
@@ -666,7 +705,7 @@ CONTAINS
          a_Rwpa = FloatArray3D(zeros3d,store=.TRUE.)
          a_Rwpba = FloatArray4D(zeros4d,store=.TRUE.)
 
-         a_Nic = FloatArray3D(zeros3d,store=.TRUE.)
+         a_Ni = FloatArray3D(zeros3d,store=.TRUE.)
          a_Niba = FloatArray4D(zeros4d,store=.TRUE.)
          a_Nibb = FloatArray4D(zeros4d,store=.TRUE.)
          a_Rwia = FloatArray3D(zeros3d,store=.TRUE.)
@@ -727,9 +766,6 @@ CONTAINS
          a_iDUb = FloatArray3D(zeros3d,store=.TRUE.)
          a_iSSb = FloatArray3D(zeros3d,store=.TRUE.)
 
-         ! Molar volume volume, (kg/mol)/(kg/m^3)=m^3/mol
-         mvol(:) = mws(:)/dens(:)
-
       END IF ! level
 
       !----------------------------------------------------
@@ -737,7 +773,6 @@ CONTAINS
       ALLOCATE (a_ustar(nxp,nyp),a_tstar(nxp,nyp),a_rstar(nxp,nyp))
       ALLOCATE (uw_sfc(nxp,nyp),vw_sfc(nxp,nyp),ww_sfc(nxp,nyp))
       ALLOCATE (wt_sfc(nxp,nyp),wq_sfc(nxp,nyp))
-      !ALLOCATE (ra(nxp,nyp))
       IF (level >= 3) THEN
          ALLOCATE(precip(nzp,nxp,nyp))
          precip = 0.
@@ -763,7 +798,7 @@ CONTAINS
       IF(myid == 0) THEN
          PRINT "(//' ',49('-')/,' ',/3x,i3.3,' prognostic scalars')", nscl
          PRINT "('   memory to be allocated  -  ',f8.3,' mbytes')", &
-            memsize*1.e-6*kind(0.0)
+               memsize*1.e-6*kind(0.0)
       END IF
 
    END SUBROUTINE define_vars
@@ -773,10 +808,10 @@ CONTAINS
    SUBROUTINE define_grid
 
       USE mpi_interface, ONLY : xoffset, yoffset, wrxid, wryid, nxpg, nypg,   &
-         appl_abort, myid
+                                appl_abort, myid
 
-      INTEGER :: i,j,k,kmax,nchby
-      REAL    :: dzrfm,dz,zb,dzmin
+      INTEGER :: i, j, k, kmax, nchby
+      REAL    :: dzrfm, dz, zb, dzmin
       REAL    :: zmnvc(-1:nzp+1)
       CHARACTER (len=51) :: &
          fm1 = '(//" ",49("-")/,"   grid DIMENSIONs:"/)            ',      &
@@ -1004,8 +1039,8 @@ CONTAINS
       USE classFieldArray
       USE mo_structured_datatypes
       USE mpi_interface, ONLY : myid, ver, author, info
-      USE mo_submctl, ONLY : fn2a,fn2b,fca,fcb,fra, &
-                             fia,fib,fsa
+      USE mo_submctl, ONLY : fn2a, fn2b, fca, fcb, fra, &
+                             fia, fib, fsa
       USE class_ComponentIndex, ONLY : IsUsed
 
       REAL, INTENT (in)    :: time
@@ -1021,8 +1056,8 @@ CONTAINS
       REAL :: zeros3d(3,3,3)
       REAL :: zeros4d(4,4,4,4)
 
-      LOGICAL :: l1,l2,l3,l4,l5           ! booleans for levels
-      LOGICAL :: lso4,lnh3,lno3,lss,ldu,loc,lbc ! booleans for particles
+      LOGICAL :: l1, l2, l3, l4, l5           ! booleans for levels
+      LOGICAL :: lso4, lnh3, lno3, lss, ldu, loc, lbc ! booleans for particles
       LOGICAL :: lsb !boolean for b bins
 
       ! dummy float arrays required to initialize field arrays -AZ
@@ -1031,7 +1066,6 @@ CONTAINS
       TYPE(FloatArray3d), TARGET :: dumarr3d
       TYPE(FloatArray4d), TARGET :: dumarr4d
       TYPE(ArrayElement), POINTER :: ArrEl
-
 
       ! Set logical variables for levels -AZ
       l1 = .FALSE.
@@ -1049,18 +1083,17 @@ CONTAINS
 
       ! Set logical variables for aerosol species if SALSA is used
       IF (level >= 4) THEN
-      lso4 = IsUsed(prtcl,'SO4')
-      loc = IsUsed(prtcl,'OC')
-      lbc = IsUsed(prtcl,'BC')
-      ldu = IsUsed(prtcl,'DU')
-      lss = IsUsed(prtcl,'SS')
-      lno3 = IsUsed(prtcl,'NO')
-      lnh3 = IsUsed(prtcl,'NH')
+         lso4 = IsUsed(prtcl,'SO4')
+         loc = IsUsed(prtcl,'OC')
+         lbc = IsUsed(prtcl,'BC')
+         ldu = IsUsed(prtcl,'DU')
+         lss = IsUsed(prtcl,'SS')
+         lno3 = IsUsed(prtcl,'NO')
+         lnh3 = IsUsed(prtcl,'NH')
       END IF
 
       ! Create a field array for output variables
       fields = FieldArray()
-
 
       ! Initialize dummy arrays and dummy pointer
       zeros1d(:) = 0.
@@ -1071,7 +1104,6 @@ CONTAINS
       dumarr4d = FloatArray4D(zeros4d,store=.TRUE.)
       dummy => dumarr3d
       dummy2 => dumarr4d
-
 
       ! Create fields for output variables
       CALL fields%NewField("time","Time","s","time",.TRUE.,dummy)
@@ -1093,14 +1125,13 @@ CONTAINS
 
          CALL fields%NewField("ica","Ice cloud droplet size bins, regime a","m","ica",(lbinanl .AND. l5),dummy)
          CALL fields%NewField("icb","Ice cloud droplet size bins","m","icb",(lbinanl .AND. l5 .AND. lsb),dummy)
-         CALL fields%NewField("snw","Snow size bins","m","snow",(lbinanl .AND. l5),dummy)
+         CALL fields%NewField("snw","Snow size bins","m","snw",(lbinanl .AND. l5),dummy)
 
       END IF
 
       CALL fields%NewField("u0","Geostrophic zonal wind","m/s","zt",.TRUE.,dummy)
       CALL fields%NewField("v0","Geostrophic meridional wind","m/s","zt",.TRUE.,dummy)
       CALL fields%NewField("dn0","Base-state density","kg/m^3","zt",.TRUE.,dummy)
-
 
       !Point the dummy pointers to float arrays containing the numerical values, then create the fields
       dummy => a_u
@@ -1167,11 +1198,8 @@ CONTAINS
 
          dummy => a_rh
          CALL fields%NewField("S_RH","SALSA Relative humidity","1","tttt",.TRUE.,dummy) !
-
          dummy => a_rhi
          CALL fields%NewField("S_RHI","SALSA Relative humidity over ice","1","tttt",l5,dummy) !
-
-
          dummy => a_nac
          CALL fields%NewField("S_Nact","SALSA Number of newly activated droplets","kg^-1","tttt",.TRUE.,dummy) !
 
@@ -1220,10 +1248,9 @@ CONTAINS
          dummy2 => a_rwpba
          CALL fields%NewField("S_Rwpba","SALSA bin precipitation particle radius","m","ttttprc",lbinanl,dummy2) !
 
-
          ! ICE
-         dummy => a_nic
-         CALL fields%NewField("S_Nic","SALSA ice nuclei","m^-3","tttt",l5,dummy) ! !
+         dummy => a_ni
+         CALL fields%NewField("S_Ni","SALSA ice nuclei","m^-3","tttt",l5,dummy) ! !
          dummy2 => a_niba
          CALL fields%NewField("S_Niba","SALSA ice particle size distribution, regime a","m^-3","ttttica",&
                               (lbinanl .AND. l5),dummy2) !
@@ -1239,7 +1266,6 @@ CONTAINS
          dummy2 => a_rwibb
          CALL fields%NewField("S_Rwibb","SALSA bin ice particle radius, regime b","m","tttticb",&
                               (lbinanl .AND. l5 .AND. lsb),dummy2) !
-
 
          ! SNOW
          dummy => a_ns
@@ -1365,20 +1391,28 @@ CONTAINS
       fname =  trim(filprf)
       IF(myid == 0) PRINT                                                  &
          "(//' ',49('-')/,' ',/,'   Initializing: ',A20)",trim(fname)
+
       CALL open_nc( fname, expnme, time, (nxp-4)*(nyp-4), ncid0, nrec0, ver, author, info)
 
       IF (level < 4 .OR. .NOT. lbinanl) THEN
+
          CALL define_nc( ncid0, nrec0, varnum, fields, n1=nzp, n2=nxp-4, n3=nyp-4)
+
       ELSE IF (level == 4 .AND. lbinanl) THEN
+
          CALL define_nc( ncid0, nrec0, varnum, fields, n1=nzp, n2=nxp-4, n3=nyp-4,  &
                          inae_a=fn2a, inae_b=fn2b-fn2a, incld_a=fca%cur,          &
                          incld_b=fcb%cur-fca%cur, inprc=fra )
+
       ELSE IF (level == 5 .AND. lbinanl) THEN
+
          CALL define_nc( ncid0, nrec0, varnum, fields, n1=nzp, n2=nxp-4, n3=nyp-4,  &
                          inae_a=fn2a,  inae_b =fn2b-fn2a, incld_a=fca%cur,        &
                          incld_b=fcb%cur-fca%cur, inprc=fra, inice_a=fia%cur,     &
                          inice_b=fib%cur-fia%cur, insnw=fsa )
+
       END IF
+
       IF (myid == 0) PRINT *,'   ...starting record: ', nrec0
 
    END SUBROUTINE init_anal
@@ -1386,31 +1420,31 @@ CONTAINS
    !Subroutine for calculating output values
    SUBROUTINE calc_anal()
       USE class_ComponentIndex, ONLY : IsUsed
-      USE mo_submctl, ONLY : in1a,fn2a,in2b,fn2b,            &
-                             ica,fca,icb,fcb,ira,fra,        &
-                             iia,fia,iib,fib,isa,fsa,        &
+      USE mo_submctl, ONLY : in1a, fn2a, in2b, fn2b,            &
+                             ica, fca, icb, fcb, ira, fra,        &
+                             iia, fia, iib, fib, isa, fsa,        &
                              aerobins, cloudbins, precpbins, &
                              icebins, snowbins, nlim, prlim, &
                              nspec, nbins, ncld, nice, nprc, nsnw
 
       INTEGER :: n, i
       INTEGER :: ibeg(4), icnt(4), i1, i2, j1, j2
-      INTEGER :: ibegsd(5), icntaea(5), icntaeb(5), icntcla(5), icntclb(5), icntpra(5), & ! Juha: For sizedistribution variables
+      INTEGER :: ibegsd(5),  icntaea(5), icntaeb(5), icntcla(5), icntclb(5), icntpra(5), & ! Juha: For sizedistribution variables
                  icntica(5), icnticb(5), icntsna(5)
       REAL :: zsum(nzp,nxp,nyp) ! Juha: Helper for computing bulk output diagnostics
       REAL :: zvar(nzp,nxp,nyp)
       REAL :: a_Rawet(nzp,nxp,nyp,nbins), a_Rcwet(nzp,nxp,nyp,ncld), a_Rpwet(nzp,nxp,nyp,nprc), &
-              a_Riwet(nzp,nxp,nyp,nice), a_Rswet(nzp,nxp,nyp,nsnw)
+              a_Riwet(nzp,nxp,nyp,nice),  a_Rswet(nzp,nxp,nyp,nsnw)
       TYPE(ArrayElement), POINTER :: ArrEl
 
-      icnt = (/nzp, nxp-4, nyp-4, 1/)
+      icnt =    (/nzp, nxp-4, nyp-4, 1/)
       icntaea = (/nzp,nxp-4,nyp-4, fn2a, 1 /)
       icntaeb = (/nzp,nxp-4,nyp-4, fn2b-fn2a, 1/)
       icntcla = (/nzp,nxp-4,nyp-4, fca%cur, 1/)
       icntclb = (/nzp,nxp-4,nyp-4, fcb%cur-fca%cur, 1/)
       icntpra = (/nzp,nxp-4,nyp-4, fra, 1/)
-      icntica = (/nzp,nxp-4,nyp-4, iia%cur, 1/)
-      icnticb = (/nzp,nxp-4,nyp-4, iib%cur-iia%cur, 1/)
+      icntica = (/nzp,nxp-4,nyp-4, fia%cur, 1/)
+      icnticb = (/nzp,nxp-4,nyp-4, fib%cur-fia%cur, 1/)
       icntsna = (/nzp,nxp-4,nyp-4, fsa, 1/)
       ibeg =   (/1,1,1,nrec0/)
       ibegsd = (/1,1,1,1,nrec0/)
@@ -1451,7 +1485,9 @@ CONTAINS
 
 
       IF(level >= 4) THEN
-         a_q%data(:,:,:) = a_rp%data(:,:,:) + a_rc%data(:,:,:) + a_srp%data(:,:,:)
+         a_q%data(:,:,:) = a_rp%data(:,:,:) + a_rc%data(:,:,:) + a_srp%data(:,:,:)+ &   ! Rain water
+                           a_ri%data(:,:,:) + & ! Ice water (level 5)
+                           a_srs%data(:,:,:)      ! Snow water (level 5)
          a_r%data(:,:,:) = a_srp%data(:,:,:)
 
          !Number of newly activated droplets
@@ -1475,7 +1511,7 @@ CONTAINS
          IF (lbinanl) THEN
 
             !SALSA bin cloud droplet radius for both regimes
-            CALL getBinRadius(ncld,nspec+1,a_ncloudp%data(:,:,:,:),a_mcloudp%data(:,:,:,:),nlim,a_Rcwet)
+            CALL getBinRadius(ncld,nspec+1,a_ncloudp%data(:,:,:,:),a_mcloudp%data(:,:,:,:),nlim,a_Rcwet,2)
             a_rwcba%data(:,:,:,:) = a_Rcwet(:,:,:,:)
             a_rwcbb%data(:,:,:,:) = a_Rcwet(:,:,:,:)
 
@@ -1487,7 +1523,7 @@ CONTAINS
             a_npba%data(:,:,:,:) = a_nprecpp%data(:,:,:,:)
 
             !Bin precipitation particle radius
-            CALL getBinRadius(nprc,nspec+1,a_nprecpp%data(:,:,:,:),a_mprecpp%data(:,:,:,:),prlim,a_Rpwet)
+            CALL getBinRadius(nprc,nspec+1,a_nprecpp%data(:,:,:,:),a_mprecpp%data(:,:,:,:),prlim,a_Rpwet,3)
             a_rwpba%data(:,:,:,:) = a_Rpwet(:,:,:,:)
 
             !Aerosol size distribution, both regimes
@@ -1495,7 +1531,7 @@ CONTAINS
             a_nabb%data(:,:,:,:) = a_naerop%data(:,:,:,:)
 
             !Bin aerosol wet radius, both regimes
-            CALL getBinRadius(nbins,nspec+1,a_naerop%data(:,:,:,:),a_maerop%data(:,:,:,:),nlim,a_Rawet)
+            CALL getBinRadius(nbins,nspec+1,a_naerop%data(:,:,:,:),a_maerop%data(:,:,:,:),nlim,a_Rawet,1)
             a_rwaba%data(:,:,:,:) = a_Rawet(:,:,:,:)
             a_rwabb%data(:,:,:,:) = a_Rawet(:,:,:,:)
 
@@ -1527,7 +1563,7 @@ CONTAINS
 
          IF (level == 5) THEN
 
-            a_f%data(:,:,:) = a_ri%data(:,:,:) + a_srs%data(:,:,:)
+            !a_f%data(:,:,:) = a_ri%data(:,:,:) + a_srs%data(:,:,:)
             a_i%data(:,:,:) = a_ri%data(:,:,:)
             a_s%data(:,:,:) = a_srs%data(:,:,:)
 
@@ -1536,7 +1572,7 @@ CONTAINS
             zsum(:,:,:) = zvar(:,:,:)
             CALL bulkNumc('ice','b',zvar(:,:,:))
             zsum(:,:,:) = zsum(:,:,:) + zvar(:,:,:)
-            a_nic%data(:,:,:) = zsum(:,:,:)
+            a_ni%data(:,:,:) = zsum(:,:,:)
 
             !Snow density number concentration
             CALL bulkNumc('snow','a',zvar(:,:,:))
@@ -1561,7 +1597,7 @@ CONTAINS
                !Ice particle size distribution, regime B
                a_nibb%data(:,:,:,:) = a_nicep%data(:,:,:,:)
 
-               CALL getBinRadius(nice,nspec+1,a_nicep%data,a_micep%data,prlim,a_Riwet)
+               CALL getBinRadius(nice,nspec+1,a_nicep%data,a_micep%data,prlim,a_Riwet,4)
                !Bin ice particle radius, regime A
                a_rwiba%data(:,:,:,:) = a_Riwet(:,:,:,:)
                !Bin ice particle radius, regime B
@@ -1571,11 +1607,13 @@ CONTAINS
                a_nsba%data(:,:,:,:) = a_nsnowp%data(:,:,:,:)
 
                !Bin snow particle radius
-               CALL getBinRadius(nsnw,nspec+1,a_nsnowp%data,a_msnowp%data,prlim,a_Rswet)
+               CALL getBinRadius(nsnw,nspec+1,a_nsnowp%data,a_msnowp%data,prlim,a_Rswet,5)
                a_rwsba%data(:,:,:,:) = a_Rswet(:,:,:,:)
 
             END IF
          END IF
+
+         ! AEROSOL OUTPUT
 
          IF (IsUsed(prtcl,'SO4')) THEN
 
@@ -1789,12 +1827,10 @@ CONTAINS
 
          END IF
 
-
-         END IF
+      END IF ! level 4
 
 
    END SUBROUTINE calc_anal
-
 
    !
    ! ----------------------------------------------------------------------
@@ -1842,17 +1878,17 @@ CONTAINS
       TYPE(FloatArray3d), POINTER :: testi
       TYPE(FloatArray4d), POINTER :: testi2
 
-      icnt = (/nzp, nxp-4, nyp-4, 1/)
-      icntaea = (/nzp,nxp-4,nyp-4, fn2a, 1 /)
-      icntaeb = (/nzp,nxp-4,nyp-4, fn2b-fn2a, 1/)
-      icntcla = (/nzp,nxp-4,nyp-4, fca%cur, 1/)
-      icntclb = (/nzp,nxp-4,nyp-4, fcb%cur-fca%cur, 1/)
-      icntpra = (/nzp,nxp-4,nyp-4, fra, 1/)
-      icntica = (/nzp,nxp-4,nyp-4, iia%cur, 1/)
-      icnticb = (/nzp,nxp-4,nyp-4, iib%cur-iia%cur, 1/)
-      icntsna = (/nzp,nxp-4,nyp-4, fsa, 1/)
-      ibeg = (/1  ,1  ,1  ,nrec0/)
-      ibegsd = (/1  ,1  ,1  ,1,nrec0/)
+      icnt =    (/nzp, nxp-4, nyp-4, 1/)
+      icntaea = (/nzp, nxp-4, nyp-4, fn2a, 1 /)
+      icntaeb = (/nzp, nxp-4, nyp-4, fn2b-fn2a, 1/)
+      icntcla = (/nzp, nxp-4, nyp-4, fca%cur, 1/)
+      icntclb = (/nzp, nxp-4, nyp-4, fcb%cur-fca%cur, 1/)
+      icntpra = (/nzp, nxp-4, nyp-4, fra, 1/)
+      icntica = (/nzp, nxp-4, nyp-4, fia%cur, 1/)
+      icnticb = (/nzp, nxp-4, nyp-4, fib%cur-fia%cur, 1/)
+      icntsna = (/nzp, nxp-4, nyp-4, fsa, 1/)
+      ibeg =   (/1,1,1,nrec0/)
+      ibegsd = (/1,1,1,1,nrec0/)
 
       i1 = 3
       i2 = nxp-2
@@ -1921,11 +1957,11 @@ CONTAINS
 
       IF (level < 4) THEN ! Operation without SALSA
 
-         DO n=11,varnum
+         DO n = 11, varnum
 
             CALL fields%getField(n,ArrEl)
 
-         ! If output status is true, print variable to output file
+            ! If output status is true, print variable to output file
             IF (ArrEl%outputstatus) THEN
                IF ((ArrEl%dimension == "tttt") .OR. (ArrEl%dimension == "mttt") .OR. &
                    (ArrEl%dimension == "tmtt") .OR. (ArrEl%dimension == "ttmt") ) THEN
@@ -1945,10 +1981,9 @@ CONTAINS
 
       IF (level >= 4) THEN ! Operation with SALSA
 
-         IF (.TRUE.) THEN
 
          ! Loop through SALSA output variables
-            DO n=19,varnum
+            DO n = 19, varnum
                CALL fields%getField(n,ArrEl)
 
          ! If output status is true, print variable to output file
@@ -2030,10 +2065,8 @@ CONTAINS
 
                END IF
 
-
             END DO
-         END IF
-      END IF
+         END IF ! level
 
          IF (myid == 0) PRINT "(//' ',12('-'),'   Record ',I3,' to: ',A60)",    &
             nrec0,fname
@@ -2082,8 +2115,8 @@ CONTAINS
                             ,hname
       OPEN(10,file=trim(hname), form='unformatted')
 
-      WRITE(10) time,th00,umean,vmean,dtl,level,isgstyp,iradtyp,nzp,nxp,nyp,nscl
-      WRITE(10) xt, xm, yt, ym, zt, zm, dn0, th0, u0, v0, pi0, pi1, rt0, psrf,sst,W1,W2,W3 ! added by Zubair
+      WRITE(10) time, th00, umean, vmean, dtl, level, isgstyp, iradtyp, nzp, nxp, nyp, nscl
+      WRITE(10) xt, xm, yt, ym, zt, zm, dn0, th0, u0, v0, pi0, pi1, rt0, psrf, sst, W1, W2, W3 ! added by Zubair
 
       WRITE(10) a_ustar, a_tstar, a_rstar
 
@@ -2269,6 +2302,7 @@ CONTAINS
       mixrat = 0.
 
       ! Determine multipliers
+
       mm = GetIndex(prtcl,icomp)
 
       ! Given in kg/kg
@@ -2356,51 +2390,6 @@ CONTAINS
       END SELECT
 
    END SUBROUTINE binSpecMixrat
-
-   !
-   ! ----------------------------------------------
-   ! Subroutine binMixrat: Calculate the total dry or wet
-   ! Mass concentration for individual bins
-   !
-   ! Juha Tonttila, FMI, 2015
-   ! Tomi Raatikainen, FMI, 2016
-   SUBROUTINE binMixrat(ipart,itype,ibin,ii,jj,kk,sumc)
-      USE mo_submctl, ONLY : ncld,nbins,nprc,nice,nsnw
-      USE class_ComponentIndex, ONLY : GetNcomp
-      IMPLICIT NONE
-
-      CHARACTER(len=*), INTENT(in) :: ipart
-      CHARACTER(len=*), INTENT(in) :: itype
-      INTEGER, INTENT(in) :: ibin,ii,jj,kk
-      REAL, INTENT(out) :: sumc
-
-      INTEGER :: iend
-
-      ! Number of components-1
-      IF (itype == 'dry') THEN
-         iend = GetNcomp(prtcl)-1 ! dry CASE
-      ELSE IF (itype == 'wet') THEN
-         iend = GetNcomp(prtcl) ! wet CASE
-      ELSE
-         STOP 'Error in binMixrat!'
-      END IF
-
-      SELECT CASE(ipart)
-         CASE('aerosol')
-            sumc = SUM( a_maerop%data(kk,ii,jj,ibin:iend*nbins+ibin:nbins) )
-         CASE('cloud')
-            sumc = SUM( a_mcloudp%data(kk,ii,jj,ibin:iend*ncld+ibin:ncld) )
-         CASE('precp')
-            sumc = SUM( a_mprecpp%data(kk,ii,jj,ibin:iend*nprc+ibin:nprc) )
-         CASE('ice')
-            sumc = SUM( a_micep%data(kk,ii,jj,ibin:iend*nice+ibin:nice) )
-         CASE('snow')
-            sumc = SUM( a_msnowp%data(kk,ii,jj,ibin:iend*nsnw+ibin:nsnw) )
-         CASE DEFAULT
-            STOP 'bin mixrat error'
-      END SELECT
-
-   END SUBROUTINE binMixrat
 
    !
    ! ----------------------------------------------
@@ -2513,7 +2502,7 @@ CONTAINS
                STOP 'meanRadius: Invalid bin regime SELECTion (aerosol)'
             END IF
 
-            CALL getRadius(istr,iend,nbins,nspec+1,a_naerop%data,a_maerop%data,nlim,rad)
+            CALL getRadius(istr,iend,nbins,nspec+1,a_naerop%data,a_maerop%data,nlim,rad,1)
 
          CASE('cloud')
 
@@ -2530,14 +2519,14 @@ CONTAINS
                STOP 'meanRadius: Invalid bin regime SELECTion (cloud)'
             END IF
 
-            CALL getRadius(istr,iend,ncld,nspec+1,a_ncloudp%data,a_mcloudp%data,nlim,rad)
+            CALL getRadius(istr,iend,ncld,nspec+1,a_ncloudp%data,a_mcloudp%data,nlim,rad,2)
 
          CASE('precp')
 
             istr = ira
             iend = fra
 
-            CALL getRadius(istr,iend,nprc,nspec+1,a_nprecpp%data,a_mprecpp%data,prlim,rad)
+            CALL getRadius(istr,iend,nprc,nspec+1,a_nprecpp%data,a_mprecpp%data,prlim,rad,3)
 
          CASE('ice')
 
@@ -2554,23 +2543,27 @@ CONTAINS
                STOP 'meanRadius: Invalid bin regime SELECTion (ice)'
             END IF
 
-            CALL getRadius(istr,iend,nice,nspec+1,a_nicep%data,a_micep%data,prlim,rad)
+            CALL getRadius(istr,iend,nice,nspec+1,a_nicep%data,a_micep%data,prlim,rad,4)
 
          CASE('snow')
 
             istr = isa
             iend = fsa
 
-            CALL getRadius(istr,iend,nsnw,nspec+1,a_nsnowp%data,a_msnowp%data,prlim,rad)
+            CALL getRadius(istr,iend,nsnw,nspec+1,a_nsnowp%data,a_msnowp%data,prlim,rad,5)
 
       END SELECT
 
-   END SUBROUTINE meanRadius
+ !  END SUBROUTINE meanRadius
    !
    ! ---------------------------------------------------
    ! Subroutine getRadius
    ! Calculates number mean wet radius (over selected bins) for the whole domain
-   SUBROUTINE getRadius(zstr,zend,nn,n4,numc,mass,numlim,zrad)
+  CONTAINS
+
+   SUBROUTINE getRadius(zstr,zend,nn,n4,numc,mass,numlim,zrad,flag)
+      USE mo_submctl, ONLY : pi6
+
       IMPLICIT NONE
 
       INTEGER, INTENT(in) :: nn, n4 ! Number of bins (nn) and aerosol species (n4)
@@ -2578,6 +2571,7 @@ CONTAINS
       REAL, INTENT(in) :: numc(nzp,nxp,nyp,nn)
       REAL, INTENT(in) :: mass(nzp,nxp,nyp,nn*n4)
       REAL, INTENT(in) :: numlim
+      INTEGER, INTENT(in) :: flag
 
       REAL, INTENT(out) :: zrad(nzp,nxp,nyp)
 
@@ -2597,7 +2591,7 @@ CONTAINS
                   IF (numc(k,i,j,bin) > numlim) THEN
                      tot = tot+numc(k,i,j,bin)
                      tmp(:) = mass(k,i,j,bin:(n4-1)*nn+bin:nn)
-                     rwet = rwet+calc_wet_radius(n4,numc(k,i,j,bin),tmp)*numc(k,i,j,bin)
+                     rwet = rwet+calc_eff_radius(n4,numc(k,i,j,bin),tmp,flag)*numc(k,i,j,bin)
                   END IF
                END DO
 
@@ -2611,8 +2605,14 @@ CONTAINS
 
 
    END SUBROUTINE getRadius
+   END SUBROUTINE meanRadius
 
-   SUBROUTINE getBinRadius(nn,n4,numc,mass,numlim,zrad)
+   ! SUBROUTINE getBinRadius
+   ! Calculates wet radius for each bin in the whole domain
+
+   SUBROUTINE getBinRadius(nn,n4,numc,mass,numlim,zrad,flag)
+      USE mo_submctl, ONLY : pi6
+
       IMPLICIT NONE
 
       INTEGER, INTENT(in) :: nn, n4 ! Number of bins (nn) and aerosol species (n4)
@@ -2620,6 +2620,7 @@ CONTAINS
       REAL, INTENT(in)  :: mass(nzp,nxp,nyp,nn*n4)
       REAL, INTENT(in)  :: numlim
       REAL, INTENT(out) :: zrad(nzp,nxp,nyp,nn)
+      INTEGER, INTENT(IN) :: flag ! Parameter for identifying aerosol (1), cloud (2), precipitation (3), ice (4) and snow (5)
 
       INTEGER :: k,i,j,bin
       REAL :: tmp(n4)
@@ -2632,7 +2633,7 @@ CONTAINS
                DO bin = 1, nn
                   IF (numc(k,i,j,bin) > numlim) THEN
                      tmp(:) = mass(k,i,j,bin:(n4-1)*nn+bin:nn)
-                     zrad(k,i,j,bin) = calc_wet_radius(n4,numc(k,i,j,bin),tmp)
+                     zrad(k,i,j,bin) = calc_eff_radius(n4,numc(k,i,j,bin),tmp,flag)
                   END IF
                END DO
 
@@ -2644,23 +2645,43 @@ CONTAINS
 
    END SUBROUTINE getBinRadius
 
-   ! Aerosol and cloud droplet composition
-   !     Needs local density array dens
-   REAL FUNCTION calc_wet_radius(n,numc,mass)
+
+  !********************************************************************
+  !
+  ! Function for calculating effective (wet) radius for any particle type
+  ! - Aerosol, cloud and rain are spherical
+  ! - Snow and ice can be irregular and their densities can be size-dependent
+  !
+  ! Edit this function when needed (also update CalcDimension in mo_submctl.f90)
+  !
+  ! Correct dimension is needed for irregular particles (e.g. ice and snow) for calculating fall speed (deposition and coagulation)
+  ! and capacitance (condensation). Otherwise compact spherical structure can be expected,
+  !
+   REAL FUNCTION calc_eff_radius(n,numc,mass,flag)
       USE mo_submctl, ONLY : pi6
       IMPLICIT NONE
-      INTEGER, INTENT(IN) :: n
-      REAL, INTENT(IN)    :: numc, mass(n)
 
-      calc_wet_radius = 0.
+      INTEGER, INTENT(IN) :: n ! Number of species
+      INTEGER, INTENT(IN) :: flag ! Parameter for identifying aerosol (1), cloud (2), precipitation (3), ice (4) and snow (5)
+      REAL, INTENT(IN) :: numc, mass(n)
 
       ! Don't calculate if very low number concentration
       IF (numc < 1e-15) RETURN
 
-      ! Radius from total volume per particle
-      calc_wet_radius = 0.5*( SUM(mass(:)/dens(:))/numc/pi6)**((1./3.))
+      calc_eff_radius=0.
+      IF (flag == 4) THEN   ! Ice
+         ! Spherical ice
+         calc_eff_radius = 0.5*( SUM(mass(:)/dens_ice(:))/numc/pi6)**(1./3.)
+      ELSE IF (flag == 5) THEN   ! Snow
+         ! Spherical snow
+         calc_eff_radius = 0.5*( SUM(mass(:)/dens_snow(:))/numc/pi6)**(1./3.)
+      ELSE
+         ! Radius from total volume of a spherical particle or aqueous droplet
+         calc_eff_radius = 0.5*( SUM(mass(:)/dens(:))/numc/pi6)**(1./3.)
+      END IF
 
-   END FUNCTION calc_wet_radius
 
+   END FUNCTION calc_eff_radius
+   !********************************************************************
 END MODULE grid
 

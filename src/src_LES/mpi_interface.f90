@@ -39,19 +39,19 @@ MODULE mpi_interface
 
    INTEGER :: myid, pecount, nxpg, nypg, nxg, nyg, nbytes, intsize, &
               MY_SIZE, MY_CMPLX
-   INTEGER :: xcomm, ycomm,commxid,commyid
-   INTEGER :: nxnzp,nynzp,fftinix,fftiniy
+   INTEGER :: xcomm, ycomm, commxid, commyid
+   INTEGER :: nxnzp, nynzp, fftinix, fftiniy
    INTEGER :: wrxid, wryid, nxprocs, nyprocs
    INTEGER, ALLOCATABLE, DIMENSION(:) :: xoffset, yoffset, nxpa, nypa, &
                                          nynza, nxnza
 
    ! these are the parameters used in the alltoallw call in the fft
 
-   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: ranktable,xtype,ytype,xdisp,&
-                                           ydisp,xcount,ycount
+   INTEGER, ALLOCATABLE, DIMENSION(:,:) :: ranktable, xtype, ytype, xdisp,&
+                                           ydisp, xcount, ycount
 
-   INTEGER :: stridetype,xstride,ystride,xystride,xylarry,xyzlarry,&
-              fxytype,fxyztype
+   INTEGER :: stridetype, xstride, ystride, xystride, xylarry, xyzlarry,&
+              fxytype, fxyztype
 
    CHARACTER(len=80) :: ver='', author=''
    ! Additional, e.g. case specific, information
@@ -109,7 +109,7 @@ CONTAINS
       INTEGER, INTENT(inout) :: nxp, nyp
       LOGICAL, INTENT(in)    :: nxpart
 
-      INTEGER :: ierror, i,j, modx,mody, nxpj, nypj, irank
+      INTEGER :: ierror, i, j, modx, mody, nxpj, nypj, irank
       INTEGER :: worldgroup, xgroup, ygroup
 
       nxprocs = 1
@@ -118,8 +118,10 @@ CONTAINS
          nyprocs = pecount
          nxprocs = 1
          IF( (nyp-4)/nyprocs < 5 .OR. nxpart) THEN
+
             nyprocs = int(sqrt(REAL(pecount)))
             nxprocs = pecount/nyprocs
+
             DO WHILE (nyprocs*nxprocs /= pecount)
                nyprocs = nyprocs+1
                nxprocs = pecount/nyprocs
@@ -328,10 +330,9 @@ CONTAINS
    !
    SUBROUTINE init_alltoall_reorder(nxp,nyp,nzp)
 
-      INTEGER, INTENT(in) :: nxp,nyp,nzp
+      INTEGER, INTENT(in) :: nxp, nyp, nzp
 
-      INTEGER :: nx, ny, i, j, k, ii, jj, ierr, cnt, typesize,nynzg, nxnzg
-
+      INTEGER :: nx, ny, i, ii, jj, ierr, typesize, nynzg, nxnzg
 
       nx  = max(1,nxp-4)
       ny  = max(1,nyp-4)
@@ -442,8 +443,8 @@ CONTAINS
       INTEGER, INTENT(in) :: n1,n2,n3
       REAL, INTENT(inout) :: var(n1,n2,n3)
       INTEGER :: req(16)
-      INTEGER :: ierror, stats(MPI_STATUS_SIZE,16), pxfwd, pxback, pyfwd, pyback
-      INTEGER :: pxyne,pxyse,pxynw,pxysw
+      INTEGER :: ierror, pxfwd, pxback, pyfwd, pyback
+      INTEGER :: pxyne, pxyse, pxynw, pxysw
 
       IF (nypg == 5) THEN
          var(:,:,1) = var(:,:,3)
@@ -512,7 +513,7 @@ CONTAINS
    SUBROUTINE cyclicc(n1,n2,n3,var,req)
 
       INTEGER :: ierror, stats(MPI_STATUS_SIZE,16)
-      INTEGER :: req(16),n1,n2,n3
+      INTEGER :: req(16), n1, n2, n3
       REAL    :: var(n1,n2,n3)
 
       CALL mpi_waitall(16,req,stats,ierror)
@@ -535,9 +536,9 @@ CONTAINS
 
    SUBROUTINE xshuffle(a,atmp,nx,ny,nz,isign)
 
-      INTEGER, INTENT(in)    :: nx,ny,nz,isign
-      COMPLEX, INTENT(inout) :: a(nx,ny,nz),atmp((nx+1)*(ny+1)*(nz+1))
-      INTEGER :: ierr,ll,i,j,k
+      INTEGER, INTENT(in)    :: nx, ny, nz, isign
+      COMPLEX, INTENT(inout) :: a(nx,ny,nz), atmp((nx+1)*(ny+1)*(nz+1))
+      INTEGER :: ierr, ll, i, j, k
 
       IF(isign == 1) THEN
          IF(nxprocs /= 1)then
@@ -586,6 +587,7 @@ CONTAINS
             CALL mpi_alltoallw( a,ycount(0:,1),ydisp(0:,1),ytype(0:,1),atmp, &
                                 ycount(0:,2),ydisp(0:,2),ytype(0:,2),ycomm,ierr)
          ELSE
+
             ll = 0
             DO k = 1, nz
                DO j = 1, ny
@@ -595,12 +597,14 @@ CONTAINS
                   END DO
                END DO
             END DO
+
          END IF
       ELSE
          IF(nyprocs /= 1)then
             CALL mpi_alltoallw(atmp,ycount(0:,2),ydisp(0:,2),ytype(0:,2),a, &
                ycount(0:,1),ydisp(0:,1),ytype(0:,1),ycomm,ierr)
          ELSE
+
             ll = 0
             DO k = 1, nz
                DO j = 1, ny
@@ -623,7 +627,7 @@ CONTAINS
 
       REAL(kind=8), INTENT(out) :: xxg
       REAL(kind=8), INTENT(in)  :: xxl
-      INTEGER :: mpiop,ierror
+      INTEGER :: ierror
 
 
       CALL mpi_allreduce(xxl,xxg,1,MPI_DOUBLE_PRECISION, MPI_MAX, &
@@ -636,8 +640,7 @@ CONTAINS
 
       REAL(kind=8), INTENT(out) :: xxg
       REAL(kind=8), INTENT(in)  :: xxl
-      INTEGER :: mpiop,ierror
-
+      INTEGER :: ierror
 
       CALL mpi_allreduce(xxl,xxg,1,MPI_DOUBLE_PRECISION, MPI_SUM, &
                          MPI_COMM_WORLD, ierror)
@@ -649,8 +652,7 @@ CONTAINS
       INTEGER, INTENT(in) :: n
       REAL(kind=8), INTENT(out) :: xxg(n)
       REAL(kind=8), INTENT(in)  :: xxl(n)
-      INTEGER :: mpiop,ierror
-
+      INTEGER :: ierror
 
       CALL mpi_allreduce(xxl,xxg,n,MPI_DOUBLE_PRECISION, MPI_SUM, &
                          MPI_COMM_WORLD, ierror)

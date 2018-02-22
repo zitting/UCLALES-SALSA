@@ -60,7 +60,7 @@ CONTAINS
 
       CALL define_parm
 
-      IF (level >= 4) CALL define_salsa ! Read SALSA namelist etc.
+      IF (level >= 4) CALL define_salsa(level) ! Read SALSA namelist etc.
 
       IF (level >= 4) CALL salsa_initialize ! All salsa variables are now initialized
 
@@ -100,45 +100,45 @@ CONTAINS
                        filprf, expnme, iradtyp, igrdtyp, nfpt, distim, runtype, CCN,        &
                        Tspinup,sst, lbinanl
       USE init, ONLY : us, vs, ts, rts, ps, hs, ipsflg, itsflg,iseed, hfilin,   &
-                       zrand
+                       zrand, zrndamp, zrndampq, zrandnorm
       USE stat, ONLY : ssam_intvl, savg_intvl, mcflg, csflg, salsa_b_bins, cloudy_col_stats
       USE forc, ONLY : radsounding,    &     ! Juha: added for radiation background profile
                        div, case_name, &     ! Divergence, forcing case name
                        sfc_albedo,     &     ! Surface albedo
-                       useMcICA,RadConstPress,RadPrecipBins
+                       useMcICA,RadConstPress,RadPrecipBins,RadSnowBins
       USE mcrp, ONLY : sed_aero, sed_cloud, sed_precp, sed_ice, sed_snow
       USE mpi_interface, ONLY : myid, appl_abort, ver, author
 
       IMPLICIT NONE
 
       NAMELIST /model/     &
-         expnme    ,       & ! experiment name
-         nxpart    ,       & ! whether partition in x direction?
-         naddsc    ,       & ! Number of additional scalars
+         expnme,           & ! experiment name
+         nxpart,           & ! whether partition in x direction?
+         naddsc,           & ! Number of additional scalars
          savg_intvl,       & ! output statistics frequency
          ssam_intvl,       & ! integral accumulate/ts print frequency
          mcflg,            & ! Mass conservation stats flag
          csflg,            & ! Column statistics flag
          salsa_b_bins,     & ! b-bins output statistics flag
          cloudy_col_stats, & ! Output column statistics for cloudy/clear column
-         corflg , cntlat , & ! coriolis flag
-         nfpt   , distim , & ! rayleigh friction points, dissipation time
-         level  , CCN    , & ! Microphysical model Number of CCN per kg of air
-         iseed  , zrand  , & ! random seed
-         nxp    , nyp    , nzp   ,  & ! number of x, y, z points
-         deltax , deltay , deltaz , & ! delta x, y, z (meters)
-         dzrat  , dzmax  , igrdtyp, & ! stretched grid parameters
-         timmax , dtlong , istpfl , & ! timestep control
-         runtype, hfilin , filprf , & ! type of run (INITIAL or HISTORY)
-         frqhis , frqanl , outflg , & ! freq of history/anal writes, output flg
-         iradtyp, radfrq , strtim , & ! radiation type flag
-         isfctyp, ubmin  , zrough , & ! surface parameterization type
-         sst    , dthcon , drtcon , & ! SSTs, surface flx parameters
-         isgstyp, csx    , prndtl , & ! SGS model type, parameters
-         ipsflg , itsflg ,          & ! sounding flags
-         hs     , ps     , ts    ,  & ! sounding heights, pressure, temperature
-         us     , vs     , rts   ,  & ! sounding E/W winds, water vapor
-         umean  , vmean  , th00,    & ! gallilean E/W wind, basic state
+         corflg,  cntlat , & ! coriolis flag
+         nfpt,    distim , & ! rayleigh friction points, dissipation time
+         level,   CCN    , & ! Microphysical model Number of CCN per kg of air
+         iseed,   zrand,   zrndamp, zrndampq, zrandnorm, & ! random seed
+         nxp,     nyp,     nzp,     & ! number of x, y, z points
+         deltax,  deltay,  deltaz,  & ! delta x, y, z (meters)
+         dzrat,   dzmax,   igrdtyp, & ! stretched grid parameters
+         timmax,  dtlong,  istpfl,  & ! timestep control
+         runtype, hfilin,  filprf,  & ! type of run (INITIAL or HISTORY)
+         frqhis,  frqanl,  outflg,  & ! freq of history/anal writes, output flg
+         iradtyp, radfrq,  strtim,  & ! radiation type flag
+         isfctyp, ubmin,   zrough,  & ! surface parameterization type
+         sst,     dthcon,  drtcon,  & ! SSTs, surface flx parameters
+         isgstyp, csx,     prndtl,  & ! SGS model type, parameters
+         ipsflg,  itsflg,           & ! sounding flags
+         hs,      ps,      ts,      & ! sounding heights, pressure, temperature
+         us,      vs,      rts,     & ! sounding E/W winds, water vapor
+         umean,   vmean,   th00,    & ! gallilean E/W wind, basic state
          usenudge,                  & ! master switch for nudging
          Tspinup, lbinanl,          & ! Length of spinup period in seconds
          radsounding, div, case_name, & ! Name of the radiation sounding file, divergence for LEVEL 4
@@ -146,6 +146,7 @@ CONTAINS
          useMcICA,           & ! use the Monte Carlo Independent Column Approximation method (T/F)
          RadConstPress,      & ! keep constant pressure levels (T/F),
          RadPrecipBins,      & ! add precipitation bins cloud water (0, 1, 2, 3,...)
+         RadSnowBins,        & ! add snow bins to cloud ice (0, 1, 2, 3,...)
          sed_aero, sed_cloud, sed_precp, sed_ice, sed_snow ! Sedimentation (T/F)
 
       NAMELIST /nudge/   &

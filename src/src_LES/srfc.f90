@@ -20,9 +20,8 @@
 MODULE srfc
 
    INTEGER :: isfctyp = 0
-   !REAL    :: sst = 292.
-   REAL    :: zrough =  0.1
-   REAL    :: ubmin  =  0.20
+   REAL    :: zrough = 0.1
+   REAL    :: ubmin  = 0.20
    REAL    :: dthcon = 100.0
    REAL    :: drtcon = 0.0
 
@@ -72,8 +71,8 @@ CONTAINS
       USE defs, ONLY: vonk, p00, rcp, g, cp, alvl, ep2
       USE grid, ONLY: nzp, nxp, nyp, a_up, a_vp, a_theta, a_rv, a_rp, zt, dzt, psrf, th00,  &
                       umean, vmean, a_ustar, a_tstar, a_rstar, uw_sfc, vw_sfc, ww_sfc,      &
-                      wt_sfc, wq_sfc, dn0, level,dtl, a_sflx, a_rflx, precip, a_dn,         &
-                      W1,W2,W3, mc_ApVdom, dtlt
+                      wt_sfc, wq_sfc, dn0, level, dtl, a_sflx, a_rflx, precip, a_dn,         &
+                      W1, W2, W3, mc_ApVdom, dtlt
       USE thrm, ONLY: rslf
       USE stat, ONLY: sfc_stat, sflg, mcflg, acc_massbudged
       USE mpi_interface, ONLY : nypg, nxpg, double_array_par_sum
@@ -87,8 +86,8 @@ CONTAINS
 
 
       REAL :: total_sw, total_rw, total_la, total_se, total_pre  ! Sami added
-      REAL :: C_heat,lambda ! Sami added
-      REAL :: K1,K2,K3,Kmean1,Kmean2,fii_1,fii_2,fii_3,Q3,Q12,Q23,ff1  ! Sami added
+      REAL :: C_heat, lambda ! Sami added
+      REAL :: K1, K2, K3, Kmean1, Kmean2, fii_1, fii_2, fii_3, Q3, Q12, Q23, ff1  ! Sami added
 
 
 
@@ -116,7 +115,7 @@ CONTAINS
                DO i = 3, nxp-2
                   dtdz(i,j) = dthcon
                   drdz(i,j) = drtcon
-                  bfct(i,j) = g*zt(2)/(a_theta%data(2,i,j)*wspd(i,j)**2) ! TR: is this needed?
+                  bfct(i,j) = g*zt(2)/(a_theta%data(2,i,j)*wspd(i,j)**2)
                END DO
             END DO
             zs = zt(2)/zrough
@@ -152,15 +151,18 @@ CONTAINS
              !
          CASE(3)
             CALL get_swnds(nzp,nxp,nyp,usfc,vsfc,wspd,a_up,a_vp,umean,vmean)
+
             DO j = 3, nyp-2
                DO i = 3, nxp-2
                   dtdz(i,j) = a_theta%data(2,i,j) - sst*(p00/psrf)**rcp
                   drdz(i,j) = rx(2,i,j) - rslf(psrf,sst) ! Juha: rx
+
                   IF (ubmin > 0.) THEN
                      a_ustar(i,j) = sqrt(zrough)* wspd(i,j)
                   ELSE
                      a_ustar(i,j) = abs(ubmin)
                   END IF
+
                   a_tstar(i,j) =  dthcon * wspd(i,j)*dtdz(i,j)/a_ustar(i,j)
                   a_rstar(i,j) =  drtcon * wspd(i,j)*drdz(i,j)/a_ustar(i,j)
                   bfct(i,j) = g*zt(2)/(a_theta%data(2,i,j)*wspd(i,j)**2)
@@ -239,12 +241,11 @@ CONTAINS
 
             DO j = 3, nyp-2
                DO i = 3, nxp-2
-                  total_sw = total_sw+a_sflx(2,i,j)
-                  !       WRITE(*,*) a_rflx(:,:,:)
-                  total_rw = total_rw + a_rflx(2,i,j)
-                  total_la = total_la + wq_sfc(i,j)*(0.5*(dn0(1)+dn0(2))*alvl)/ffact
-                  total_se = total_se + wt_sfc(i,j)*(0.5*(dn0(1)+dn0(2))*cp)/ffact
-                  total_pre=   total_pre +  precip(2,i,j)
+                  total_sw  = total_sw + a_sflx(2,i,j)
+                  total_rw  = total_rw + a_rflx(2,i,j)
+                  total_la  = total_la + wq_sfc(i,j)*(0.5*(dn0(1)+dn0(2))*alvl)/ffact
+                  total_se  = total_se + wt_sfc(i,j)*(0.5*(dn0(1)+dn0(2))*cp)/ffact
+                  total_pre = total_pre +  precip(2,i,j)
                END DO
             END DO
             total_sw  = total_sw/REAL((nxp-4)*(nyp-4))
@@ -310,10 +311,9 @@ CONTAINS
             CALL sfcflxs(nxp,nyp,vonk,wspd,usfc,vsfc,bfct,a_ustar,a_tstar,a_rstar,  &
                          uw_sfc,vw_sfc,wt_sfc,wq_sfc,ww_sfc)
 
-            !       WRITE(*,*) ww_sfc(3,10),a_ustar(3,10),'sflx'
-
             sst1 = sst1-(total_rw+total_la+total_se+( sqrt(lambda*C_heat*7.27e-5/(2.0)) *(SST1-280.0)))&
                    /(2.0e-2*C_heat+ sqrt( lambda*C_heat/(2.0*7.27e-5)) )*dtl
+
 
             sst = sst1
          !
@@ -345,6 +345,7 @@ CONTAINS
 
                   wspd(i,j)   = max(0.1,                                    &
                                 sqrt((a_up(2,i,j)+umean)**2+(a_vp(2,i,j)+vmean)**2))
+
                   IF (ubmin > 0.) THEN
                      bflx = g*wt_sfc(1,1)/th00
                      IF (level >= 2) bflx = bflx + g*ep2*wq_sfc(i,j)
@@ -503,7 +504,7 @@ CONTAINS
       REAL, INTENT(inout) :: rstar(n2,n3)  ! scale value of qt
 
       LOGICAL, SAVE :: first_call = .TRUE.
-      INTEGER :: i,j,iterate
+      INTEGER :: i, j, iterate
       REAL    :: lnz, klnz, betg, cnst1, cnst2
       REAL    :: x, y, psi1, psi2, zeta, lmo, dtv
 
@@ -572,15 +573,15 @@ CONTAINS
    !
    SUBROUTINE sfcflxs(n2,n3,vk,ubar,u,v,xx,us,ts,rs,uw,vw,tw,rw,ww)
       IMPLICIT NONE
-      REAL, PARAMETER     :: cc = 4.7,eps = 1.e-20
+      REAL, PARAMETER     :: cc = 4.7, eps = 1.e-20
 
       INTEGER, INTENT(in) :: n2,n3
-      REAL, INTENT(in)    :: ubar(n2,n3),u(n2,n3),v(n2,n3),xx(n2,n3),vk
-      REAL, INTENT(in)    :: us(n2,n3),ts(n2,n3),rs(n2,n3)
-      REAL, INTENT(out)   :: uw(n2,n3),vw(n2,n3),tw(n2,n3),rw(n2,n3),ww(n2,n3)
+      REAL, INTENT(in)    :: ubar(n2,n3), u(n2,n3), v(n2,n3), xx(n2,n3), vk
+      REAL, INTENT(in)    :: us(n2,n3), ts(n2,n3), rs(n2,n3)
+      REAL, INTENT(out)   :: uw(n2,n3), vw(n2,n3), tw(n2,n3), rw(n2,n3), ww(n2,n3)
 
-      REAL :: x(n2,n3),y(n2,n3)
-      INTEGER i,j
+      REAL :: x(n2,n3), y(n2,n3)
+      INTEGER i, j
 
       DO j = 3, n3-2
          DO i = 3, n2-2

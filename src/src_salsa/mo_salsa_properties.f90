@@ -202,8 +202,8 @@ CONTAINS
                    
                      !-- particle wet radius [m]
                      zdwet = (zlwc/paero(ii,jj,kk)%numc/rhowa/pi6 + &
-                              (SUM(zvpart(6:7))/pi6)**(1./3.) +     &
-                              zcore/pi6)**(1./3.)
+                              SUM(zvpart(6:7))/pi6 + zcore/pi6)**(1./3.)
+
 
                      zke = exp(2.*surfw0*mvsu/(boltz*ptemp(ii,jj)*zdwet))
                      !-- Kelvin effect
@@ -310,8 +310,7 @@ CONTAINS
                       
                         !-- particle wet radius [m]
                         zdwet = (zlwc/paero(ii,jj,kk)%numc/rhowa/pi6 +  &
-                                 (SUM(zvpart(6:7))/pi6)**(1./3.) + &
-                                 zcore/pi6)**(1./3.)
+                                 SUM(zvpart(6:7))/pi6 + zcore/pi6)**(1./3.)
 
                         !-- Kelvin effect
                         zke = exp(2.*surfw0*mvsu/(boltz*ptemp(ii,jj)*zdwet))
@@ -340,60 +339,5 @@ CONTAINS
       END IF
 
    END SUBROUTINE equilibration
-
-   ! Juha: It should not be necessary to do this since cloud water content is Always calculated via condensation equations
-   ! This is done for initialization call when non-zero cloud or ice number concentration is initialized
-   !                 manually. Otherwise water contents are computed via condensation
-   !               - Not an equilibrium, but fixed droplet/ice diameter
-   !               - Regimes 2a & 2b for ice and cloud droplets
-   ! ----------------------------------------------------------------------------------------------------------------------
-   SUBROUTINE equilibration_cloud( kbdim, klev,    &
-                                   pcloud, pice )
-
-      USE mo_submctl, ONLY : &
-         t_section,    &
-         pi6,          & ! pi/6
-         ica, fcb,     &
-         iia, fib,     &
-         ncld,nice,    &
-         nlim, prlim
-
-      IMPLICIT NONE
-
-      !-- input variables -------------
-      INTEGER, INTENT(in) ::      &
-         kbdim,                     & ! dimension for arrays
-         klev                         ! number of vertical levels
-
-      !-- output variables -------------
-      TYPE(t_section), INTENT(inout) :: pcloud(kbdim,klev,ncld), &
-                                        pice(kbdim,klev,nice)
-
-      !-- local variables --------------
-      INTEGER :: ii, jj, kk             ! loop indices
-
-      DO jj = 1, klev      ! vertical grid
-         DO ii = 1, kbdim ! horizontal grid
-            ! Cloud droplets
-            DO kk = ica%cur, fcb%cur      ! size bin
-               IF ((pcloud(ii,jj,kk)%numc > nlim)) THEN
-                  !-- 1) particle properties calculated for non-empty bins ---------
-                  pcloud(ii,jj,kk)%volc(8) = pi6*12.0E-6**3*pcloud(ii,jj,kk)%numc ! set water content according to 12um diameter
-                  pcloud(ii,jj,kk)%dwet = 12.0E-6
-               END IF
-            END DO
-
-            ! Ice
-            DO kk = iia%cur, fib%cur      ! size bin
-               IF ((pice(ii,jj,kk)%numc > prlim)) THEN
-                   !-- 1) particle properties calculated for non-empty bins ---------
-                  pice(ii,jj,kk)%volc(8) = pi6*30.0E-6**3*pice(ii,jj,kk)%numc  ! set water content according to 30um diameter
-                  pice(ii,jj,kk)%dwet = 30.0E-6! sqrt(3*B/A)
-               END IF
-            END DO
-         END DO
-      END DO
-
-   END SUBROUTINE equilibration_cloud
 
 END MODULE mo_salsa_properties

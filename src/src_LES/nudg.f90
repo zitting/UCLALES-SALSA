@@ -159,7 +159,7 @@ CONTAINS
 
    !
    ! Nudging for any 4D field based on 2D target
-   SUBROUTINE nudge_any_2d(nxp,nyp,nzp,nb,zt,ap,at,trgt,dt,tau,iopt)
+   SUBROUTINE nudge_any_2d(nxp, nyp, nzp, nb, zt, ap, at, trgt, dt, tau, iopt)
       USE util, ONLY : get_avg3
       IMPLICIT NONE
       INTEGER :: nxp,nyp,nzp,nb

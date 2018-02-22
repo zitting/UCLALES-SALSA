@@ -1,6 +1,6 @@
 MODULE mo_salsa_driver
 
-   USE mo_submctl, ONLY : t_section, debug
+   USE mo_submctl, ONLY : t_section
    USE mo_structured_datatypes, ONLY : FloatArray1d, FloatArray2d, FloatArray3d, FloatArray4d
    IMPLICIT NONE
 
@@ -64,7 +64,7 @@ CONTAINS
    ! Juha Tonttila, FMI, 2014
    ! Jaakko Ahola, FMI, 2016
    !
-   SUBROUTINE run_SALSA(pnx, pny, pnz, n4, press, tk, tt, rv, rt, rs, rsi, wp, pdn,   &
+   SUBROUTINE run_SALSA(pnx, pny, pnz, n4, press, tk, rv, rt, rs, rsi, wp, pdn,   &
                         pa_naerop,  pa_naerot,  pa_maerop,  pa_maerot,   &
                         pa_ncloudp, pa_ncloudt, pa_mcloudp, pa_mcloudt,  &
                         pa_nprecpp, pa_nprecpt, pa_mprecpp, pa_mprecpt,  &
@@ -81,7 +81,7 @@ CONTAINS
                              rhlim, lscndgas, nlim, prlim
 
       USE mo_salsa, ONLY : salsa
-      USE mo_salsa_properties, ONLY  : equilibration, equilibration_cloud
+      USE mo_salsa_properties, ONLY  : equilibration
       USE class_componentIndex, ONLY : ComponentIndex, GetIndex, GetNcomp, IsUsed
       IMPLICIT NONE
 
@@ -92,46 +92,45 @@ CONTAINS
       TYPE(FloatArray3D), INTENT(in) :: press, &            ! Pressure (Pa)
                                         rv,    &            ! Water vapor mixing ratio
                                         rs,    &            ! Water vapour saturation mixing ratio
-                                        rsi                 ! Water vapour sat mix rat over ice
+                                        rsi                 ! Water vapour saturation mixing ratio over ice
 
       REAL, INTENT(in) ::    tk(pnz,pnx,pny),    &            ! Temperature (K)
-                             tt(pnz,pnx,pny),    &            ! Temperature tendency
                              wp(pnz,pnx,pny)                  ! Vertical velocity (m s-1)
 
 
       TYPE(FloatArray3D), INTENT(in) :: pdn             ! Air density (for normalizing concentrations)
 
-      TYPE(FloatArray4D), INTENT(in) :: pa_naerop,        & ! aerosol number concentration (# kg-1)
-                                        pa_maerop,        & ! aerosol volume concentration (m3 kg-1)
+      TYPE(FloatArray4D), INTENT(in) :: pa_naerop,        & ! Aerosol number concentration (# kg-1)
+                                        pa_maerop,        & ! Aerosol mass concentration (kg kg-1)
                                         pa_ncloudp,       & ! Cloud droplet number concentration (# kg-1)
-                                        pa_mcloudp,       & ! Cloud droplet volume concentration (m3 kg-1)
+                                        pa_mcloudp,       & ! Cloud droplet mass concentration (kg kg-1)
                                         pa_nprecpp,       & ! Rain drop number concentration (# kg-1)
-                                        pa_mprecpp,       & ! Rain drop volume concentration (m3 kg-1)
-                                        pa_nicep,         & ! ice number concentration (# kg-1)
-                                        pa_micep,         & ! ice volume concentration (m3 kg-1)
-                                        pa_nsnowp,        & ! snow precipitation number concentration (# kg-1)
-                                        pa_msnowp           ! snow precipitation volume concentration (m3 kg-1)
+                                        pa_mprecpp,       & ! Rain drop mass concentration (kg kg-1)
+                                        pa_nicep,         & ! Ice number concentration (# kg-1)
+                                        pa_micep,         & ! Ice mass concentration (kg kg-1)
+                                        pa_nsnowp,        & ! Snow precipitation number concentration (# kg-1)
+                                        pa_msnowp           ! Snow precipitation mass concentration (kg kg-1)
 
       TYPE(FloatArray4D), INTENT(in) :: pa_gaerop         ! Gaseous tracers [# kg]
 
       INTEGER, INTENT(in) :: prunmode                      ! 1: Initialization call
                                                            ! 2: Spinup period call
-                                                           ! 3: Regular runtime call'
+                                                           ! 3: Regular runtime call
       INTEGER, INTENT(in) :: level                         ! thermodynamical level
 
 
       TYPE(ComponentIndex), INTENT(in) :: prtcl ! Object containing the indices of different aerosol components for mass arrays
 
      TYPE(FloatArray4D), INTENT(inout) :: pa_naerot,      & ! Aerosol number tendency
-                                          pa_maerot,      & ! Aerosol volume tendency
+                                          pa_maerot,      & ! Aerosol mass tendency
                                           pa_ncloudt,     & ! Cloud droplet number tendency
-                                          pa_mcloudt,     & ! Cloud droplet volume tendency
+                                          pa_mcloudt,     & ! Cloud droplet mass tendency
                                           pa_nprecpt,     & ! Rain drop number tendency
-                                          pa_mprecpt,     & ! Rain drop volume tendency
+                                          pa_mprecpt,     & ! Rain drop mass tendency
                                           pa_nicet,       & ! Ice particle number tendency
-                                          pa_micet,       & ! Ice particle volume tendency
-                                          pa_nsnowt,      & ! snow flake number tendency
-                                          pa_msnowt         ! snow flake volume tendecy
+                                          pa_micet,       & ! Ice particle mass tendency
+                                          pa_nsnowt,      & ! Snow number tendency
+                                          pa_msnowt         ! Snow mass tendecy
 
       TYPE(FloatArray4D), INTENT(inout) :: pa_gaerot         ! Gaseous tracer tendency
       TYPE(FloatArray3D), INTENT(inout) :: rt                  ! Water vapour tendency
@@ -148,7 +147,7 @@ CONTAINS
 
       INTEGER :: jj,ii,kk,ss,str,end, nc,vc
       REAL :: in_p(kbdim,klev), in_t(kbdim,klev), in_rv(kbdim,klev), in_rs(kbdim,klev),&
-              in_w(kbdim,klev), in_rsi(kbdim,klev), in_tt(kbdim,klev)
+              in_w(kbdim,klev), in_rsi(kbdim,klev)
       REAL :: rv_old(kbdim,klev)
 
       ! Number is always set, but mass can be uninitialized
@@ -166,8 +165,8 @@ CONTAINS
          snow_old(:,:,:)%volc(ss) = 0.
       END DO
 
-      ! Set the SALSA runtime config (Could this be done more efficiently?)
-      CALL set_salsa_runtime(prunmode,level)
+      ! Set the SALSA runtime config
+      CALL set_salsa_runtime(prunmode)
 
       ! Convert input concentrations for SALSA into #/m3 or m3/m3 instead of kg/kg (multiplied by pdn/divided by substance density)
       DO jj = 3, pny-2
@@ -177,7 +176,6 @@ CONTAINS
                ! Set inputs
                in_p(1,1) = press%data(kk,ii,jj)
                in_t(1,1) = tk(kk,ii,jj)
-               in_tt(1,1) = tt(kk,ii,jj)
                in_rs(1,1) = rs%data(kk,ii,jj)
                in_rsi(1,1) = rsi%data(kk,ii,jj)
                in_w(1,1) = wp(kk,ii,jj)
@@ -499,11 +497,6 @@ CONTAINS
                If (prunmode == 1) CALL equilibration(kbdim,klev,   &
                                                      init_rh,in_t,aero,.TRUE.)
 
-               ! Juha: Should be removed when possible
-               If (prunmode == 1) CALL equilibration_cloud(kbdim,klev,   &
-                                                           cloud,ice)
-
-
                ! Convert to #/m3
                zgso4(1,1) = pa_gaerop%data(kk,ii,jj,1)*pdn%data(kk,ii,jj)
                zghno3(1,1) = pa_gaerop%data(kk,ii,jj,2)*pdn%data(kk,ii,jj)
@@ -516,7 +509,7 @@ CONTAINS
                ! ***************************************!
                CALL salsa(kbdim,  klev,                          &
                           in_p,   in_rv,  in_rs,  in_rsi,        &
-                          in_t,  in_tt, tstep,                   &
+                          in_t,  tstep,                          &
                           zgso4,  zgocnv, zgocsv, zghno3,        &
                           zgnh3,  aero,   cloud,  precp,         &
                           ice,    snow,                          &
@@ -895,7 +888,7 @@ CONTAINS
    !
    ! Juha Tonttila, FMI, 2014
    !
-   SUBROUTINE set_SALSA_runtime(prunmode,level)
+   SUBROUTINE set_SALSA_runtime(prunmode)
       USE mo_submctl, ONLY : nlcoag,                 &
                              nlcgaa,nlcgcc,nlcgpp,   &
                              nlcgca,nlcgpa,nlcgpc,   &
@@ -922,122 +915,80 @@ CONTAINS
                              nlcgip,nlcgsa,nlcgsc,   &
                              nlcgsi,nlcgsp,nlcgss,   &
                              nlcnd,                  &
-                             nlichom,                &
-                             nlichet,                &
-                             nlicimmers,             &
+                             nlicenucl,              &
                              nlicmelt,               &
+                             nlfixinc, &
 
                              lscgia,lscgic,lscgii,   &
                              lscgip,lscgsa,lscgsc,   &
                              lscgsi,lscgsp,lscgss,   &
-                             lsichom,                &
-                             lsichet,                &
-                             lsicimmers,             &
+                             lsicenucl,              &
                              lsicmelt,               &
-                             nldebug, debug
+                             lsfixinc
 
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(in) :: prunmode,level
+      INTEGER, INTENT(in) :: prunmode
+
+      ! Apply runtime settings
+
+
+      lscoag      = nlcoag
+      lscgaa      = nlcgaa
+      lscgcc      = nlcgcc
+      lscgpp      = nlcgpp
+      lscgca      = nlcgca
+      lscgpa      = nlcgpa
+      lscgpc      = nlcgpc
+      lscgia      = nlcgia
+      lscgic      = nlcgic
+      lscgii      = nlcgii
+      lscgip      = nlcgip
+      lscgsa      = nlcgsa
+      lscgsc      = nlcgsc
+      lscgsi      = nlcgsi
+      lscgsp      = nlcgsp
+      lscgss      = nlcgss
+
+      lscnd       = nlcnd
+      lscndgas    = nlcndgas
+      lscndh2oae  = nlcndh2oae
+      lscndh2ocl  = nlcndh2ocl
+      lscndh2oic  = nlcndh2oic
+
+      lsauto      = nlauto
+      lsautosnow  = nlautosnow
+
+      lsactiv     = nlactiv
+      lsactbase   = nlactbase
+      lsactintst  = nlactintst
+
+      lsicenucl   = ( nlicenucl .AND. ( .NOT. nlfixinc) )
+      lsfixinc    = nlfixinc
+      lsicmelt    = nlicmelt
+
+      ! Adjustments for initialization and spinup
+
 
       SELECT CASE(prunmode)
 
          CASE(1) ! Initialization
-
             lscoag      = .FALSE.
-            lscnd       = nlcnd
-            lscndgas    = nlcndgas
-            lscndh2oae  = nlcndh2oae
-            lscndh2ocl  = nlcndh2ocl
-            lscndh2oic  = nlcndh2oic
             lsauto      = .FALSE.
             lsautosnow  = .FALSE.
-            lsactiv     = nlactiv
             lsactbase   = .FALSE.
-            lsactintst  = .TRUE.
-            debug       = nldebug
+            lsactintst  = nlactintst
+            lsicenucl  = .FALSE.
+            lsfixinc    = .FALSE.
+            lsicmelt    = .FALSE.
 
          CASE(2)  ! Spinup period
-
-            lscoag      = ( .FALSE. .AND. nlcoag   )
-            lscnd       = ( .TRUE.  .AND. nlcnd    )
-            lscndgas    = ( .TRUE.  .AND. nlcndgas )
-            lscndh2oae  = ( .TRUE.  .AND. nlcndh2oae )
-            lscndh2ocl  = ( .TRUE.  .AND. nlcndh2ocl )
-            lscndh2oic  = ( .TRUE.  .AND. nlcndh2oic )
-            lsauto      = ( .FALSE. .AND. nlauto   )
-            lsautosnow  = ( .FALSE. .AND. nlautosnow  )
-            lsactiv     = ( .TRUE.  .AND. nlactiv  )
-            lsactbase   = ( .TRUE.  .AND. nlactbase )
-            lsactintst  = ( .TRUE.  .AND. nlactintst )
-            debug       = nldebug
-
-         CASE(3)  ! Run
-
-            lscoag      = nlcoag
-            lscgaa      = nlcgaa
-            lscgcc      = nlcgcc
-            lscgpp      = nlcgpp
-            lscgca      = nlcgca
-            lscgpa      = nlcgpa
-            lscgpc      = nlcgpc
-            lscgia      = nlcgia
-            lscgic      = nlcgic
-            lscgii      = nlcgii
-            lscgip      = nlcgip
-            lscgsa      = nlcgsa
-            lscgsc      = nlcgsc
-            lscgsi      = nlcgsi
-            lscgsp      = nlcgsp
-            lscgss      = nlcgss
-
-            lscnd       = nlcnd
-            lscndgas    = nlcndgas
-            lscndh2oae  = nlcndh2oae
-            lscndh2ocl  = nlcndh2ocl
-            lscndh2oic  = nlcndh2oic
-
-            lsauto      = nlauto
-            lsautosnow  = nlautosnow
-
-            lsactiv     = nlactiv
-            lsactbase   = nlactbase
-            lsactintst  = nlactintst
-
-            lsichom     = nlichom
-            lsichet     = nlichet
-            lsicimmers  = nlicimmers
-            lsicmelt    = nlicmelt
-
-            debug       = nldebug
+            lscoag      = .FALSE.
+            lsauto      = .FALSE.
+            lsautosnow  = .FALSE.
 
       END SELECT
-
-      ! if thermodynamical level is 4, set all ice process switches to false
-      IF(level == 4) THEN
-         lscgia      = .FALSE.
-         lscgic      = .FALSE.
-         lscgii      = .FALSE.
-         lscgip      = .FALSE.
-         lscgsa      = .FALSE.
-         lscgsc      = .FALSE.
-         lscgsi      = .FALSE.
-         lscgsp      = .FALSE.
-         lscgss      = .FALSE.
-
-         lscndh2oic  = .FALSE.
-
-         lsautosnow  = .FALSE.
-
-         lsichom     = .FALSE.
-         lsichet     = .FALSE.
-         lsicimmers  = .FALSE.
-         lsicmelt    = .FALSE.
-
-      END IF !level
-
-      debug = .FALSE.
 
    END SUBROUTINE set_SALSA_runtime
 

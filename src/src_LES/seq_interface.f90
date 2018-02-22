@@ -35,8 +35,8 @@ MODULE mpi_interface
    IMPLICIT NONE
 
    INTEGER :: myid, pecount, nxpg, nypg, nxg, nyg, nbytes, intsize
-   INTEGER :: xcomm, ycomm,commxid,commyid, MY_CMPLX, MY_SIZE
-   INTEGER :: nxnzp,nynzp
+   INTEGER :: xcomm, ycomm, commxid, commyid, MY_CMPLX, MY_SIZE
+   INTEGER :: nxnzp, nynzp
    INTEGER :: wrxid, wryid, nxprocs, nyprocs
    INTEGER, ALLOCATABLE, DIMENSION(:) :: xoffset, yoffset, nxpa, nypa
    CHARACTER(len=80) :: ver='', author=''
@@ -154,7 +154,7 @@ CONTAINS
    !
    SUBROUTINE init_alltoall_reorder(nxp,nyp,nzp)
 
-      INTEGER, INTENT(in) :: nxp,nyp,nzp
+      INTEGER, INTENT(in) :: nxp, nyp, nzp
 
       nxg = nxp-4
       nyg = nyp-4
@@ -167,7 +167,7 @@ CONTAINS
    !
    SUBROUTINE cyclics(n1,n2,n3,var,req)
 
-      INTEGER, INTENT(in) :: n1,n2,n3,req(16)
+      INTEGER, INTENT(in) :: n1, n2, n3, req(16)
       REAL, INTENT(inout) :: var(n1,n2,n3)
 
       IF (n3 == 5) THEN
@@ -197,7 +197,7 @@ CONTAINS
    ! Subroutine cyclicc: comits excahnging cyclic boundary conditions
    SUBROUTINE cyclicc(n1,n2,n3,var,req)
 
-      INTEGER :: n1,n2,n3,req(16)
+      INTEGER :: n1, n2, n3, req(16)
       REAL    :: var(n1,n2,n3)
 
    END SUBROUTINE cyclicc
@@ -220,9 +220,9 @@ CONTAINS
    !---------------------------------------------------------------------------
    SUBROUTINE xshuffle(a,atmp,nx,ny,nz,isign)
 
-      INTEGER, INTENT(in)    :: nx,ny,nz,isign
-      COMPLEX, INTENT(inout) :: a(nx,ny,nz),atmp((nx+1)*(ny+1)*(nz+1))
-      INTEGER ll,i,j,k
+      INTEGER, INTENT(in)    :: nx, ny, nz, isign
+      COMPLEX, INTENT(inout) :: a(nx,ny,nz), atmp((nx+1)*(ny+1)*(nz+1))
+      INTEGER ll, i, j, k
 
       IF(isign == 1) THEN
          ll = 0
@@ -253,9 +253,9 @@ CONTAINS
    !---------------------------------------------------------------------------
    SUBROUTINE yshuffle(a,atmp,nx,ny,nz,isign)
 
-      INTEGER, INTENT(in)    :: nx,ny,nz,isign
-      COMPLEX, INTENT(inout) :: a(ny,nx,nz),atmp((nx+1)*(ny+1)*(nz+1))
-      INTEGER ll,i,j,k
+      INTEGER, INTENT(in)    :: nx, ny, nz, isign
+      COMPLEX, INTENT(inout) :: a(ny,nx,nz), atmp((nx+1)*(ny+1)*(nz+1))
+      INTEGER ll, i, j, k
 
       IF(isign == 1) THEN
          ll = 0

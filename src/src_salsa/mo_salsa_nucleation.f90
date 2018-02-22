@@ -69,82 +69,82 @@ CONTAINS
   !
   !---------------------------------------------------------------------
 
-  SUBROUTINE nucleation(kbdim,  klev,      &
-                        paero,  ptemp,  prh,    ppres,  &
-                        pcsa,   pcocnv, ptstep, pj3n3,  &
-                        pxsa,   pxocnv, ppbl            )
+   SUBROUTINE nucleation(kbdim,  klev,      &
+                         paero,  ptemp,  prh,    ppres,  &
+                         pcsa,   pcocnv, ptstep, pj3n3,  &
+                         pxsa,   pxocnv, ppbl            )
 
-    !USE mo_aero_mem_salsa, ONLY: d_jnuc,d_j3 !ALN002
+      !USE mo_aero_mem_salsa, ONLY: d_jnuc,d_j3 !ALN002
 
-    USE mo_submctl,   ONLY:  &
-         t_section,              &
-         act_coeff,              &
-         nj3,                    &
-         nsnucl,                 &
-         fn2b,                   &
-         pstand,                 &
-         d_sa,                   &
-         massacc,                &
-         n3,                     &
-         msu,                    &
-         rhosu,                  &
-         boltz,                  &
-         avog,                   &
-         rg,                     &
-         pi,                     &
-         reglim
+      USE mo_submctl,   ONLY:  &
+            t_section,              &
+            act_coeff,              &
+            nj3,                    &
+            nsnucl,                 &
+            fn2b,                   &
+            pstand,                 &
+            d_sa,                   &
+            massacc,                &
+            n3,                     &
+            msu,                    &
+            rhosu,                  &
+            boltz,                  &
+            avog,                   &
+            rg,                     &
+            pi,                     &
+            reglim
 
-    IMPLICIT NONE
+      IMPLICIT NONE
 
-    !-- Input and output variables -------------
-    INTEGER, INTENT(IN) ::        &
-         kbdim,                   & ! dimension for arrays
-         klev                       ! number of vertical klev
-
-
-    REAL, INTENT(IN) ::       &
-         ptemp(kbdim,klev),       & ! ambient temperature [K]
-         prh(kbdim, klev),        & ! relative humidity
-         ppres(kbdim,klev),       & ! ambient pressure [Pa]
-         ptstep,                  & ! timestep [s]
-         pcsa(kbdim,klev),        & ! sulphuric acid concentration [#/m3]
-         pcocnv(kbdim,klev)         ! concentration of organic matter [#/m3]
-
-    INTEGER, INTENT(IN) :: ppbl(kbdim) ! Planetary boundary layer top level
-
-    REAL, INTENT(INOUT) ::    &
-         pj3n3(kbdim,klev,2)        ! change in concentration [#/m3]
-
-    TYPE(t_section), INTENT(inout) :: &
-         paero(kbdim,klev,fn2b)
+      !-- Input and output variables -------------
+      INTEGER, INTENT(IN) ::        &
+            kbdim,                   & ! dimension for arrays
+            klev                       ! number of vertical klev
 
 
-    REAL, INTENT(OUT) ::      &
-         pxsa(kbdim,klev),        & ! ratio of sulphuric acid and organic vapor in 3nm particles [ ]
-         pxocnv(kbdim,klev)
+      REAL, INTENT(IN) ::       &
+            ptemp(kbdim,klev),       & ! ambient temperature [K]
+            prh(kbdim, klev),        & ! relative humidity
+            ppres(kbdim,klev),       & ! ambient pressure [Pa]
+            ptstep,                  & ! timestep [s]
+            pcsa(kbdim,klev),        & ! sulphuric acid concentration [#/m3]
+            pcocnv(kbdim,klev)         ! concentration of organic matter [#/m3]
 
-    !-- Local variables ------------------------
-    INTEGER :: ii, jj, iteration
-    INTEGER :: ppbl_bin(kbdim)      ! when nsnucl is chose to be binary nucleation, it is calculated at all vertical klev.
+      INTEGER, INTENT(IN) :: ppbl(kbdim) ! Planetary boundary layer top level
+
+      REAL, INTENT(INOUT) ::    &
+            pj3n3(kbdim,klev,2)        ! change in concentration [#/m3]
+
+      TYPE(t_section), INTENT(inout) :: &
+            paero(kbdim,klev,fn2b)
+
+
+      REAL, INTENT(OUT) ::      &
+            pxsa(kbdim,klev),        & ! ratio of sulphuric acid and organic vapor in 3nm particles [ ]
+            pxocnv(kbdim,klev)
+
+      !-- Local variables ------------------------
+      INTEGER :: ii, jj, iteration
+      INTEGER :: ppbl_bin(kbdim)      ! when nsnucl is chose to be binary nucleation, it is calculated at all vertical klev.
                                     ! with other nucleation types binary nucleation is calculated in planetary boundary layer and above
                                     ! according to the chosen nucleation type.
 
-    REAL ::                   &
-         zjnuc(kbdim,klev),       & ! nucleation rate at ~ 1 nm [#/m3s]
-         zmixnh3(kbdim,klev),     & ! ammonia mixing ratio [ppt]
-         zc_h2so4(kbdim,klev),    & ! sulphuric acid concentration (note units!) [#/cm3]
-         zcsa_local(kbdim,klev),  & ! sulphuric acid concentration (note units!) [#/m3]
-         zc_org(kbdim,klev),      & ! organic vapour concentration [#/cm3]
-         zcocnv_local(kbdim,klev),& ! organic vapour concentration [#/m3]
-         znsa(kbdim,klev),        & ! number of H2SO4 molecules in critical cluster [1]
-         znoc(kbdim,klev),        & ! number of ORGANIC molecules in critical cluster [1]
-         zksa(kbdim,klev),        & ! Lever: if k_sa = 1, h2so4 is involved in nucleation. [1]
-         zkocnv(kbdim,klev) ,     & ! Lever: if k_ocnv = 1, organic compounds are involved in nucleation. [1]
-         zdcrit(kbdim,klev),      & ! diameter of critical cluster [m]
-         zknud(fn2b),             & ! particle Knudsen number [1]
-         zbeta(fn2b),             & ! transitional correction factor [1]
-         zGRclust,                & ! growth rate of formed clusters [nm/h]
-         zdfvap,                  & ! air diffusion coefficient [m2/s]
+      REAL ::                   &
+            zjnuc(kbdim,klev),       & ! nucleation rate at ~ 1 nm [#/m3s]
+            zmixnh3(kbdim,klev),     & ! ammonia mixing ratio [ppt]
+            zc_h2so4(kbdim,klev),    & ! sulphuric acid concentration (note units!) [#/cm3]
+            zcsa_local(kbdim,klev),  & ! sulphuric acid concentration (note units!) [#/m3]
+            zc_org(kbdim,klev),      & ! organic vapour concentration [#/cm3]
+            zcocnv_local(kbdim,klev),& ! organic vapour concentration [#/m3]
+            znsa(kbdim,klev),        & ! number of H2SO4 molecules in critical cluster [1]
+            znoc(kbdim,klev),        & ! number of ORGANIC molecules in critical cluster [1]
+            zksa(kbdim,klev),        & ! Lever: if k_sa = 1, h2so4 is involved in nucleation. [1]
+            zkocnv(kbdim,klev) ,     & ! Lever: if k_ocnv = 1, organic compounds are involved in nucleation. [1]
+            zdcrit(kbdim,klev),      & ! diameter of critical cluster [m]
+            zknud(fn2b),             & ! particle Knudsen number [1]
+            zbeta(fn2b),             & ! transitional correction factor [1]
+            zGRclust,                & ! growth rate of formed clusters [nm/h]
+            zdfvap,                  & ! air diffusion coefficient [m2/s]
          zmfp,                    & ! mean free path of condensing vapour [m]
          zcsink,                  & ! condensational sink [#/m2]
          zdmean,                  & ! mean diameter of existing particles [nm]
@@ -1169,7 +1169,7 @@ CONTAINS
    !********************************************************************
    !********************************************************************
 
-   SUBROUTINE actnucl( kbdim,        klev,                   &
+   SUBROUTINE actnucl( kbdim,      klev,                   &
                        psa_conc,   pnuc_rate,    pd_crit, ppbl,          &
                        pn_crit_sa, pn_crit_ocnv, pk_sa,   pk_ocnv, activ)
 
@@ -1236,7 +1236,7 @@ CONTAINS
    ! ORGNUCL scheme conciders only the organic matter in nucleation
    ! ---------------------------------------------------------------
 
-   SUBROUTINE orgnucl(kbdim,        klev,            &
+   SUBROUTINE orgnucl(kbdim,      klev,            &
                       pc_org,     pnuc_rate,    pd_crit, ppbl,   &
                       pn_crit_sa, pn_crit_ocnv, pk_sa,   pk_ocnv)
 
